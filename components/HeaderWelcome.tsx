@@ -12,7 +12,7 @@ function HeaderWelcome() {
     <div className='pt-32'>
       {isLoaded && user?.firstName ? (
         <>
-          <h1 className='text-2xl lg:text-5xl text-white font-medium mb-3'>Welcome Back, {user?.firstName} 👋</h1>
+          <h1 className='text-2xl lg:text-5xl text-white font-medium mb-3'>Welcome, {user?.firstName} 👋</h1>
           <p className='text-green-300'>This is your financial overview report</p>
         </>
       ) : (
