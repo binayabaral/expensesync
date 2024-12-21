@@ -3,6 +3,7 @@
 import { useMountedState } from 'react-use';
 
 import { AddAccount } from '@/features/accounts/components/AddAccount';
+import { EditAccountSheet } from '@/features/accounts/components/EditAccountSheet';
 
 export const SheetProvider = ({ children }: { children: React.ReactNode }) => {
   const isMounted = useMountedState();
@@ -14,6 +15,7 @@ export const SheetProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <>
       <AddAccount />
+      <EditAccountSheet />
       {children}
     </>
   );

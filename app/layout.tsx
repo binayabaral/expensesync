@@ -31,10 +31,10 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang='en'>
-        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <body className={`${geistSans.variable} ${geistMono.variable} antialiased !pointer-events-auto`}>
           <QueryProvider>
             <SheetProvider>
-              <Toaster />
+              <Toaster position='top-right' />
               {children}
             </SheetProvider>
           </QueryProvider>
