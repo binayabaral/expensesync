@@ -3,13 +3,14 @@ import { handle } from 'hono/vercel';
 import { clerkMiddleware } from '@hono/clerk-auth';
 
 import accountsRoute from './accounts';
+import categoriesRoute from './categories';
 
 export const runtime = 'edge';
 
 const app = new Hono().basePath('/api');
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const routes = app.use(clerkMiddleware()).route('/accounts', accountsRoute);
+const routes = app.use(clerkMiddleware()).route('/accounts', accountsRoute).route('/categories', categoriesRoute);
 
 export const GET = handle(app);
 export const POST = handle(app);
