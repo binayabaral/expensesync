@@ -15,6 +15,13 @@
       "when": 1734778687818,
       "tag": "0001_spicy_lockjaw",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1735107837022,
+      "tag": "0002_sour_rocket_raccoon",
+      "breakpoints": true
     }
   ]
 }
