@@ -28,10 +28,10 @@ export const Select = ({
   };
 
   const handleCreate = (inputValue: string) => {
-    if(inputValue !== '') {
+    if (inputValue !== '') {
       onCreate?.(inputValue);
     }
-  }
+  };
 
   const formattedValue = useMemo(() => options.find(option => option.value === value), [options, value]);
   return (
@@ -44,7 +44,16 @@ export const Select = ({
       placeholder={placeholder}
       onCreateOption={handleCreate}
       isValidNewOption={() => allowCreatingOptions}
-      styles={{ control: base => ({ ...base, borderColor: '#e2e8f0', ':hover': { borderColor: '#e2e8f0' } }) }}
+      styles={{
+        control: (base, state) => ({
+          ...base,
+          boxShadow: 'none',
+          borderColor: state.isFocused ? 'hsl(var(--ring))' : 'hsl(var(--input))',
+          '&:hover': {
+            borderColor: state.isFocused ? 'hsl(var(--ring))' : 'hsl(var(--input))'
+          }
+        })
+      }}
     />
   );
 };

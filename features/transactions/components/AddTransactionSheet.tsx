@@ -48,7 +48,7 @@ export const AddTransactionSheet = () => {
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className='space-y-4'>
+      <SheetContent className='space-y-4' tabIndex={undefined}>
         <SheetHeader>
           <SheetTitle>New Transaction</SheetTitle>
           <SheetDescription>Create a new transaction.</SheetDescription>
