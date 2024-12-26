@@ -27,6 +27,12 @@ export const Select = ({
     onChangeAction(option?.value);
   };
 
+  const handleCreate = (inputValue: string) => {
+    if(inputValue !== '') {
+      onCreate?.(inputValue);
+    }
+  }
+
   const formattedValue = useMemo(() => options.find(option => option.value === value), [options, value]);
   return (
     <CreatableSelect
@@ -36,7 +42,7 @@ export const Select = ({
       value={formattedValue}
       className='text-sm h-10'
       placeholder={placeholder}
-      onCreateOption={onCreate}
+      onCreateOption={handleCreate}
       isValidNewOption={() => allowCreatingOptions}
       styles={{ control: base => ({ ...base, borderColor: '#e2e8f0', ':hover': { borderColor: '#e2e8f0' } }) }}
     />
