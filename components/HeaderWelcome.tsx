@@ -9,7 +9,7 @@ function HeaderWelcome() {
   const { isLoaded, user } = useUser();
 
   return (
-    <div className='pt-32'>
+    <div className='pt-10'>
       {isLoaded && user?.firstName ? (
         <>
           <h1 className='text-2xl lg:text-5xl text-white font-medium mb-3'>Welcome, {user?.firstName} 👋</h1>

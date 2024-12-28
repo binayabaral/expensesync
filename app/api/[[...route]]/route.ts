@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { handle } from 'hono/vercel';
 import { clerkMiddleware } from '@hono/clerk-auth';
 
+import summaryRoute from './summary';
 import accountsRoute from './accounts';
 import categoriesRoute from './categories';
 import transactionsRoute from './transactions';
@@ -13,6 +14,7 @@ const app = new Hono().basePath('/api');
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const routes = app
   .use(clerkMiddleware())
+  .route('/summary', summaryRoute)
   .route('/accounts', accountsRoute)
   .route('/categories', categoriesRoute)
   .route('/transactions', transactionsRoute);
