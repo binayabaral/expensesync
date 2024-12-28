@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 import Nav from '@/components/Nav';
+import Filters from '@/components/Filters';
 import HeaderWelcome from '@/components/HeaderWelcome';
 
 function Header() {
@@ -16,6 +17,7 @@ function Header() {
           <Nav />
         </div>
         <HeaderWelcome />
+        <Filters />
       </div>
     </header>
   );
