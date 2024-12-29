@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { Hono } from 'hono';
-import { parse, subDays } from 'date-fns';
 import { getAuth } from '@hono/clerk-auth';
+import { parse, startOfMonth } from 'date-fns';
 import { createId } from '@paralleldrive/cuid2';
 import { zValidator } from '@hono/zod-validator';
 import { and, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
@@ -29,7 +29,7 @@ const app = new Hono()
       }
 
       const defaultTo = new Date();
-      const defaultFrom = subDays(defaultTo, 30);
+      const defaultFrom = startOfMonth(defaultTo);
       const startDate = from ? parse(from, 'yyyy-MM-dd', new Date()) : defaultFrom;
       const endDate = to ? parse(to, 'yyyy-MM-dd', new Date()) : defaultTo;
 

@@ -3,8 +3,8 @@
 import qs from 'query-string';
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
-import { format, subDays } from 'date-fns';
 import { DateRange } from 'react-day-picker';
+import { format, startOfMonth } from 'date-fns';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 import { formatDateRange } from '@/lib/utils';
@@ -22,7 +22,7 @@ function FilterDate() {
   const accountId = params.get('accountId') || 'all';
 
   const defaultTo = new Date();
-  const defaultFrom = subDays(defaultTo, 30);
+  const defaultFrom = startOfMonth(defaultTo);
 
   const paramState = {
     from: from ? new Date(from) : defaultFrom,
