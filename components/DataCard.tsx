@@ -41,19 +41,21 @@ interface DataCardProps extends BoxVariants, IconVariants {
   title: string;
   icon: IconType;
   value?: number;
-  dateRange: string;
+  subtitle: string;
   isLoading?: boolean;
   percentageChange?: number;
+  period: { from: string | undefined; to: string | undefined };
 }
 
 function DataCard({
   title,
   variant,
   value = 0,
-  dateRange,
+  subtitle,
   isLoading,
   icon: Icon,
-  percentageChange = 0
+  percentageChange = 0,
+  period
 }: DataCardProps) {
   if (isLoading) {
     return (
@@ -77,7 +79,7 @@ function DataCard({
       <CardHeader className='flex flex-row items-center justify-between gap-x-4'>
         <div className='space-y-2'>
           <CardTitle className='text-2xl line-clamp-1'>{title}</CardTitle>
-          <CardDescription className='line-clamp-1'>{dateRange}</CardDescription>
+          <CardDescription className='line-clamp-1'>{subtitle}</CardDescription>
         </div>
         <div className={cn('shrink-0', boxVariants({ variant }))}>
           <Icon className={cn(iconVariants({ variant }))} />
@@ -94,7 +96,11 @@ function DataCard({
             percentageChange < 0 && 'text-rose-500'
           )}
         >
-          {formatPercentage(percentageChange, { addPrefix: true })} from last period
+          {formatPercentage(
+            percentageChange,
+            { addPrefix: true, showEndDateOnly: title === 'Current Balance' },
+            period
+          )}
         </p>
       </CardContent>
     </Card>

@@ -60,14 +60,33 @@ const app = new Hono().get(
         );
     };
 
-    const [[currentPeriod], [lastPeriod]] = await Promise.all([
-      fetchFinancialData(auth.userId, startDate, endDate),
-      fetchFinancialData(auth.userId, lastPeriodStartDate, lastPeriodEndDate)
-    ]);
+    const fetchAccountBalance = async (userId: string, to: Date) => {
+      return db
+        .select({
+          balance: sum(transactions.amount).mapWith(Number)
+        })
+        .from(transactions)
+        .innerJoin(accounts, eq(transactions.accountId, accounts.id))
+        .where(
+          and(
+            accountId ? eq(transactions.accountId, accountId) : undefined,
+            eq(accounts.userId, userId),
+            lte(transactions.date, to)
+          )
+        );
+    };
 
-    const incomeChange = calculatePercentageChange(currentPeriod.income, lastPeriod.income);
-    const expenseChange = calculatePercentageChange(currentPeriod.expenses, lastPeriod.expenses);
-    const remainingChange = calculatePercentageChange(currentPeriod.remaining, lastPeriod.remaining);
+    const [[currentPeriod], [lastPeriod], [{ balance: remainingBalance }], [{ balance: previousRemainingBalance }]] =
+      await Promise.all([
+        fetchFinancialData(auth.userId, startDate, endDate),
+        fetchFinancialData(auth.userId, lastPeriodStartDate, lastPeriodEndDate),
+        fetchAccountBalance(auth.userId, defaultTo),
+        fetchAccountBalance(auth.userId, lastPeriodEndDate)
+      ]);
+
+    const incomeChange = calculatePercentageChange(currentPeriod.income || 0, lastPeriod.income || 0);
+    const expenseChange = calculatePercentageChange(currentPeriod.expenses || 0, lastPeriod.expenses || 0);
+    const remainingChange = calculatePercentageChange(remainingBalance || 0, previousRemainingBalance || 0);
 
     const transactionsByCategory = await db
       .select({
@@ -112,7 +131,7 @@ const app = new Hono().get(
 
     return c.json({
       data: {
-        remainingAmount: currentPeriod.remaining,
+        remainingAmount: remainingBalance,
         remainingChange,
         incomeAmount: currentPeriod.income,
         incomeChange,

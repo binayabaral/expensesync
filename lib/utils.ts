@@ -1,6 +1,16 @@
 import { twMerge } from 'tailwind-merge';
 import { clsx, type ClassValue } from 'clsx';
-import { eachDayOfInterval, format, isSameDay, startOfMonth } from 'date-fns';
+import {
+  parse,
+  format,
+  subDays,
+  endOfDay,
+  isSameDay,
+  startOfDay,
+  startOfMonth,
+  differenceInDays,
+  eachDayOfInterval
+} from 'date-fns';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -66,26 +76,65 @@ type Period = {
   to: string | Date | undefined;
 };
 export function formatDateRange(period?: Period) {
-  const defaultTo = new Date();
+  const today = new Date();
+  const defaultTo = endOfDay(today);
   const defaultFrom = startOfMonth(defaultTo);
 
   if (!period?.from) {
-    return `${format(defaultFrom, 'LLL dd, y')} - ${format(defaultTo, 'LLL dd, y')}`;
+    return `${format(defaultFrom, 'LLL dd, y')} - ${format(defaultTo, 'LLL dd, y')} (${
+      differenceInDays(defaultTo, defaultFrom) + 1
+    } days)`;
   }
 
   if (period?.to) {
-    return `${format(period.from, 'LLL dd, y')} - ${format(period.to, 'LLL dd, y')}`;
+    return `${format(period.from, 'LLL dd, y')} - ${format(period.to, 'LLL dd, y')} (${
+      differenceInDays(period.to, period.from) + 1
+    } days)`;
   }
 
   return format(period.from, 'LLL dd, y');
 }
 
-export function formatPercentage(value: number, options: { addPrefix?: boolean } = { addPrefix: false }) {
+export function formatPercentage(
+  value: number,
+  options: { addPrefix?: boolean; showEndDateOnly?: boolean } = { addPrefix: false, showEndDateOnly: false },
+  period?: { from?: string; to?: string }
+) {
   const result = new Intl.NumberFormat('en-US', { style: 'percent' }).format(value / 100);
 
+  let returnString = '';
+
   if (options.addPrefix && value > 0) {
-    return `+${result}`;
+    returnString += `+${result}`;
+  } else {
+    returnString += result;
   }
 
-  return result;
+  if (!period) {
+    return returnString;
+  }
+
+  const { from, to } = period;
+
+  const today = new Date();
+  const defaultTo = endOfDay(today);
+  const defaultFrom = startOfMonth(today);
+
+  const startDate = from ? startOfDay(parse(from, 'yyyy-MM-dd', new Date())) : defaultFrom;
+  const endDate = to ? endOfDay(parse(to, 'yyyy-MM-dd', new Date())) : defaultTo;
+
+  const periodLength = differenceInDays(endDate, startDate) + 1;
+
+  const lastPeriodEndDate = subDays(endDate, periodLength);
+  const lastPeriodStartDate = subDays(startDate, periodLength);
+
+  if (options.showEndDateOnly) {
+    returnString += ` from ${format(lastPeriodEndDate, 'LLL dd')}`;
+  } else {
+    returnString += ` from ${format(lastPeriodStartDate, 'LLL dd')} - ${format(lastPeriodEndDate, 'LLL dd')} (last ${
+      differenceInDays(lastPeriodEndDate, lastPeriodStartDate) + 1
+    } days)`;
+  }
+
+  return returnString;
 }

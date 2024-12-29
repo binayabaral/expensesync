@@ -20,29 +20,32 @@ function DataGrid() {
   return (
     <div className='grid grid-cols-1 lg:grid-cols-3 gap-8 pb-2 mb-8'>
       <DataCard
-        title='Remaining'
         variant='default'
         icon={FaPiggyBank}
         isLoading={isLoading}
-        dateRange={dateRangeLabel}
+        period={{ from, to }}
+        title='Current Balance'
         value={data?.remainingAmount}
         percentageChange={data?.remainingChange}
+        subtitle='Accumulated balance of selected accounts'
       />
       <DataCard
         title='Income'
         variant='default'
         isLoading={isLoading}
         icon={FaArrowTrendUp}
+        period={{ from, to }}
         value={data?.incomeAmount}
-        dateRange={dateRangeLabel}
+        subtitle={dateRangeLabel}
         percentageChange={data?.incomeChange}
       />
       <DataCard
         title='Expenses'
         variant='default'
+        period={{ from, to }}
         isLoading={isLoading}
         icon={FaArrowTrendDown}
-        dateRange={dateRangeLabel}
+        subtitle={dateRangeLabel}
         value={data?.expensesAmount}
         percentageChange={data?.expenseChange}
       />
