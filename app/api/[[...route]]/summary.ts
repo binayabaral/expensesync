@@ -3,7 +3,7 @@ import { Hono } from 'hono';
 import { getAuth } from '@hono/clerk-auth';
 import { zValidator } from '@hono/zod-validator';
 import { and, desc, eq, gte, lt, lte, sql, sum } from 'drizzle-orm';
-import { subDays, parse, differenceInDays, startOfMonth } from 'date-fns';
+import { subDays, parse, differenceInDays, startOfMonth, endOfDay, startOfDay } from 'date-fns';
 
 import { db } from '@/db/drizzle';
 import { accounts, categories, transactions } from '@/db/schema';
@@ -27,11 +27,12 @@ const app = new Hono().get(
       return c.json({ error: 'Unauthorized' }, 401);
     }
 
-    const defaultTo = new Date();
-    const defaultFrom = startOfMonth(defaultTo);
+    const today = new Date();
+    const defaultTo = endOfDay(today);
+    const defaultFrom = startOfMonth(today);
 
-    const startDate = from ? parse(from, 'yyyy-MM-dd', new Date()) : defaultFrom;
-    const endDate = to ? parse(to, 'yyyy-MM-dd', new Date()) : defaultTo;
+    const startDate = from ? startOfDay(parse(from, 'yyyy-MM-dd', new Date())) : defaultFrom;
+    const endDate = to ? endOfDay(parse(to, 'yyyy-MM-dd', new Date())) : defaultTo;
 
     const periodLength = differenceInDays(endDate, startDate) + 1;
 

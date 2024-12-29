@@ -1,10 +1,10 @@
 import { z } from 'zod';
 import { Hono } from 'hono';
 import { getAuth } from '@hono/clerk-auth';
-import { parse, startOfMonth } from 'date-fns';
 import { createId } from '@paralleldrive/cuid2';
 import { zValidator } from '@hono/zod-validator';
 import { and, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
+import { endOfDay, parse, startOfDay, startOfMonth } from 'date-fns';
 
 import { db } from '@/db/drizzle';
 import { transactions, insertTransactionSchema, categories, accounts } from '@/db/schema';
@@ -28,10 +28,12 @@ const app = new Hono()
         return c.json({ error: 'Unauthorized' }, 401);
       }
 
-      const defaultTo = new Date();
-      const defaultFrom = startOfMonth(defaultTo);
-      const startDate = from ? parse(from, 'yyyy-MM-dd', new Date()) : defaultFrom;
-      const endDate = to ? parse(to, 'yyyy-MM-dd', new Date()) : defaultTo;
+      const today = new Date();
+      const defaultTo = endOfDay(today);
+      const defaultFrom = startOfMonth(today);
+
+      const startDate = from ? startOfDay(parse(from, 'yyyy-MM-dd', new Date())) : defaultFrom;
+      const endDate = to ? endOfDay(parse(to, 'yyyy-MM-dd', new Date())) : defaultTo;
 
       const data = await db
         .select({
