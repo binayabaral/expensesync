@@ -13,7 +13,7 @@ function HeaderWelcome() {
       {isLoaded && user?.firstName ? (
         <>
           <h1 className='text-2xl lg:text-5xl text-white font-medium mb-3'>Welcome, {user?.firstName} 👋</h1>
-          <p className='text-green-300'>This is your financial overview report</p>
+          <p className='text-green-300 mb-3'>This is your financial overview report</p>
         </>
       ) : (
         <>

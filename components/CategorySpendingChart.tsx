@@ -67,7 +67,7 @@ function CategorySpendingChart({ isLoading, data = [] }: Props) {
       </CardHeader>
       <CardContent>
         {data.length === 0 ? (
-          <div className='flex flex-col gap-y-4 items-center justify-center h-[350px] w-full'>
+          <div className='flex flex-col gap-y-4 items-center justify-center h-[300px] w-full'>
             <FileSearch className='size-6 text-muted-foreground' />
             <p className='text-muted-foreground text-sm'>No data for this period</p>
           </div>
