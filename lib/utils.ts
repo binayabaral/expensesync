@@ -3,9 +3,9 @@ import { clsx, type ClassValue } from 'clsx';
 import {
   parse,
   format,
-  subDays,
   endOfDay,
   isSameDay,
+  subMonths,
   startOfDay,
   startOfMonth,
   differenceInDays,
@@ -17,11 +17,11 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function convertAmountToMiliUnits(amount: number) {
-  return Math.round(amount * 1000);
+  return amount * 1000;
 }
 
 export function convertAmountFromMiliUnits(amount: number) {
-  return Math.round(amount / 1000);
+  return amount / 1000;
 }
 
 export function formatCurrency(value: number) {
@@ -123,17 +123,16 @@ export function formatPercentage(
   const startDate = from ? startOfDay(parse(from, 'yyyy-MM-dd', new Date())) : defaultFrom;
   const endDate = to ? endOfDay(parse(to, 'yyyy-MM-dd', new Date())) : defaultTo;
 
-  const periodLength = differenceInDays(endDate, startDate) + 1;
-
-  const lastPeriodEndDate = subDays(endDate, periodLength);
-  const lastPeriodStartDate = subDays(startDate, periodLength);
+  const lastPeriodEndDate = subMonths(endDate, 1);
+  const lastPeriodStartDate = subMonths(startDate, 1);
 
   if (options.showEndDateOnly) {
-    returnString += ` from ${format(lastPeriodEndDate, 'LLL dd')}`;
+    returnString += ` from ${format(lastPeriodEndDate, 'LLL dd, y')}`;
   } else {
-    returnString += ` from ${format(lastPeriodStartDate, 'LLL dd')} - ${format(lastPeriodEndDate, 'LLL dd')} (last ${
-      differenceInDays(lastPeriodEndDate, lastPeriodStartDate) + 1
-    } days)`;
+    returnString += ` from ${format(lastPeriodStartDate, 'LLL dd')} - ${format(
+      lastPeriodEndDate,
+      'LLL dd'
+    )} (previous ${differenceInDays(lastPeriodEndDate, lastPeriodStartDate) + 1} days)`;
   }
 
   return returnString;

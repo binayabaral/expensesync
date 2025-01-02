@@ -3,7 +3,7 @@ import { Hono } from 'hono';
 import { getAuth } from '@hono/clerk-auth';
 import { zValidator } from '@hono/zod-validator';
 import { and, desc, eq, gte, lt, lte, sql } from 'drizzle-orm';
-import { subDays, parse, differenceInDays, startOfMonth, endOfDay, startOfDay } from 'date-fns';
+import { parse, startOfMonth, endOfDay, startOfDay, subMonths } from 'date-fns';
 
 import { db } from '@/db/drizzle';
 import { accounts, categories, transactions } from '@/db/schema';
@@ -36,10 +36,8 @@ const app = new Hono().get(
     const startDate = from ? startOfDay(parse(from, 'yyyy-MM-dd', new Date())) : defaultFrom;
     const endDate = to ? endOfDay(parse(to, 'yyyy-MM-dd', new Date())) : defaultTo;
 
-    const periodLength = differenceInDays(endDate, startDate) + 1;
-
-    const lastPeriodEndDate = subDays(endDate, periodLength);
-    const lastPeriodStartDate = subDays(startDate, periodLength);
+    const lastPeriodEndDate = subMonths(endDate, 1);
+    const lastPeriodStartDate = subMonths(startDate, 1);
 
     const [[currentPeriod], [lastPeriod], [{ balance: remainingBalance }], [{ balance: previousRemainingBalance }]] =
       await Promise.all([
