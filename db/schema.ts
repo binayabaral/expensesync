@@ -1,7 +1,14 @@
 import { z } from 'zod';
 import { relations } from 'drizzle-orm';
 import { createInsertSchema } from 'drizzle-zod';
-import { integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+import { integer, pgTable, text, timestamp, pgEnum } from 'drizzle-orm/pg-core';
+
+export const TransactionTypeEnum = pgEnum('transaction_type', [
+  'USER_CREATED',
+  'INITIAL_BALANCE',
+  'PEER_TRANSFER',
+  'SELF_TRANSFER'
+]);
 
 export const accounts = pgTable('accounts', {
   id: text('id').primaryKey(),
@@ -32,7 +39,8 @@ export const transactions = pgTable('transactions', {
   accountId: text('account_id')
     .references(() => accounts.id, { onDelete: 'cascade' })
     .notNull(),
-  categoryId: text('category_id').references(() => categories.id, { onDelete: 'set null' })
+  categoryId: text('category_id').references(() => categories.id, { onDelete: 'set null' }),
+  type: TransactionTypeEnum('type').default('USER_CREATED').notNull()
 });
 
 export const transactionsRelations = relations(transactions, ({ one }) => ({

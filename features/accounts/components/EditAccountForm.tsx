@@ -5,47 +5,30 @@ import { zodResolver } from '@hookform/resolvers/zod';
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { AmountInput } from '@/components/AmountInput';
-import { convertAmountToMiliUnits } from '@/lib/utils';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 
-const formSchema = z.object({
-  name: z.string(),
-  startingBalance: z.string()
-});
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const apiSchema = z.object({
-  name: z.string(),
-  startingBalance: z.number()
-});
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const editSchema = z.object({
+const editAccountSchema = z.object({
   name: z.string()
 });
 
-type FormValues = z.input<typeof formSchema>;
-type ApiFormValues = z.input<typeof apiSchema>;
-type EditFormValues = z.input<typeof editSchema>;
+type FormValues = z.input<typeof editAccountSchema>;
 
 type Props = {
   id?: string;
   disabled?: boolean;
   onDelete?: () => void;
-  defaultValues?: EditFormValues;
-  onSubmit: (values: ApiFormValues) => void;
+  defaultValues?: FormValues;
+  onSubmit: (values: FormValues) => void;
 };
 
-export const AccountForm = ({ id, onSubmit, onDelete, disabled, defaultValues }: Props) => {
+export const EditAccountForm = ({ id, onSubmit, onDelete, disabled, defaultValues }: Props) => {
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(editAccountSchema),
     defaultValues: defaultValues
   });
 
   const handleSubmit = (values: FormValues) => {
-    const amountInMiliUnits = convertAmountToMiliUnits(parseFloat(values.startingBalance));
-    onSubmit({ ...values, startingBalance: amountInMiliUnits });
+    onSubmit(values);
   };
 
   const handleDelete = () => {
@@ -67,20 +50,6 @@ export const AccountForm = ({ id, onSubmit, onDelete, disabled, defaultValues }:
             </FormItem>
           )}
         />
-        {!id && (
-          <FormField
-            name='startingBalance'
-            control={form.control}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Starting Balance</FormLabel>
-                <FormControl>
-                  <AmountInput {...field} disabled={disabled} placeholder={'0.00'} />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-        )}
         <Button className='w-full' disabled={disabled}>
           {id ? 'Save Changes' : 'Create Account'}
         </Button>

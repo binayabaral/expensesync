@@ -1,0 +1,2 @@
+CREATE TYPE "public"."transaction_type" AS ENUM('USER_CREATED', 'INITIAL_BALANCE', 'PEER_TRANSFER', 'SELF_TRANSFER');--> statement-breakpoint
+ALTER TABLE "transactions" ADD COLUMN "type" "transaction_type" DEFAULT 'USER_CREATED' NOT NULL;

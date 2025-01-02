@@ -58,8 +58,11 @@ export const columns: ColumnDef<ResponseType>[] = [
     },
     cell: ({ row }) => (
       <div>
-        {row.original.category && <span>{row.original.category}</span>}
-        {!row.original.category && (
+        {row.original.category !== 'USER_CREATED' ? (
+          <span>N/A</span>
+        ) : row.original.category ? (
+          <span>{row.original.category}</span>
+        ) : (
           <span className='flex items-center text-destructive'>
             <TriangleAlert className='size-4 mr-2' />
             Not Categorized

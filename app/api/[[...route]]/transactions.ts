@@ -38,14 +38,15 @@ const app = new Hono()
       const data = await db
         .select({
           id: transactions.id,
+          type: transactions.type,
           date: transactions.date,
-          category: categories.name,
-          categoryId: transactions.categoryId,
-          payee: transactions.payee,
-          amount: transactions.amount,
-          notes: transactions.notes,
           account: accounts.name,
-          accountId: transactions.accountId
+          category: categories.name,
+          payee: transactions.payee,
+          notes: transactions.notes,
+          amount: transactions.amount,
+          accountId: transactions.accountId,
+          categoryId: transactions.categoryId
         })
         .from(transactions)
         .innerJoin(accounts, eq(transactions.accountId, accounts.id))
@@ -87,11 +88,12 @@ const app = new Hono()
         .select({
           id: transactions.id,
           date: transactions.date,
-          categoryId: transactions.categoryId,
+          type: transactions.type,
           payee: transactions.payee,
-          amount: transactions.amount,
           notes: transactions.notes,
-          accountId: transactions.accountId
+          amount: transactions.amount,
+          accountId: transactions.accountId,
+          categoryId: transactions.categoryId
         })
         .from(transactions)
         .innerJoin(accounts, eq(transactions.accountId, accounts.id))
@@ -108,7 +110,7 @@ const app = new Hono()
     const auth = getAuth(c);
     const values = c.req.valid('json');
 
-    if (!auth?.userId) {
+    if (!auth?.userId || (values.type && values.type !== 'USER_CREATED')) {
       return c.json({ error: 'Unauthorized' }, 401);
     }
 
@@ -126,7 +128,7 @@ const app = new Hono()
     const auth = getAuth(c);
     const values = c.req.valid('json');
 
-    if (!auth?.userId) {
+    if (!auth?.userId || values.some(value => value.type !== 'USER_CREATED')) {
       return c.json({ error: 'Unauthorized' }, 401);
     }
 
@@ -158,7 +160,13 @@ const app = new Hono()
           .select({ id: transactions.id })
           .from(transactions)
           .innerJoin(accounts, eq(transactions.accountId, accounts.id))
-          .where(and(inArray(transactions.id, values.ids), eq(accounts.userId, auth.userId)))
+          .where(
+            and(
+              inArray(transactions.id, values.ids),
+              eq(accounts.userId, auth.userId),
+              eq(transactions.type, 'USER_CREATED')
+            )
+          )
       );
 
       const data = await db
@@ -184,7 +192,7 @@ const app = new Hono()
       const { id } = c.req.valid('param');
       const values = c.req.valid('json');
 
-      if (!auth?.userId) {
+      if (!auth?.userId || (values.type && values.type !== 'USER_CREATED')) {
         return c.json({ error: 'Unauthorized' }, 401);
       }
 
@@ -192,24 +200,21 @@ const app = new Hono()
         return c.json({ error: 'Id is required' }, 400);
       }
 
-      const transactionToUpdate = db.$with('transactions_to_update').as(
-        db
-          .select({ id: transactions.id })
-          .from(transactions)
-          .innerJoin(accounts, eq(transactions.accountId, accounts.id))
-          .where(and(eq(transactions.id, id), eq(accounts.userId, auth.userId)))
-      );
+      const [existingTransaction] = await db
+        .select()
+        .from(transactions)
+        .innerJoin(accounts, eq(transactions.accountId, accounts.id))
+        .where(and(eq(transactions.id, id), eq(accounts.userId, auth.userId)));
 
-      const [data] = await db
-        .with(transactionToUpdate)
-        .update(transactions)
-        .set(values)
-        .where(inArray(transactions.id, sql`(select id from ${transactionToUpdate})`))
-        .returning();
-
-      if (!data) {
+      if (!existingTransaction) {
         return c.json({ error: 'Not found' }, 404);
       }
+
+      if (existingTransaction.transactions.type !== 'USER_CREATED') {
+        return c.json({ error: 'Unauthorized. This is a system generated transaction and cannot be edited' }, 401);
+      }
+
+      const [data] = await db.update(transactions).set(values).where(eq(transactions.id, id)).returning();
 
       return c.json({ data });
     }
@@ -234,19 +239,21 @@ const app = new Hono()
         return c.json({ error: 'Id is required' }, 400);
       }
 
-      const transactionToDelete = db.$with('transactions_to_delete').as(
-        db
-          .select({ id: transactions.id })
-          .from(transactions)
-          .innerJoin(accounts, eq(transactions.accountId, accounts.id))
-          .where(and(eq(transactions.id, id), eq(accounts.userId, auth.userId)))
-      );
+      const [existingTransaction] = await db
+        .select()
+        .from(transactions)
+        .innerJoin(accounts, eq(transactions.accountId, accounts.id))
+        .where(and(eq(transactions.id, id), eq(accounts.userId, auth.userId)));
 
-      const [data] = await db
-        .with(transactionToDelete)
-        .delete(transactions)
-        .where(inArray(transactions.id, sql`(select id from ${transactionToDelete})`))
-        .returning({ id: transactions.id });
+      if (!existingTransaction) {
+        return c.json({ error: 'Not found' }, 404);
+      }
+
+      if (existingTransaction.transactions.type !== 'USER_CREATED') {
+        return c.json({ error: 'Unauthorized. This is a system generated transaction and cannot be deleted' }, 401);
+      }
+
+      const [data] = await db.delete(transactions).where(eq(transactions.id, id)).returning({ id: transactions.id });
 
       if (!data) {
         return c.json({ error: 'Not found' }, 404);

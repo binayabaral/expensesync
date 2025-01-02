@@ -42,10 +42,14 @@ const app = new Hono().get(
     const fetchFinancialData = async (userId: string, from: Date, to: Date) => {
       return db
         .select({
-          income: sql`SUM(CASE WHEN ${transactions.amount} >=0 THEN ${transactions.amount} ELSE 0 END)`.mapWith(Number),
-          expenses: sql`SUM(CASE WHEN ${transactions.amount} < 0 THEN ${transactions.amount} ELSE 0 END)`.mapWith(
-            Number
-          ),
+          income:
+            sql`SUM(CASE WHEN ${transactions.amount} >=0 AND ${transactions.type} = 'USER_CREATED' THEN ${transactions.amount} ELSE 0 END)`.mapWith(
+              Number
+            ),
+          expenses:
+            sql`SUM(CASE WHEN ${transactions.amount} < 0 AND ${transactions.type} = 'USER_CREATED' THEN ${transactions.amount} ELSE 0 END)`.mapWith(
+              Number
+            ),
           remaining: sum(transactions.amount).mapWith(Number)
         })
         .from(transactions)
@@ -111,8 +115,14 @@ const app = new Hono().get(
     const activeDays = await db
       .select({
         date: transactions.date,
-        income: sql`SUM (CASE WHEN ${transactions.amount} >=0 THEN ${transactions.amount} ELSE 0 END)`.mapWith(Number),
-        expenses: sql`SUM (CASE WHEN ${transactions.amount} <0 THEN ${transactions.amount} ELSE 0 END)`.mapWith(Number)
+        income:
+          sql`SUM (CASE WHEN ${transactions.amount} >=0 AND ${transactions.type} = 'USER_CREATED' THEN ${transactions.amount} ELSE 0 END)`.mapWith(
+            Number
+          ),
+        expenses:
+          sql`SUM (CASE WHEN ${transactions.amount} <0 AND ${transactions.type} = 'USER_CREATED' THEN ${transactions.amount} ELSE 0 END)`.mapWith(
+            Number
+          )
       })
       .from(transactions)
       .innerJoin(accounts, eq(transactions.accountId, accounts.id))

@@ -6,7 +6,7 @@ import { createId } from '@paralleldrive/cuid2';
 import { zValidator } from '@hono/zod-validator';
 
 import { db } from '@/db/drizzle';
-import { accounts, insertAccountSchema } from '@/db/schema';
+import { accounts, insertAccountSchema, transactions } from '@/db/schema';
 
 const app = new Hono()
   .get('/', async c => {
@@ -64,8 +64,9 @@ const app = new Hono()
     '/',
     zValidator(
       'json',
-      insertAccountSchema.pick({
-        name: true
+      z.object({
+        name: z.string(),
+        startingBalance: z.number()
       })
     ),
     async c => {
@@ -84,6 +85,15 @@ const app = new Hono()
           ...values
         })
         .returning();
+
+      await db.insert(transactions).values({
+        id: createId(),
+        accountId: insertedData.id,
+        amount: values.startingBalance,
+        payee: 'Initial Balance',
+        date: new Date(),
+        type: 'INITIAL_BALANCE'
+      });
 
       return c.json({ data: insertedData });
     }

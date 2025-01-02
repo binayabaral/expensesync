@@ -5,8 +5,8 @@ import { useConfirm } from '@/hooks/useConfirm';
 import { insertAccountSchema } from '@/db/schema';
 import { useGetAccount } from '@/features/accounts/api/useGetAccount';
 import { useEditAccount } from '@/features/accounts/api/useEditAccounts';
-import { AccountForm } from '@/features/accounts/components/AccountForm';
 import { useDeleteAccount } from '@/features/accounts/api/useDeleteAccounts';
+import { EditAccountForm } from '@/features/accounts/components/EditAccountForm';
 import { useOpenEditAccountSheet } from '@/features/accounts/hooks/useOpenEditAccountSheet';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
@@ -64,7 +64,7 @@ export const EditAccountSheet = () => {
               <Loader2 className='size-12 text-muted-foreground animate-spin' />
             </div>
           ) : (
-            <AccountForm
+            <EditAccountForm
               id={id}
               onDelete={onDelete}
               onSubmit={onSubmit}
