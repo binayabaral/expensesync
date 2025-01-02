@@ -103,7 +103,7 @@ export const columns: ColumnDef<ResponseType>[] = [
     header: ({ column }) => {
       return (
         <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-          Amount
+          Account
           <ArrowUpDown className='ml-2 h-4 w-4' />
         </Button>
       );

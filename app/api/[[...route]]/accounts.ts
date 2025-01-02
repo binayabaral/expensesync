@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { Hono } from 'hono';
+import { endOfDay } from 'date-fns';
 import { getAuth } from '@hono/clerk-auth';
 import { and, eq, inArray } from 'drizzle-orm';
 import { createId } from '@paralleldrive/cuid2';
@@ -8,6 +9,8 @@ import { zValidator } from '@hono/zod-validator';
 import { db } from '@/db/drizzle';
 import { accounts, insertAccountSchema, transactions } from '@/db/schema';
 
+import { fetchAccountBalance } from '../utils/common';
+
 const app = new Hono()
   .get('/', async c => {
     const auth = getAuth(c);
@@ -15,6 +18,7 @@ const app = new Hono()
     if (!auth?.userId) {
       return c.json({ error: 'Unauthorized' }, 401);
     }
+
     const data = await db
       .select({
         id: accounts.id,
@@ -23,7 +27,21 @@ const app = new Hono()
       .from(accounts)
       .where(eq(accounts.userId, auth.userId));
 
-    return c.json({ data });
+    const today = new Date();
+    const defaultTo = endOfDay(today);
+
+    const result = await Promise.all(
+      data.map(async item => {
+        const [{ balance }] = await fetchAccountBalance(auth.userId, defaultTo, item.id);
+
+        return {
+          ...item,
+          balance
+        };
+      })
+    );
+
+    return c.json({ data: result });
   })
   .get(
     '/:id',

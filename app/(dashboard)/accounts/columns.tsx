@@ -7,6 +7,7 @@ import { ColumnDef } from '@tanstack/react-table';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { convertAmountFromMiliUnits } from '@/lib/utils';
 
 import { Actions } from './Actions';
 
@@ -42,6 +43,18 @@ export const columns: ColumnDef<ResponseType>[] = [
         </Button>
       );
     }
+  },
+  {
+    accessorKey: 'balance',
+    header: ({ column }) => {
+      return (
+        <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+          Available Balance
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      );
+    },
+    cell: ({ row }) => <span>{convertAmountFromMiliUnits(row.original.balance)}</span>
   },
   {
     id: 'actions',

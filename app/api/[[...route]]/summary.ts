@@ -2,12 +2,14 @@ import { z } from 'zod';
 import { Hono } from 'hono';
 import { getAuth } from '@hono/clerk-auth';
 import { zValidator } from '@hono/zod-validator';
-import { and, desc, eq, gte, lt, lte, sql, sum } from 'drizzle-orm';
+import { and, desc, eq, gte, lt, lte, sql } from 'drizzle-orm';
 import { subDays, parse, differenceInDays, startOfMonth, endOfDay, startOfDay } from 'date-fns';
 
 import { db } from '@/db/drizzle';
 import { accounts, categories, transactions } from '@/db/schema';
 import { calculatePercentageChange, fillMissingDays } from '@/lib/utils';
+
+import { fetchAccountBalance, fetchFinancialData } from '../utils/common';
 
 const app = new Hono().get(
   '/',
@@ -39,53 +41,12 @@ const app = new Hono().get(
     const lastPeriodEndDate = subDays(endDate, periodLength);
     const lastPeriodStartDate = subDays(startDate, periodLength);
 
-    const fetchFinancialData = async (userId: string, from: Date, to: Date) => {
-      return db
-        .select({
-          income:
-            sql`SUM(CASE WHEN ${transactions.amount} >=0 AND ${transactions.type} = 'USER_CREATED' THEN ${transactions.amount} ELSE 0 END)`.mapWith(
-              Number
-            ),
-          expenses:
-            sql`SUM(CASE WHEN ${transactions.amount} < 0 AND ${transactions.type} = 'USER_CREATED' THEN ${transactions.amount} ELSE 0 END)`.mapWith(
-              Number
-            ),
-          remaining: sum(transactions.amount).mapWith(Number)
-        })
-        .from(transactions)
-        .innerJoin(accounts, eq(transactions.accountId, accounts.id))
-        .where(
-          and(
-            accountId ? eq(transactions.accountId, accountId) : undefined,
-            eq(accounts.userId, userId),
-            gte(transactions.date, from),
-            lte(transactions.date, to)
-          )
-        );
-    };
-
-    const fetchAccountBalance = async (userId: string, to: Date) => {
-      return db
-        .select({
-          balance: sum(transactions.amount).mapWith(Number)
-        })
-        .from(transactions)
-        .innerJoin(accounts, eq(transactions.accountId, accounts.id))
-        .where(
-          and(
-            accountId ? eq(transactions.accountId, accountId) : undefined,
-            eq(accounts.userId, userId),
-            lte(transactions.date, to)
-          )
-        );
-    };
-
     const [[currentPeriod], [lastPeriod], [{ balance: remainingBalance }], [{ balance: previousRemainingBalance }]] =
       await Promise.all([
-        fetchFinancialData(auth.userId, startDate, endDate),
-        fetchFinancialData(auth.userId, lastPeriodStartDate, lastPeriodEndDate),
-        fetchAccountBalance(auth.userId, defaultTo),
-        fetchAccountBalance(auth.userId, lastPeriodEndDate)
+        fetchFinancialData(auth.userId, startDate, endDate, accountId),
+        fetchFinancialData(auth.userId, lastPeriodStartDate, lastPeriodEndDate, accountId),
+        fetchAccountBalance(auth.userId, defaultTo, accountId),
+        fetchAccountBalance(auth.userId, lastPeriodEndDate, accountId)
       ]);
 
     const incomeChange = calculatePercentageChange(currentPeriod.income || 0, lastPeriod.income || 0);
