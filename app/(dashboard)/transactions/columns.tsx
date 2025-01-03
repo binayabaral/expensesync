@@ -58,7 +58,7 @@ export const columns: ColumnDef<ResponseType>[] = [
     },
     cell: ({ row }) => (
       <div>
-        {row.original.category !== 'USER_CREATED' ? (
+        {row.original.type !== 'USER_CREATED' ? (
           <span>N/A</span>
         ) : row.original.category ? (
           <span>{row.original.category}</span>
