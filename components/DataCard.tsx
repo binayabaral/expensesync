@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 const boxVariants = cva('rounded-md p-3', {
   variants: {
     variant: {
-      default: 'bg-green-500/20',
+      default: 'bg-muted-foreground/20',
       warning: 'bg-yellow-500/20',
       success: 'bg-green-500/20',
       destructive: 'bg-rose-500/20'
@@ -23,7 +23,7 @@ const boxVariants = cva('rounded-md p-3', {
 const iconVariants = cva('size-6', {
   variants: {
     variant: {
-      default: 'fill-green-500',
+      default: 'fill-muted-foreground',
       warning: 'fill-yellow-500',
       success: 'fill-green-500',
       destructive: 'fill-rose-500'
@@ -87,13 +87,26 @@ function DataCard({
       </CardHeader>
       <CardContent>
         <h1 className='font-bold text-2xl mb-2 line-clamp-1 break-all'>
-          <CountUp preserveValue start={0} end={value} decimals={2} decimalPlaces={2} formattingFn={formatCurrency} />
+          <CountUp
+            start={0}
+            decimals={2}
+            preserveValue
+            decimalPlaces={2}
+            end={Math.abs(value)}
+            formattingFn={formatCurrency}
+          />
         </h1>
         <p
           className={cn(
-            'text-muted-foreground text-sm  line-clamp-1',
-            percentageChange > 0 && 'text-green-500',
-            percentageChange < 0 && 'text-rose-500'
+            'text-muted-foreground text-sm line-clamp-1',
+            percentageChange !== 0 &&
+              (title === 'Expenses'
+                ? percentageChange > 0
+                  ? 'text-rose-500'
+                  : 'text-green-500'
+                : percentageChange > 0
+                ? 'text-green-500'
+                : 'text-rose-500')
           )}
         >
           {formatPercentage(
