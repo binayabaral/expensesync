@@ -40,7 +40,8 @@ export const transactions = pgTable('transactions', {
     .references(() => accounts.id, { onDelete: 'cascade' })
     .notNull(),
   categoryId: text('category_id').references(() => categories.id, { onDelete: 'set null' }),
-  type: TransactionTypeEnum('type').default('USER_CREATED').notNull()
+  type: TransactionTypeEnum('type').default('USER_CREATED').notNull(),
+  transferId: text('transfer_id').references(() => transfers.id, { onDelete: 'cascade' })
 });
 
 export const transactionsRelations = relations(transactions, ({ one }) => ({
@@ -54,8 +55,37 @@ export const transactionsRelations = relations(transactions, ({ one }) => ({
   })
 }));
 
+export const transfers = pgTable('transfers', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull(),
+  amount: integer('amount').notNull(),
+  date: timestamp('date', { mode: 'date' }).notNull(),
+  fromAccountId: text('from_account_id')
+    .references(() => accounts.id, { onDelete: 'set null' })
+    .notNull(),
+  toAccountId: text('to_account_id')
+    .references(() => accounts.id, { onDelete: 'set null' })
+    .notNull(),
+  transferCharge: integer('transfer_charge').notNull().default(0),
+  notes: text('notes')
+});
+
+export const transactionTransferRelations = relations(transactions, ({ one }) => ({
+  transfers: one(transfers, {
+    fields: [transactions.transferId],
+    references: [transfers.id]
+  })
+}));
+
+export const transfersRelations = relations(transfers, ({ many }) => ({
+  transactions: many(transactions)
+}));
+
 export const insertAccountSchema = createInsertSchema(accounts);
 export const insertCategorySchema = createInsertSchema(accounts);
+export const insertTransferSchema = createInsertSchema(transfers).extend({
+  date: z.coerce.date()
+});
 export const insertTransactionSchema = createInsertSchema(transactions).extend({
   date: z.coerce.date()
 });

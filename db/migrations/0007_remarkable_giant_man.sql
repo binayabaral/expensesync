@@ -1,0 +1,1 @@
+ALTER TABLE "transfers" ADD COLUMN "transfer_charge" integer DEFAULT 0 NOT NULL;

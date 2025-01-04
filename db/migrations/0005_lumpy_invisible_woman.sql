@@ -1,0 +1,1 @@
+ALTER TABLE "transfers" ADD COLUMN "user_id" text NOT NULL;
