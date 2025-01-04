@@ -52,7 +52,7 @@ function Transactions() {
           <DataTable
             columns={columns}
             data={transactions}
-            filterKey='date'
+            filterKey='payee'
             onDeleteAction={row => {
               const ids = row.map(r => r.original.id);
               deleteTransactions.mutate({ ids });
@@ -66,7 +66,11 @@ function Transactions() {
 }
 
 const Page = () => {
-  return <Suspense><Transactions/></Suspense>
-}
+  return (
+    <Suspense>
+      <Transactions />
+    </Suspense>
+  );
+};
 
 export default Page;
