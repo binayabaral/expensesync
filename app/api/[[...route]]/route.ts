@@ -4,6 +4,7 @@ import { clerkMiddleware } from '@hono/clerk-auth';
 
 import summaryRoute from './summary';
 import accountsRoute from './accounts';
+import TransfersRoute from './transfers';
 import categoriesRoute from './categories';
 import transactionsRoute from './transactions';
 
@@ -16,6 +17,7 @@ const routes = app
   .use(clerkMiddleware())
   .route('/summary', summaryRoute)
   .route('/accounts', accountsRoute)
+  .route('/transfers', TransfersRoute)
   .route('/categories', categoriesRoute)
   .route('/transactions', transactionsRoute);
 

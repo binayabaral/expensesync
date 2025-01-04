@@ -28,6 +28,10 @@ function Nav() {
     {
       href: '/categories',
       label: 'Categories'
+    },
+    {
+      href: '/transfers',
+      label: 'Transfers'
     }
   ];
 
