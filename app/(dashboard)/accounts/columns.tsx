@@ -5,7 +5,7 @@ import { InferResponseType } from 'hono';
 import { ArrowUpDown } from 'lucide-react';
 import { ColumnDef } from '@tanstack/react-table';
 
-import { formatCurrency } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 
@@ -54,7 +54,11 @@ export const columns: ColumnDef<ResponseType>[] = [
         </Button>
       );
     },
-    cell: ({ row }) => <span>{formatCurrency(row.original.balance)}</span>
+    cell: ({ row }) => (
+      <span className={cn(row.original.balance < 0 ? 'text-destructive' : 'text-primary')}>
+        {formatCurrency(row.original.balance)}
+      </span>
+    )
   },
   {
     id: 'actions',

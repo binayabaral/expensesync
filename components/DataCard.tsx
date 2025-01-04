@@ -102,11 +102,11 @@ function DataCard({
             percentageChange !== 0 &&
               (title === 'Expenses'
                 ? percentageChange > 0
-                  ? 'text-rose-500'
-                  : 'text-green-500'
+                  ? 'text-destructive'
+                  : 'text-primary'
                 : percentageChange > 0
-                ? 'text-green-500'
-                : 'text-rose-500')
+                ? 'text-primary'
+                : 'text-destructive')
           )}
         >
           {formatPercentage(
