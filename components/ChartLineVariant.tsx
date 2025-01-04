@@ -1,5 +1,6 @@
 import { format } from 'date-fns';
-import { Tooltip, XAxis, ResponsiveContainer, LineChart, Line, CartesianGrid } from 'recharts';
+import { scaleSymlog } from 'd3-scale';
+import { Tooltip, XAxis, ResponsiveContainer, LineChart, Line, CartesianGrid, YAxis } from 'recharts';
 
 import { ChartTooltip } from '@/components/ChartTooltip';
 
@@ -12,6 +13,8 @@ type Props = {
 };
 
 function LineVariant({ data }: Props) {
+  const scale = scaleSymlog();
+
   return (
     <ResponsiveContainer width='100%' height={300}>
       <LineChart data={data}>
@@ -24,6 +27,7 @@ function LineVariant({ data }: Props) {
           style={{ fontSize: '12px' }}
           tickMargin={16}
         />
+        <YAxis scale={scale} />
         <Tooltip content={<ChartTooltip />} />
         <Line dataKey='income' dot={false} stroke='#16a34a' strokeWidth={2} className='drop-shadow-sm' />
         <Line dataKey='expenses' dot={false} stroke='#f43f5e' strokeWidth={2} className='drop-shadow-sm' />

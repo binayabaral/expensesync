@@ -1,7 +1,8 @@
 import { format } from 'date-fns';
+import { scaleSymlog } from 'd3-scale';
+import { Tooltip, XAxis, ResponsiveContainer, BarChart, Bar, CartesianGrid, YAxis } from 'recharts';
 
 import { ChartTooltip } from '@/components/ChartTooltip';
-import { Tooltip, XAxis, ResponsiveContainer, BarChart, Bar, CartesianGrid } from 'recharts';
 
 type Props = {
   data: {
@@ -12,10 +13,13 @@ type Props = {
 };
 
 function BarVariant({ data }: Props) {
+  const scale = scaleSymlog();
+
   return (
     <ResponsiveContainer width='100%' height={300}>
       <BarChart data={data}>
         <CartesianGrid strokeDasharray='3 3' />
+        <YAxis scale={scale} hide={true} />
         <XAxis
           axisLine={false}
           tickLine={false}

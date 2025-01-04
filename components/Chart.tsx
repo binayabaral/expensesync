@@ -18,7 +18,7 @@ type Props = {
 };
 
 function Chart({ isLoading, data = [] }: Props) {
-  const [chartType, setChartType] = useState<string>('line');
+  const [chartType, setChartType] = useState<string>('area');
 
   if (isLoading) {
     return (

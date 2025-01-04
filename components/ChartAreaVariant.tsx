@@ -1,5 +1,6 @@
 import { format } from 'date-fns';
-import { Tooltip, XAxis, AreaChart, Area, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { scaleSymlog } from 'd3-scale';
+import { Tooltip, XAxis, AreaChart, Area, ResponsiveContainer, CartesianGrid, YAxis } from 'recharts';
 
 import { ChartTooltip } from '@/components/ChartTooltip';
 
@@ -12,6 +13,8 @@ type Props = {
 };
 
 function AreaVariant({ data }: Props) {
+  const scale = scaleSymlog();
+
   return (
     <ResponsiveContainer width='100%' height={300}>
       <AreaChart data={data}>
@@ -26,6 +29,7 @@ function AreaVariant({ data }: Props) {
             <stop offset='98%' stopColor='#f43f5e' stopOpacity={0} />
           </linearGradient>
         </defs>
+        <YAxis scale={scale} hide={true} />
         <XAxis
           axisLine={false}
           tickLine={false}
