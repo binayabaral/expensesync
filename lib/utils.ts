@@ -55,10 +55,17 @@ export function fillMissingDays(
   const allDays = eachDayOfInterval({ start: startDate, end: endDate });
 
   const transactionsByDay = allDays.map(day => {
-    const found = activeDays.find(d => isSameDay(d.date, day));
+    const found = activeDays.filter(d => isSameDay(d.date, day));
 
-    if (found) {
-      return found;
+    if (found.length > 0) {
+      return found.reduce(
+        (acc, curr) => ({
+          date: day,
+          income: acc.income + curr.income,
+          expenses: acc.expenses + curr.expenses
+        }),
+        { date: day, income: 0, expenses: 0 }
+      );
     } else {
       return {
         date: day,
