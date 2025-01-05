@@ -18,9 +18,10 @@ export const useEditTransaction = (id?: string) => {
     },
     onSuccess: () => {
       toast.success('Transaction updated');
-      queryClient.invalidateQueries({ queryKey: ['transaction', { id }] });
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['summary'] });
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['transaction', { id }] });
     },
     onError: () => {
       toast.error('Failed to update transaction');
