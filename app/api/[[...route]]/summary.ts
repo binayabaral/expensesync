@@ -48,7 +48,7 @@ const app = new Hono().get(
       ]);
 
     const incomeChange = calculatePercentageChange(currentPeriod.income || 0, lastPeriod.income || 0);
-    const expenseChange = calculatePercentageChange(currentPeriod.expenses || 0, lastPeriod.expenses || 0);
+    const expenseChange = calculatePercentageChange(currentPeriod.expenses || 0, lastPeriod.expenses || 0, true);
     const remainingChange = calculatePercentageChange(remainingBalance || 0, previousRemainingBalance || 0);
 
     const transactionsByCategory = await db

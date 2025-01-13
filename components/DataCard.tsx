@@ -87,14 +87,7 @@ function DataCard({
       </CardHeader>
       <CardContent>
         <h1 className='font-bold text-2xl mb-2 line-clamp-1 break-all'>
-          <CountUp
-            start={0}
-            decimals={2}
-            preserveValue
-            decimalPlaces={2}
-            end={Math.abs(value)}
-            formattingFn={formatCurrency}
-          />
+          <CountUp start={0} decimals={2} preserveValue decimalPlaces={2} end={value} formattingFn={formatCurrency} />
         </h1>
         <p
           className={cn(

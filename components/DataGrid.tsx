@@ -35,8 +35,8 @@ function DataGrid() {
         icon={FaArrowTrendUp}
         period={{ from, to }}
         subtitle={dateRangeLabel}
-        value={data?.incomeAmount}
         percentageChange={data?.incomeChange}
+        value={Math.abs(data?.incomeAmount || 0)}
         variant={data?.incomeChange ? (data.incomeChange > 0 ? 'success' : 'warning') : 'default'}
       />
       <DataCard
@@ -45,8 +45,8 @@ function DataGrid() {
         isLoading={isLoading}
         icon={FaArrowTrendDown}
         subtitle={dateRangeLabel}
-        value={data?.expensesAmount}
         percentageChange={data?.expenseChange}
+        value={Math.abs(data?.expensesAmount || 0)}
         variant={data?.expenseChange ? (data.expenseChange > 0 ? 'destructive' : 'success') : 'default'}
       />
     </div>

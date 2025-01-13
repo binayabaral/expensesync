@@ -32,10 +32,18 @@ export function formatCurrency(value: number) {
   }).format(convertAmountFromMiliUnits(value));
 }
 
-export function calculatePercentageChange(current: number, previous: number) {
+export function calculatePercentageChange(current: number, previous: number, isExpense: boolean = false) {
   if (!previous || previous === 0) {
-    return previous === current ? 0 : 100;
+    if (isExpense) {
+      return current === 0 ? 0 : current < 0 ? 100 : -100;
+    }
+    return current === 0 ? 0 : current < 0 ? -100 : 100;
   }
+
+  if (isExpense) {
+    return ((current - previous) / previous) * 100 * -1;
+  }
+
   return ((current - previous) / previous) * 100;
 }
 
@@ -54,8 +62,8 @@ export function fillMissingDays(
 
   const allDays = eachDayOfInterval({ start: startDate, end: endDate });
 
-  const transactionsByDay = allDays.map(day => {
-    const found = activeDays.filter(d => isSameDay(d.date, day));
+  const transactionsByDay = allDays.map((day) => {
+    const found = activeDays.filter((d) => isSameDay(d.date, day));
 
     if (found.length > 0) {
       return found.reduce(
