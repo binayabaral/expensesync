@@ -129,7 +129,7 @@ export const TransferForm = ({ id, onSubmit, onDelete, disabled, defaultValues, 
           control={form.control}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Transfer Charge</FormLabel>
+              <FormLabel>Extra Charges (Transfer fees / Interest Amount)</FormLabel>
               <FormControl>
                 <AmountInput {...field} disabled={disabled} placeholder={'0.00'} allowNegativeValue={false} />
               </FormControl>

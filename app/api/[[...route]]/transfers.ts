@@ -45,7 +45,8 @@ const app = new Hono()
           notes: transfers.notes,
           amount: transfers.amount,
           toAccount: toAccount.name,
-          fromAccount: fromAccount.name
+          fromAccount: fromAccount.name,
+          transferCharge: transfers.transferCharge
         })
         .from(transfers)
         .innerJoin(toAccount, eq(transfers.toAccountId, toAccount.id))

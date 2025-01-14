@@ -91,6 +91,22 @@ export const columns: ColumnDef<ResponseType>[] = [
     }
   },
   {
+    accessorKey: 'transferCharge',
+    header: ({ column }) => {
+      return (
+        <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+          Extra Charges
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      const charge = parseFloat(row.getValue('transferCharge'));
+
+      return <span className='text-destructive'>{formatCurrency(charge)}</span>;
+    }
+  },
+  {
     accessorKey: 'notes',
     header: ({ column }) => {
       return (
