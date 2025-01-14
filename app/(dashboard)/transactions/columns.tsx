@@ -114,6 +114,6 @@ export const columns: ColumnDef<ResponseType>[] = [
   },
   {
     id: 'actions',
-    cell: ({ row }) => <Actions id={row.original.id} />
+    cell: ({ row }) => <Actions id={row.original.id} isDisabled={row.original.type !== 'USER_CREATED'} />
   }
 ];

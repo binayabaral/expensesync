@@ -3,8 +3,8 @@ import { Hono } from 'hono';
 import { getAuth } from '@hono/clerk-auth';
 import { createId } from '@paralleldrive/cuid2';
 import { zValidator } from '@hono/zod-validator';
-import { and, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
 import { endOfDay, parse, startOfDay, startOfMonth } from 'date-fns';
+import { and, desc, eq, gte, inArray, lte, not, sql } from 'drizzle-orm';
 
 import { db } from '@/db/drizzle';
 import { transactions, insertTransactionSchema, categories, accounts } from '@/db/schema';
@@ -57,7 +57,7 @@ const app = new Hono()
             eq(accounts.userId, auth.userId),
             gte(transactions.date, startDate),
             lte(transactions.date, endDate),
-            eq(transactions.type, 'USER_CREATED')
+            not(eq(transactions.type, 'INITIAL_BALANCE'))
           )
         )
         .orderBy(desc(transactions.date));

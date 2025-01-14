@@ -15,9 +15,10 @@ import {
 
 type Props = {
   id: string;
+  isDisabled: boolean;
 };
 
-export const Actions = ({ id }: Props) => {
+export const Actions = ({ id, isDisabled }: Props) => {
   const [ConfirmDialog, confirm] = useConfirm('Are you sure?', 'You are about to delete this transaction.');
   const deleteMutation = useDeleteTransaction(id);
   const { onOpen } = useOpenEditTransactionSheet();
@@ -34,7 +35,7 @@ export const Actions = ({ id }: Props) => {
     <>
       <ConfirmDialog />
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
+        <DropdownMenuTrigger asChild disabled={isDisabled}>
           <Button variant='ghost' className='size-8 p-0'>
             <MoreHorizontal className='size-4' />
           </Button>
