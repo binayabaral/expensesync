@@ -2,9 +2,9 @@ import { z } from 'zod';
 import { Hono } from 'hono';
 import { endOfDay } from 'date-fns';
 import { getAuth } from '@hono/clerk-auth';
-import { and, eq, inArray } from 'drizzle-orm';
 import { createId } from '@paralleldrive/cuid2';
 import { zValidator } from '@hono/zod-validator';
+import { and, asc, eq, inArray } from 'drizzle-orm';
 
 import { db } from '@/db/drizzle';
 import { accounts, insertAccountSchema, transactions } from '@/db/schema';
@@ -26,7 +26,8 @@ const app = new Hono()
         isHidden: accounts.isHidden
       })
       .from(accounts)
-      .where(eq(accounts.userId, auth.userId));
+      .where(eq(accounts.userId, auth.userId))
+      .orderBy(asc(accounts.isHidden));
 
     const today = new Date();
     const defaultTo = endOfDay(today);
