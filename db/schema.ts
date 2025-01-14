@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { relations } from 'drizzle-orm';
 import { createInsertSchema } from 'drizzle-zod';
-import { integer, pgTable, text, timestamp, pgEnum } from 'drizzle-orm/pg-core';
+import { integer, pgTable, text, timestamp, pgEnum, boolean } from 'drizzle-orm/pg-core';
 
 export const TransactionTypeEnum = pgEnum('transaction_type', [
   'USER_CREATED',
@@ -13,7 +13,8 @@ export const TransactionTypeEnum = pgEnum('transaction_type', [
 export const accounts = pgTable('accounts', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
-  userId: text('user_id').notNull()
+  userId: text('user_id').notNull(),
+  isHidden: boolean('is_hidden').default(false).notNull()
 });
 
 export const accountsRelations = relations(accounts, ({ many }) => ({

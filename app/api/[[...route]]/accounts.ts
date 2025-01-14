@@ -22,7 +22,8 @@ const app = new Hono()
     const data = await db
       .select({
         id: accounts.id,
-        name: accounts.name
+        name: accounts.name,
+        isHidden: accounts.isHidden
       })
       .from(accounts)
       .where(eq(accounts.userId, auth.userId));
@@ -32,7 +33,7 @@ const app = new Hono()
 
     const result = await Promise.all(
       data.map(async item => {
-        const [{ balance }] = await fetchAccountBalance(auth.userId, defaultTo, item.id);
+        const [{ balance }] = await fetchAccountBalance(auth.userId, defaultTo, item.id, true);
 
         return {
           ...item,
@@ -66,7 +67,8 @@ const app = new Hono()
       const [data] = await db
         .select({
           id: accounts.id,
-          name: accounts.name
+          name: accounts.name,
+          isHidden: accounts.isHidden
         })
         .from(accounts)
         .where(and(eq(accounts.userId, auth.userId), eq(accounts.id, id)));
@@ -84,6 +86,7 @@ const app = new Hono()
       'json',
       z.object({
         name: z.string(),
+        isHidden: z.boolean(),
         startingBalance: z.number()
       })
     ),
@@ -148,7 +151,7 @@ const app = new Hono()
         id: z.string().optional()
       })
     ),
-    zValidator('json', insertAccountSchema.pick({ name: true })),
+    zValidator('json', insertAccountSchema.pick({ name: true, isHidden: true })),
     async c => {
       const auth = getAuth(c);
       const { id } = c.req.valid('param');

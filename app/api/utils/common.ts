@@ -28,7 +28,7 @@ export const fetchFinancialData = async (userId: string, from: Date, to: Date, a
     );
 };
 
-export const fetchAccountBalance = async (userId: string, to: Date, accountId?: string) => {
+export const fetchAccountBalance = async (userId: string, to: Date, accountId?: string, showHidden?: boolean) => {
   return db
     .select({
       balance: sum(transactions.amount).mapWith(Number)
@@ -39,7 +39,8 @@ export const fetchAccountBalance = async (userId: string, to: Date, accountId?: 
       and(
         accountId ? eq(transactions.accountId, accountId) : undefined,
         eq(accounts.userId, userId),
-        lte(transactions.date, to)
+        lte(transactions.date, to),
+        showHidden ? undefined : eq(accounts.isHidden, false)
       )
     );
 };

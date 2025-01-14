@@ -48,7 +48,9 @@ export const EditAccountSheet = () => {
     }
   };
 
-  const defaultValues = accountQuery.data ? { name: accountQuery.data.name } : { name: '' };
+  const defaultValues = accountQuery.data
+    ? { name: accountQuery.data.name, isHidden: accountQuery.data.isHidden }
+    : { name: '', isHidden: false };
 
   return (
     <>

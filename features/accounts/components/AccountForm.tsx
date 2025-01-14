@@ -5,24 +5,28 @@ import { zodResolver } from '@hookform/resolvers/zod';
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { AmountInput } from '@/components/AmountInput';
 import { convertAmountToMiliUnits } from '@/lib/utils';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 
 const formSchema = z.object({
   name: z.string(),
+  isHidden: z.boolean(),
   startingBalance: z.string()
 });
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const apiSchema = z.object({
   name: z.string(),
+  isHidden: z.boolean(),
   startingBalance: z.number()
 });
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const editSchema = z.object({
-  name: z.string()
+  name: z.string(),
+  isHidden: z.boolean()
 });
 
 type FormValues = z.input<typeof formSchema>;
@@ -81,6 +85,18 @@ export const AccountForm = ({ id, onSubmit, onDelete, disabled, defaultValues }:
             )}
           />
         )}
+        <FormField
+          name='isHidden'
+          control={form.control}
+          render={({ field }) => (
+            <FormItem className='space-y-0 flex items-center'>
+              <FormLabel className='mr-2'>Hide account balance from summary</FormLabel>
+              <FormControl>
+                <Checkbox checked={field.value} onCheckedChange={field.onChange} disabled={disabled} />
+              </FormControl>
+            </FormItem>
+          )}
+        />
         <Button className='w-full' disabled={disabled}>
           {id ? 'Save Changes' : 'Create Account'}
         </Button>

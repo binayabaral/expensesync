@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const formSchema = z.object({
   name: z.string(),
+  isHidden: z.boolean(),
   startingBalance: z.number()
 });
 
@@ -32,7 +33,7 @@ export const AddAccount = () => {
           <SheetTitle>New Account</SheetTitle>
           <SheetDescription>Create a new account to track your transactions.</SheetDescription>
         </SheetHeader>
-        <AccountForm onSubmit={onSubmit} disabled={mutation.isPending} defaultValues={{ name: '' }} />
+        <AccountForm onSubmit={onSubmit} disabled={mutation.isPending} defaultValues={{ name: '', isHidden: false }} />
       </SheetContent>
     </Sheet>
   );

@@ -42,7 +42,22 @@ export const columns: ColumnDef<ResponseType>[] = [
           <ArrowUpDown className='ml-2 h-4 w-4' />
         </Button>
       );
-    }
+    },
+    cell: ({ row }) => (
+      <span
+        className={cn(
+          cn(
+            row.original.isHidden
+              ? 'text-muted-foreground'
+              : row.original.balance < 0
+              ? 'text-destructive'
+              : 'text-primary'
+          )
+        )}
+      >
+        {row.original.name}
+      </span>
+    )
   },
   {
     accessorKey: 'balance',
@@ -55,7 +70,15 @@ export const columns: ColumnDef<ResponseType>[] = [
       );
     },
     cell: ({ row }) => (
-      <span className={cn(row.original.balance < 0 ? 'text-destructive' : 'text-primary')}>
+      <span
+        className={cn(
+          row.original.isHidden
+            ? 'text-muted-foreground'
+            : row.original.balance < 0
+            ? 'text-destructive'
+            : 'text-primary'
+        )}
+      >
         {formatCurrency(row.original.balance)}
       </span>
     )

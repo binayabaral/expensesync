@@ -57,6 +57,13 @@
       "when": 1735997434594,
       "tag": "0007_remarkable_giant_man",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1736879750662,
+      "tag": "0008_breezy_fallen_one",
+      "breakpoints": true
     }
   ]
 }

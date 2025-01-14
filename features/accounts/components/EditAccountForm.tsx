@@ -5,10 +5,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 
 const editAccountSchema = z.object({
-  name: z.string()
+  name: z.string(),
+  isHidden: z.boolean()
 });
 
 type FormValues = z.input<typeof editAccountSchema>;
@@ -46,6 +48,18 @@ export const EditAccountForm = ({ id, onSubmit, onDelete, disabled, defaultValue
               <FormLabel>Name</FormLabel>
               <FormControl>
                 <Input disabled={disabled} placeholder='e.g. Cash, Bank, Credit Card' {...field} />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        <FormField
+          name='isHidden'
+          control={form.control}
+          render={({ field }) => (
+            <FormItem className='space-y-0 flex items-center'>
+              <FormLabel className='mr-2'>Hide account balance from summary</FormLabel>
+              <FormControl>
+                <Checkbox checked={field.value} onCheckedChange={field.onChange} disabled={disabled} />
               </FormControl>
             </FormItem>
           )}
