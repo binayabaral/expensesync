@@ -56,7 +56,8 @@ const app = new Hono()
             accountId ? eq(transactions.accountId, accountId) : undefined,
             eq(accounts.userId, auth.userId),
             gte(transactions.date, startDate),
-            lte(transactions.date, endDate)
+            lte(transactions.date, endDate),
+            eq(transactions.type, 'USER_CREATED')
           )
         )
         .orderBy(desc(transactions.date));
