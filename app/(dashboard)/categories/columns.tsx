@@ -4,9 +4,9 @@ import { InferResponseType } from 'hono';
 import { ArrowUpDown } from 'lucide-react';
 import { ColumnDef } from '@tanstack/react-table';
 
-import { cn } from '@/lib/utils';
 import { client } from '@/lib/hono';
 import { Button } from '@/components/ui/button';
+import { cn, formatCurrency } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 
 import { Actions } from './Actions';
@@ -61,7 +61,7 @@ export const columns: ColumnDef<ResponseType>[] = [
     },
     cell: ({ row }) => (
       <span className={cn(row.original.amount < row.original.prevAmount ? 'text-destructive' : 'text-primary')}>
-        {row.original.amount}
+        {formatCurrency(row.original.amount)}
       </span>
     )
   },
@@ -77,7 +77,7 @@ export const columns: ColumnDef<ResponseType>[] = [
     },
     cell: ({ row }) => (
       <span className={cn(row.original.amount < row.original.prevAmount ? 'text-destructive' : 'text-primary')}>
-        {row.original.prevAmount}
+        {formatCurrency(row.original.prevAmount)}
       </span>
     )
   },
