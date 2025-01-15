@@ -1,21 +1,22 @@
 'use client';
 
+import { Suspense } from 'react';
 import { Loader2, Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/DataTable';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAddCategory } from '@/features/categories/hooks/useAddCategory';
-import { useGetCategories } from '@/features/categories/api/useGetCategories';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useBulkDeleteCategories } from '@/features/categories/api/useBulkDeleteCategories';
+import { useGetCategoriesWithExpenses } from '@/features/categories/api/useGetCategoriesWithExpenses';
 
 import { columns } from './columns';
 
 function Categories() {
   const newCategory = useAddCategory();
-  const categoriesQuery = useGetCategories();
   const deleteCategories = useBulkDeleteCategories();
+  const categoriesQuery = useGetCategoriesWithExpenses();
 
   const categories = categoriesQuery.data || [];
   const isDisabled = categoriesQuery.isLoading || deleteCategories.isPending;
@@ -64,4 +65,12 @@ function Categories() {
   );
 }
 
-export default Categories;
+const Page = () => {
+  return (
+    <Suspense>
+      <Categories />
+    </Suspense>
+  );
+};
+
+export default Page;

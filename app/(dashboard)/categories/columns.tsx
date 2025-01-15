@@ -1,16 +1,17 @@
 'use client';
 
-import { client } from '@/lib/hono';
 import { InferResponseType } from 'hono';
 import { ArrowUpDown } from 'lucide-react';
 import { ColumnDef } from '@tanstack/react-table';
 
+import { cn } from '@/lib/utils';
+import { client } from '@/lib/hono';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 
 import { Actions } from './Actions';
 
-export type ResponseType = InferResponseType<typeof client.api.categories.$get, 200>['data'][0];
+export type ResponseType = InferResponseType<(typeof client.api.categories)['with-expenses']['$get'], 200>['data'][0];
 
 export const columns: ColumnDef<ResponseType>[] = [
   {
@@ -41,7 +42,44 @@ export const columns: ColumnDef<ResponseType>[] = [
           <ArrowUpDown className='ml-2 h-4 w-4' />
         </Button>
       );
-    }
+    },
+    cell: ({ row }) => (
+      <span className={cn(row.original.amount < row.original.prevAmount ? 'text-destructive' : 'text-primary')}>
+        {row.original.name}
+      </span>
+    )
+  },
+  {
+    accessorKey: 'amount',
+    header: ({ column }) => {
+      return (
+        <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+          Amount (selected period)
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      );
+    },
+    cell: ({ row }) => (
+      <span className={cn(row.original.amount < row.original.prevAmount ? 'text-destructive' : 'text-primary')}>
+        {row.original.amount}
+      </span>
+    )
+  },
+  {
+    accessorKey: 'prevAmount',
+    header: ({ column }) => {
+      return (
+        <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+          Amount (previous period)
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      );
+    },
+    cell: ({ row }) => (
+      <span className={cn(row.original.amount < row.original.prevAmount ? 'text-destructive' : 'text-primary')}>
+        {row.original.prevAmount}
+      </span>
+    )
   },
   {
     id: 'actions',

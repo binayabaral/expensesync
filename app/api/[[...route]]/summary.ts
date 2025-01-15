@@ -2,14 +2,14 @@ import { z } from 'zod';
 import { Hono } from 'hono';
 import { getAuth } from '@hono/clerk-auth';
 import { zValidator } from '@hono/zod-validator';
-import { and, desc, eq, gte, lt, lte, sql } from 'drizzle-orm';
+import { and, eq, gte, lte, sql } from 'drizzle-orm';
 import { parse, startOfMonth, endOfDay, startOfDay, subMonths } from 'date-fns';
 
 import { db } from '@/db/drizzle';
-import { accounts, categories, transactions } from '@/db/schema';
+import { accounts, transactions } from '@/db/schema';
 import { calculatePercentageChange, fillMissingDays } from '@/lib/utils';
 
-import { fetchAccountBalance, fetchFinancialData } from '../utils/common';
+import { fetchAccountBalance, fetchFinancialData, fetchTransactionsByCategory } from '../utils/common';
 
 const app = new Hono().get(
   '/',
@@ -51,25 +51,7 @@ const app = new Hono().get(
     const expenseChange = calculatePercentageChange(currentPeriod.expenses || 0, lastPeriod.expenses || 0, true);
     const remainingChange = calculatePercentageChange(remainingBalance || 0, previousRemainingBalance || 0);
 
-    const transactionsByCategory = await db
-      .select({
-        name: categories.name,
-        value: sql`SUM(ABS(${transactions.amount}))`.mapWith(Number)
-      })
-      .from(transactions)
-      .innerJoin(accounts, eq(transactions.accountId, accounts.id))
-      .innerJoin(categories, eq(transactions.categoryId, categories.id))
-      .where(
-        and(
-          lt(transactions.amount, 0),
-          lte(transactions.date, endDate),
-          eq(accounts.userId, auth.userId),
-          gte(transactions.date, startDate),
-          accountId ? eq(transactions.accountId, accountId) : undefined
-        )
-      )
-      .groupBy(categories.name)
-      .orderBy(desc(sql`SUM(ABS(${transactions.amount}))`));
+    const transactionsByCategory = await fetchTransactionsByCategory(auth.userId, startDate, endDate, accountId);
 
     const activeDays = await db
       .select({

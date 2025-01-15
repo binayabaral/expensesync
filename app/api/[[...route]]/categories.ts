@@ -4,9 +4,12 @@ import { getAuth } from '@hono/clerk-auth';
 import { and, eq, inArray } from 'drizzle-orm';
 import { createId } from '@paralleldrive/cuid2';
 import { zValidator } from '@hono/zod-validator';
+import { endOfDay, parse, startOfDay, startOfMonth, subMonths } from 'date-fns';
 
 import { db } from '@/db/drizzle';
 import { categories, insertCategorySchema } from '@/db/schema';
+
+import { fetchTransactionsByCategory } from '../utils/common';
 
 const app = new Hono()
   .get('/', async c => {
@@ -25,6 +28,65 @@ const app = new Hono()
 
     return c.json({ data });
   })
+  .get(
+    '/with-expenses',
+    zValidator(
+      'query',
+      z.object({
+        to: z.string().optional(),
+        from: z.string().optional(),
+        accountId: z.string().optional()
+      })
+    ),
+    async c => {
+      const auth = getAuth(c);
+      const { to, from, accountId } = c.req.valid('query');
+
+      if (!auth?.userId) {
+        return c.json({ error: 'Unauthorized' }, 401);
+      }
+
+      const today = new Date();
+      const defaultTo = endOfDay(today);
+      const defaultFrom = startOfMonth(today);
+
+      const startDate = from ? startOfDay(parse(from, 'yyyy-MM-dd', new Date())) : defaultFrom;
+      const endDate = to ? endOfDay(parse(to, 'yyyy-MM-dd', new Date())) : defaultTo;
+
+      const lastPeriodEndDate = subMonths(endDate, 1);
+      const lastPeriodStartDate = subMonths(startDate, 1);
+
+      const allCategoriesPromise = await db
+        .select({
+          id: categories.id,
+          name: categories.name
+        })
+        .from(categories)
+        .where(eq(categories.userId, auth.userId));
+
+      const [categoriesWithExpenses, categoriesWithExpensesPrev, allCategories] = await Promise.all([
+        fetchTransactionsByCategory(auth.userId, startDate, endDate, accountId, false),
+        fetchTransactionsByCategory(auth.userId, lastPeriodStartDate, lastPeriodEndDate, accountId, false),
+        allCategoriesPromise
+      ]);
+
+      const result = allCategories.map(allCategoriesItem => {
+        const currentMatch = categoriesWithExpenses.find(
+          categoriesWithExpensesItem => categoriesWithExpensesItem.id === allCategoriesItem.id
+        );
+        const prevMatch = categoriesWithExpensesPrev.find(
+          categoriesWithExpensesPrevItem => categoriesWithExpensesPrevItem.id === allCategoriesItem.id
+        );
+        return {
+          ...allCategoriesItem,
+          prevAmount: prevMatch ? prevMatch.value : 0,
+          amount: currentMatch ? currentMatch.value : 0
+        };
+      });
+
+      return c.json({ data: result });
+    }
+  )
   .get(
     '/:id',
     zValidator(
