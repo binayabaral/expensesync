@@ -113,6 +113,20 @@ export const columns: ColumnDef<ResponseType>[] = [
     }
   },
   {
+    accessorKey: 'notes',
+    header: ({ column }) => {
+      return (
+        <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+          Notes
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      return <span className='line-clamp-1'>{row.original.notes}</span>;
+    }
+  },
+  {
     id: 'actions',
     cell: ({ row }) => <Actions id={row.original.id} isDisabled={row.original.type !== 'USER_CREATED'} />
   }
