@@ -3,8 +3,8 @@ import { Hono } from 'hono';
 import { getAuth } from '@hono/clerk-auth';
 import { createId } from '@paralleldrive/cuid2';
 import { zValidator } from '@hono/zod-validator';
-import { aliasedTable, eq, gte, lte, and, or, inArray, sql } from 'drizzle-orm';
 import { endOfDay, parse, startOfDay, startOfMonth } from 'date-fns';
+import { aliasedTable, eq, gte, lte, and, or, inArray, sql, desc } from 'drizzle-orm';
 
 import { db } from '@/db/drizzle';
 import { accounts, insertTransferSchema, transactions, transfers } from '@/db/schema';
@@ -58,7 +58,8 @@ const app = new Hono()
             eq(transfers.userId, auth.userId),
             accountId ? or(eq(transfers.toAccountId, accountId), eq(transfers.fromAccountId, accountId)) : undefined
           )
-        );
+        )
+        .orderBy(desc(transfers.date));
 
       return c.json({ data: userTransfers });
     }
