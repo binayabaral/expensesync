@@ -49,8 +49,8 @@ const app = new Hono()
           transferCharge: transfers.transferCharge
         })
         .from(transfers)
-        .innerJoin(toAccount, eq(transfers.toAccountId, toAccount.id))
-        .innerJoin(fromAccount, eq(transfers.fromAccountId, fromAccount.id))
+        .leftJoin(toAccount, eq(transfers.toAccountId, toAccount.id))
+        .leftJoin(fromAccount, eq(transfers.fromAccountId, fromAccount.id))
         .where(
           and(
             lte(transfers.date, endDate),
@@ -106,7 +106,11 @@ const app = new Hono()
   .post('/', zValidator('json', insertTransferSchema.omit({ id: true, userId: true })), async c => {
     const auth = getAuth(c);
     const values = c.req.valid('json');
-    const { transferCharge = 0 } = values;
+    const { transferCharge = 0, fromAccountId, toAccountId } = values;
+
+    if (!fromAccountId && !toAccountId) {
+      return c.json({ error: 'One of Sender or Receiver account is required' }, 400);
+    }
 
     if (!auth?.userId) {
       return c.json({ error: 'Unauthorized' }, 401);
@@ -118,9 +122,10 @@ const app = new Hono()
       .where(eq(accounts.userId, auth.userId));
 
     const loggedInUserAccountsIds = loggedInUserAccounts.map(account => account.id);
+
     if (
-      !loggedInUserAccountsIds.includes(values.fromAccountId) ||
-      !loggedInUserAccountsIds.includes(values.toAccountId)
+      (fromAccountId && !loggedInUserAccountsIds.includes(fromAccountId)) ||
+      (toAccountId && !loggedInUserAccountsIds.includes(toAccountId))
     ) {
       return c.json({ error: 'Unauthorized' }, 401);
     }
@@ -134,33 +139,37 @@ const app = new Hono()
           userId: auth.userId,
           notes: values.notes,
           amount: values.amount,
+          transferCharge: transferCharge,
           toAccountId: values.toAccountId,
-          fromAccountId: values.fromAccountId,
-          transferCharge: values.transferCharge || 0
+          fromAccountId: values.fromAccountId
         })
         .returning();
 
-      await db.insert(transactions).values({
-        id: createId(),
-        date: values.date,
-        notes: values.notes,
-        type: 'SELF_TRANSFER',
-        accountId: values.fromAccountId,
-        transferId: insertedTransfer.id,
-        amount: -values.amount - transferCharge,
-        payee: 'Transferred to another account'
-      });
+      if (values.fromAccountId) {
+        await db.insert(transactions).values({
+          id: createId(),
+          date: values.date,
+          accountId: values.fromAccountId,
+          transferId: insertedTransfer.id,
+          notes: `TRANSFER: ${values.notes}`,
+          amount: -values.amount - transferCharge,
+          payee: 'Transferred to another account',
+          type: values.toAccountId ? 'PEER_TRANSFER' : 'SELF_TRANSFER'
+        });
+      }
 
-      await db.insert(transactions).values({
-        id: createId(),
-        date: values.date,
-        notes: values.notes,
-        type: 'SELF_TRANSFER',
-        amount: values.amount,
-        accountId: values.toAccountId,
-        transferId: insertedTransfer.id,
-        payee: 'Transferred from another account'
-      });
+      if (values.toAccountId) {
+        await db.insert(transactions).values({
+          id: createId(),
+          date: values.date,
+          amount: values.amount,
+          accountId: values.toAccountId,
+          transferId: insertedTransfer.id,
+          notes: `TRANSFER: ${values.notes}`,
+          payee: 'Transferred from another account',
+          type: values.fromAccountId ? 'PEER_TRANSFER' : 'SELF_TRANSFER'
+        });
+      }
 
       return c.json({ data: insertedTransfer });
     } catch (error) {
@@ -212,6 +221,11 @@ const app = new Hono()
       const auth = getAuth(c);
       const { id } = c.req.valid('param');
       const values = c.req.valid('json');
+      const { transferCharge = 0, fromAccountId, toAccountId } = values;
+
+      if (!fromAccountId && !toAccountId) {
+        return c.json({ error: 'One of Sender or Receiver account is required' }, 400);
+      }
 
       if (!auth?.userId) {
         return c.json({ error: 'Unauthorized' }, 401);
@@ -230,7 +244,7 @@ const app = new Hono()
       const fromTransaction = relatedTransactions.find(transaction => transaction.amount < 0);
       const toTransaction = relatedTransactions.find(transaction => transaction.amount > 0);
 
-      if (!existingTransaction || !fromTransaction || !toTransaction) {
+      if (!existingTransaction) {
         return c.json({ error: 'Not found' }, 404);
       }
 
@@ -241,36 +255,76 @@ const app = new Hono()
 
       const loggedInUserAccountsIds = loggedInUserAccounts.map(account => account.id);
       if (
-        !loggedInUserAccountsIds.includes(values.fromAccountId) ||
-        !loggedInUserAccountsIds.includes(values.toAccountId)
+        (values.fromAccountId && !loggedInUserAccountsIds.includes(values.fromAccountId)) ||
+        (values.toAccountId && !loggedInUserAccountsIds.includes(values.toAccountId))
       ) {
         return c.json({ error: 'Unauthorized' }, 401);
       }
 
       try {
-        const [data] = await db.update(transfers).set(values).where(eq(transfers.id, id)).returning();
-
-        await db
-          .update(transactions)
+        const [data] = await db
+          .update(transfers)
           .set({
-            ...fromTransaction,
+            ...values,
+            toAccountId: values.toAccountId?.length ? values.toAccountId : null,
+            fromAccountId: values.fromAccountId?.length ? values.fromAccountId : null
+          })
+          .where(eq(transfers.id, id))
+          .returning();
+
+        if (values.fromAccountId && !fromTransaction) {
+          await db.insert(transactions).values({
+            id: createId(),
+            transferId: id,
             date: values.date,
-            notes: values.notes,
             accountId: values.fromAccountId,
-            amount: -values.amount - (values.transferCharge || 0)
-          })
-          .where(eq(transactions.id, fromTransaction.id));
+            notes: `TRANSFER: ${values.notes}`,
+            payee: 'Transferred to another account',
+            amount: -values.amount - transferCharge,
+            type: values.toAccountId ? 'PEER_TRANSFER' : 'SELF_TRANSFER'
+          });
+        } else if (values.fromAccountId && fromTransaction) {
+          await db
+            .update(transactions)
+            .set({
+              ...fromTransaction,
+              date: values.date,
+              accountId: values.fromAccountId,
+              notes: `TRANSFER: ${values.notes}`,
+              amount: -values.amount - transferCharge,
+              type: values.toAccountId ? 'PEER_TRANSFER' : 'SELF_TRANSFER'
+            })
+            .where(eq(transactions.id, fromTransaction.id));
+        } else if (!values.fromAccountId && fromTransaction) {
+          await db.delete(transactions).where(eq(transactions.id, fromTransaction.id));
+        }
 
-        await db
-          .update(transactions)
-          .set({
-            ...toTransaction,
+        if (values.toAccountId && !toTransaction) {
+          await db.insert(transactions).values({
+            id: createId(),
+            transferId: id,
             date: values.date,
-            notes: values.notes,
             amount: values.amount,
-            accountId: values.toAccountId
-          })
-          .where(eq(transactions.id, toTransaction.id));
+            accountId: values.toAccountId,
+            notes: `TRANSFER: ${values.notes}`,
+            payee: 'Transferred from another account',
+            type: values.fromAccountId ? 'PEER_TRANSFER' : 'SELF_TRANSFER'
+          });
+        } else if (values.toAccountId && toTransaction) {
+          await db
+            .update(transactions)
+            .set({
+              ...toTransaction,
+              date: values.date,
+              amount: values.amount,
+              accountId: values.toAccountId,
+              notes: `TRANSFER: ${values.notes}`,
+              type: values.fromAccountId ? 'PEER_TRANSFER' : 'SELF_TRANSFER'
+            })
+            .where(eq(transactions.id, toTransaction.id));
+        } else if (!values.toAccountId && toTransaction) {
+          await db.delete(transactions).where(eq(transactions.id, toTransaction.id));
+        }
 
         return c.json({ data });
       } catch (error) {

@@ -24,7 +24,7 @@ export const Select = ({
   allowCreatingOptions
 }: Props) => {
   const onSelect = (option: SingleValue<{ label: string; value: string }>) => {
-    onChangeAction(option?.value);
+    onChangeAction(option?.value || '');
   };
 
   const handleCreate = (inputValue: string) => {
@@ -36,6 +36,7 @@ export const Select = ({
   const formattedValue = useMemo(() => options.find(option => option.value === value), [options, value]);
   return (
     <CreatableSelect
+      isClearable
       options={options}
       onChange={onSelect}
       isDisabled={disabled}

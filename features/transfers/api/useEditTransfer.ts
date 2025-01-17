@@ -22,6 +22,7 @@ export const useEditTransfer = (id?: string) => {
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
       queryClient.invalidateQueries({ queryKey: ['transfers'] });
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['transfer', { id }] });
     },
     onError: () => {
       toast.error('Failed to update transfer');

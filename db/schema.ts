@@ -10,6 +10,8 @@ export const TransactionTypeEnum = pgEnum('transaction_type', [
   'SELF_TRANSFER'
 ]);
 
+export const TransferTypeEnum = pgEnum('transfer_type', ['SELF_TRANSFER', 'PEER_TRANSFER']);
+
 export const accounts = pgTable('accounts', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
@@ -61,12 +63,8 @@ export const transfers = pgTable('transfers', {
   userId: text('user_id').notNull(),
   amount: integer('amount').notNull(),
   date: timestamp('date', { mode: 'date' }).notNull(),
-  fromAccountId: text('from_account_id')
-    .references(() => accounts.id, { onDelete: 'set null' })
-    .notNull(),
-  toAccountId: text('to_account_id')
-    .references(() => accounts.id, { onDelete: 'set null' })
-    .notNull(),
+  fromAccountId: text('from_account_id').references(() => accounts.id, { onDelete: 'set null' }),
+  toAccountId: text('to_account_id').references(() => accounts.id, { onDelete: 'set null' }),
   transferCharge: integer('transfer_charge').notNull().default(0),
   notes: text('notes')
 });

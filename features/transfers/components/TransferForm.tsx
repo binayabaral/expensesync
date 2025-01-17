@@ -15,10 +15,10 @@ import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/
 const formSchema = z.object({
   amount: z.string(),
   date: z.coerce.date(),
-  toAccountId: z.string(),
-  fromAccountId: z.string(),
   transferCharge: z.string(),
-  notes: z.string().nullable().optional()
+  notes: z.string().nullable().optional(),
+  toAccountId: z.string().nullable().optional(),
+  fromAccountId: z.string().nullable().optional()
 });
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
