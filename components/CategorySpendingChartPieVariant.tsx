@@ -33,15 +33,15 @@ export const CategorySpendingChartPieVariant = ({ data }: Props) => {
           align='center'
           iconType='circle'
           content={({ payload }) => (
-            <ul className='flex flex-col space-y-2'>
+            <ul className='flex flex-wrap justify-center space-x-2'>
               {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 payload?.map((entry: any, index: number) => (
                   <li key={`item-${index}`} className='flex items-center space-x-2'>
                     <span className='size-2 rounded-full' style={{ backgroundColor: entry.color }} />
                     <div className='space-x-1'>
-                      <span className='text-sm text-muted-foreground'>{entry.value}:</span>
-                      <span className='text-sm'>{formatPercentage(entry.payload.percent * 100)}</span>
+                      <span className='text-xs text-muted-foreground'>{entry.value}:</span>
+                      <span className='text-xs'>{formatPercentage(entry.payload.percent * 100)}</span>
                     </div>
                   </li>
                 ))
