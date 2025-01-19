@@ -6,8 +6,8 @@ import { ColumnDef } from '@tanstack/react-table';
 import { ArrowUpDown, TriangleAlert } from 'lucide-react';
 
 import { client } from '@/lib/hono';
-import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { cn, formatCurrency } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 
 import { Actions } from './Actions';
@@ -95,7 +95,11 @@ export const columns: ColumnDef<ResponseType>[] = [
     cell: ({ row }) => {
       const amount = parseFloat(row.getValue('amount'));
 
-      return <span className={amount < 0 ? 'text-destructive' : 'text-primary'}>{formatCurrency(amount)}</span>;
+      return (
+        <span className={cn('whitespace-nowrap', amount < 0 ? 'text-destructive' : 'text-primary')}>
+          {formatCurrency(amount)}
+        </span>
+      );
     }
   },
   {
@@ -123,7 +127,7 @@ export const columns: ColumnDef<ResponseType>[] = [
       );
     },
     cell: ({ row }) => {
-      return <span className='line-clamp-1'>{row.original.notes}</span>;
+      return <span>{row.original.notes}</span>;
     }
   },
   {

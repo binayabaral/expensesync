@@ -72,6 +72,7 @@ export const columns: ColumnDef<ResponseType>[] = [
     cell: ({ row }) => (
       <span
         className={cn(
+          'whitespace-nowrap',
           row.original.isHidden
             ? 'text-muted-foreground'
             : row.original.balance < 0

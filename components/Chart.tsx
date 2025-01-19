@@ -39,7 +39,7 @@ function Chart({ isLoading, data = [] }: Props) {
   return (
     <Card className='border-none drop-shadow-sm'>
       <CardHeader className='flex space-y-2 lg:space-y-0 lg:flex-row lg:items-center justify-between'>
-        <CardTitle className='text-xl line-clamp-1'>Transactions</CardTitle>
+        <CardTitle className='text-xl'>Transactions</CardTitle>
         <Select defaultValue={chartType} onValueChange={setChartType}>
           <SelectTrigger className='lg:w-auto h-9 rounded-md px-3'>
             <SelectValue placeholder='Chart Type' />
@@ -48,19 +48,19 @@ function Chart({ isLoading, data = [] }: Props) {
             <SelectItem value='area'>
               <div className='flex items-center'>
                 <AreaChart className='size-4 mr-2 shrink-0' />
-                <p className='line-clamp-1'>Area Chart</p>
+                <p>Area Chart</p>
               </div>
             </SelectItem>
             <SelectItem value='line'>
               <div className='flex items-center'>
                 <LineChart className='size-4 mr-2 shrink-0' />
-                <p className='line-clamp-1'>Line Chart</p>
+                <p>Line Chart</p>
               </div>
             </SelectItem>
             <SelectItem value='bar'>
               <div className='flex items-center'>
                 <BarChart className='size-4 mr-2 shrink-0' />
-                <p className='line-clamp-1'>Bar Chart</p>
+                <p>Bar Chart</p>
               </div>
             </SelectItem>
           </SelectContent>

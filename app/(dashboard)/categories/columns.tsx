@@ -60,7 +60,12 @@ export const columns: ColumnDef<ResponseType>[] = [
       );
     },
     cell: ({ row }) => (
-      <span className={cn(row.original.amount < row.original.prevAmount ? 'text-destructive' : 'text-primary')}>
+      <span
+        className={cn(
+          'whitespace-nowrap',
+          row.original.amount < row.original.prevAmount ? 'text-destructive' : 'text-primary'
+        )}
+      >
         {formatCurrency(row.original.amount)}
       </span>
     )
@@ -76,7 +81,12 @@ export const columns: ColumnDef<ResponseType>[] = [
       );
     },
     cell: ({ row }) => (
-      <span className={cn(row.original.amount < row.original.prevAmount ? 'text-destructive' : 'text-primary')}>
+      <span
+        className={cn(
+          'whitespace-nowrap',
+          row.original.amount < row.original.prevAmount ? 'text-destructive' : 'text-primary'
+        )}
+      >
         {formatCurrency(row.original.prevAmount)}
       </span>
     )

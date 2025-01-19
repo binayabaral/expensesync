@@ -41,7 +41,7 @@ function Accounts() {
     <div className='container mx-auto pb-10 -mt-24'>
       <Card className='border-none drop-shadow-sm'>
         <CardHeader className='gap-y-2 lg:flex-row lg:items-center lg:justify-between'>
-          <CardTitle className='text-xl line-clamp-1'>Accounts Page</CardTitle>
+          <CardTitle className='text-xl'>Accounts</CardTitle>
           <Button onClick={newAccount.onOpen}>
             <Plus className='size-4 mr-2' />
             Add New
