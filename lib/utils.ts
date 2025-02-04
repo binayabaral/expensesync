@@ -40,10 +40,6 @@ export function calculatePercentageChange(current: number, previous: number, isE
     return current === 0 ? 0 : current < 0 ? -100 : 100;
   }
 
-  if (isExpense) {
-    return ((current - previous) / previous) * 100 * -1;
-  }
-
   return ((current - previous) / previous) * 100;
 }
 
