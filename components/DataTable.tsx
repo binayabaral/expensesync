@@ -1,5 +1,3 @@
-'use client';
-
 import * as React from 'react';
 import { Trash } from 'lucide-react';
 import {
@@ -8,6 +6,7 @@ import {
   flexRender,
   SortingState,
   useReactTable,
+  PaginationState,
   getCoreRowModel,
   getSortedRowModel,
   ColumnFiltersState,
@@ -16,9 +15,11 @@ import {
 } from '@tanstack/react-table';
 
 import { Input } from '@/components/ui/input';
-import { useConfirm } from '@/hooks/useConfirm';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+import { useConfirm } from '@/hooks/useConfirm';
 
 interface DataTableProps<TData, TValue> {
   data: TData[];
@@ -38,19 +39,21 @@ export function DataTable<TData, TValue>({
   const [rowSelection, setRowSelection] = React.useState({});
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [pagination, setPagination] = React.useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
   const [ConfirmDialog, confirm] = useConfirm('Are you sure?', 'You are about to perform bulk delete');
 
   const table = useReactTable({
     data,
     columns,
     onSortingChange: setSorting,
+    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     onRowSelectionChange: setRowSelection,
     getSortedRowModel: getSortedRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    state: { sorting, columnFilters, rowSelection }
+    state: { sorting, columnFilters, rowSelection, pagination }
   });
 
   return (
@@ -127,6 +130,21 @@ export function DataTable<TData, TValue>({
         <Button variant='outline' size='sm' onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
           Next
         </Button>
+        <Select
+          onValueChange={value => table.setPageSize(Number(value))}
+          value={`${table.getState().pagination.pageSize}`}
+        >
+          <SelectTrigger className='w-28'>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {['10', '20', '30', '40', '50'].map(pageSize => (
+              <SelectItem key={pageSize} value={pageSize}>
+                Show {pageSize}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );
