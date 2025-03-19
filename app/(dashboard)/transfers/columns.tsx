@@ -107,7 +107,16 @@ export const columns: ColumnDef<ResponseType>[] = [
     cell: ({ row }) => {
       const charge = parseFloat(row.getValue('transferCharge'));
 
-      return <span className='whitespace-nowrap text-destructive'>{formatCurrency(charge)}</span>;
+      return (
+        <span
+          className={cn(
+            'whitespace-nowrap',
+            charge === 0 ? 'text-muted-foreground' : charge < 0 ? 'text-primary' : 'text-destructive'
+          )}
+        >
+          {formatCurrency(charge)}
+        </span>
+      );
     }
   },
   {
