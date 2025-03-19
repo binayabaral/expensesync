@@ -131,7 +131,7 @@ export const TransferForm = ({ id, onSubmit, onDelete, disabled, defaultValues, 
             <FormItem>
               <FormLabel>Extra Charges (Transfer fees / Interest Amount)</FormLabel>
               <FormControl>
-                <AmountInput {...field} disabled={disabled} placeholder={'0.00'} allowNegativeValue={false} />
+                <AmountInput {...field} disabled={disabled} placeholder={'0.00'} />
               </FormControl>
             </FormItem>
           )}
