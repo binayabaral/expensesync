@@ -43,15 +43,15 @@ const app = new Hono()
       })
     );
 
-    const sortedByBalanceAndIsHidden = result.sort((a, b) => {
+    const sortedByAccountNameAndIsHidden = result.sort((a, b) => {
       if (a.isHidden !== b.isHidden) {
         return a.isHidden === false ? -1 : 1;
       }
 
-      return b.balance - a.balance;
+      return a.name.toLowerCase().localeCompare(b.name.toLocaleUpperCase());
     });
 
-    return c.json({ data: sortedByBalanceAndIsHidden });
+    return c.json({ data: sortedByAccountNameAndIsHidden });
   })
   .get(
     '/:id',
