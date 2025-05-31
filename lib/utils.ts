@@ -32,15 +32,20 @@ export function formatCurrency(value: number) {
   }).format(convertAmountFromMiliUnits(value));
 }
 
-export function calculatePercentageChange(current: number, previous: number, isExpense: boolean = false) {
-  if (!previous || previous === 0) {
-    if (isExpense) {
-      return current === 0 ? 0 : current < 0 ? 100 : -100;
-    }
-    return current === 0 ? 0 : current < 0 ? -100 : 100;
+export function calculatePercentageChange(current: number, previous: number, isExpense: boolean = false): number {
+  if (previous === 0) {
+    if (current === 0) return 0;
+    const direction = current > 0 ? 1 : -1;
+    return isExpense ? -100 * direction : 100 * direction;
   }
 
-  return ((current - previous) / previous) * 100;
+  const change = ((current - previous) / Math.abs(previous)) * 100;
+
+  if (isExpense) {
+    return -change;
+  }
+
+  return change;
 }
 
 export function fillMissingDays(
