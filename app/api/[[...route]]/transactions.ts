@@ -40,13 +40,13 @@ const app = new Hono()
           id: transactions.id,
           type: transactions.type,
           date: transactions.date,
-          account: accounts.name,
           category: categories.name,
           payee: transactions.payee,
           notes: transactions.notes,
           amount: transactions.amount,
           accountId: transactions.accountId,
-          categoryId: transactions.categoryId
+          categoryId: transactions.categoryId,
+          account: sql<string>`CASE WHEN ${accounts.isDeleted} THEN CONCAT(${accounts.name}, ' (deleted account)') ELSE ${accounts.name} END`
         })
         .from(transactions)
         .innerJoin(accounts, eq(transactions.accountId, accounts.id))

@@ -44,8 +44,8 @@ const app = new Hono()
           date: transfers.date,
           notes: transfers.notes,
           amount: transfers.amount,
-          toAccount: toAccount.name,
-          fromAccount: fromAccount.name,
+          toAccount: sql<string>`CASE WHEN ${toAccount.isDeleted} THEN CONCAT(${toAccount.name}, ' (deleted account)') ELSE ${toAccount.name} END`,
+          fromAccount: sql<string>`CASE WHEN ${fromAccount.isDeleted} THEN CONCAT(${fromAccount.name}, ' (deleted account)') ELSE ${fromAccount.name} END`,
           transferCharge: transfers.transferCharge
         })
         .from(transfers)

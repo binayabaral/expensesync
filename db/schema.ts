@@ -16,7 +16,8 @@ export const accounts = pgTable('accounts', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   userId: text('user_id').notNull(),
-  isHidden: boolean('is_hidden').default(false).notNull()
+  isHidden: boolean('is_hidden').default(false).notNull(),
+  isDeleted: boolean('is_deleted').default(false).notNull()
 });
 
 export const accountsRelations = relations(accounts, ({ many }) => ({

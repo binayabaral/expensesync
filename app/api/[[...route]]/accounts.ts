@@ -26,7 +26,7 @@ const app = new Hono()
         isHidden: accounts.isHidden
       })
       .from(accounts)
-      .where(eq(accounts.userId, auth.userId))
+      .where(and(eq(accounts.userId, auth.userId), eq(accounts.isDeleted, false)))
       .orderBy(asc(accounts.isHidden));
 
     const today = new Date();
@@ -80,7 +80,7 @@ const app = new Hono()
           isHidden: accounts.isHidden
         })
         .from(accounts)
-        .where(and(eq(accounts.userId, auth.userId), eq(accounts.id, id)));
+        .where(and(eq(accounts.userId, auth.userId), eq(accounts.id, id), eq(accounts.isDeleted, false)));
 
       if (!data) {
         return c.json({ error: 'Not found' }, 404);
@@ -145,7 +145,8 @@ const app = new Hono()
       }
 
       const data = await db
-        .delete(accounts)
+        .update(accounts)
+        .set({ isDeleted: true })
         .where(and(eq(accounts.userId, auth.userId), inArray(accounts.id, values.ids)))
         .returning({ id: accounts.id });
 
@@ -177,7 +178,7 @@ const app = new Hono()
       const [data] = await db
         .update(accounts)
         .set(values)
-        .where(and(eq(accounts.userId, auth.userId), eq(accounts.id, id)))
+        .where(and(eq(accounts.userId, auth.userId), eq(accounts.id, id), eq(accounts.isDeleted, false)))
         .returning();
 
       if (!data) {
@@ -208,11 +209,10 @@ const app = new Hono()
       }
 
       const [data] = await db
-        .delete(accounts)
+        .update(accounts)
+        .set({ isDeleted: true })
         .where(and(eq(accounts.userId, auth.userId), eq(accounts.id, id)))
-        .returning({
-          id: accounts.id
-        });
+        .returning({ id: accounts.id });
 
       if (!data) {
         return c.json({ error: 'Not found' }, 404);

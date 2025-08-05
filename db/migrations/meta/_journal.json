@@ -78,6 +78,13 @@
       "when": 1741283344324,
       "tag": "0010_faulty_inertia",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1754415897147,
+      "tag": "0011_romantic_golden_guardian",
+      "breakpoints": true
     }
   ]
 }
