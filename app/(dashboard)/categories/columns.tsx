@@ -82,17 +82,13 @@ export const buildColumns = (data: ResponseType[]): ColumnDef<ResponseType>[] =>
       </Button>
     ),
     cell: ({ row }) => {
-      const prevValue = row.original.prevAmounts?.[i + 1] ?? 0;
       const value = row.original.prevAmounts?.[i] ?? 0;
+      const prevValue = row.original.prevAmounts?.[i + 1] ?? value;
       return (
         <span
           className={cn(
             'whitespace-nowrap',
-            value < prevValue
-              ? 'text-destructive'
-              : value === prevValue || prevValue === 0
-              ? 'text-muted-foreground'
-              : 'text-primary'
+            value < prevValue ? 'text-destructive' : value === prevValue ? 'text-muted-foreground' : 'text-primary'
           )}
         >
           {value != null ? formatCurrency(value) : '-'}
