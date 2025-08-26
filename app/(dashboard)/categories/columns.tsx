@@ -13,7 +13,7 @@ import { Actions } from './Actions';
 
 export type ResponseType = InferResponseType<(typeof client.api.categories)['with-expenses']['$get'], 200>['data'][0];
 
-export const columns: ColumnDef<ResponseType>[] = [
+export const baseColumns: ColumnDef<ResponseType>[] = [
   {
     id: 'select',
     header: ({ table }) => (
@@ -35,64 +35,72 @@ export const columns: ColumnDef<ResponseType>[] = [
   },
   {
     accessorKey: 'name',
-    header: ({ column }) => {
-      return (
-        <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-          Name
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
+    header: ({ column }) => (
+      <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+        Name
+        <ArrowUpDown className='ml-2 h-4 w-4' />
+      </Button>
+    ),
     cell: ({ row }) => (
-      <span className={cn(row.original.amount < row.original.prevAmount ? 'text-destructive' : 'text-primary')}>
+      <span
+        className={cn(
+          row.original.amount < Math.max(...row.original.prevAmounts, 0) ? 'text-destructive' : 'text-primary'
+        )}
+      >
         {row.original.name}
       </span>
     )
   },
   {
     accessorKey: 'amount',
-    header: ({ column }) => {
-      return (
-        <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-          Amount (selected period)
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
+    header: ({ column }) => (
+      <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+        Amount (selected period)
+        <ArrowUpDown className='ml-2 h-4 w-4' />
+      </Button>
+    ),
     cell: ({ row }) => (
       <span
         className={cn(
           'whitespace-nowrap',
-          row.original.amount < row.original.prevAmount ? 'text-destructive' : 'text-primary'
+          row.original.amount < Math.max(...row.original.prevAmounts, 0) ? 'text-destructive' : 'text-primary'
         )}
       >
         {formatCurrency(row.original.amount)}
       </span>
     )
-  },
-  {
-    accessorKey: 'prevAmount',
-    header: ({ column }) => {
-      return (
-        <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-          Amount (previous period)
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
-    cell: ({ row }) => (
-      <span
-        className={cn(
-          'whitespace-nowrap',
-          row.original.amount < row.original.prevAmount ? 'text-destructive' : 'text-primary'
-        )}
-      >
-        {formatCurrency(row.original.prevAmount)}
-      </span>
-    )
-  },
-  {
-    id: 'actions',
-    cell: ({ row }) => <Actions id={row.original.id} />
   }
 ];
+
+export const buildColumns = (data: ResponseType[]): ColumnDef<ResponseType>[] => {
+  const maxPeriods = Math.max(...data.map(d => d.prevAmounts?.length ?? 0), 0);
+
+  const prevColumns: ColumnDef<ResponseType>[] = Array.from({ length: maxPeriods }).map((_, i) => ({
+    id: `prev-${i}`,
+    header: ({ column }) => (
+      <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+        Amount ({i + 1} period/s ago)
+        <ArrowUpDown className='ml-2 h-4 w-4' />
+      </Button>
+    ),
+    cell: ({ row }) => {
+      const value = row.original.prevAmounts?.[i] ?? null;
+      return (
+        <span
+          className={cn('whitespace-nowrap', row.original.amount < (value ?? 0) ? 'text-destructive' : 'text-primary')}
+        >
+          {value != null ? formatCurrency(value) : '-'}
+        </span>
+      );
+    }
+  }));
+
+  return [
+    ...baseColumns,
+    ...prevColumns,
+    {
+      id: 'actions',
+      cell: ({ row }) => <Actions id={row.original.id} />
+    }
+  ];
+};

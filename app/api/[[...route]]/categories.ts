@@ -4,7 +4,7 @@ import { getAuth } from '@hono/clerk-auth';
 import { and, eq, inArray } from 'drizzle-orm';
 import { createId } from '@paralleldrive/cuid2';
 import { zValidator } from '@hono/zod-validator';
-import { endOfDay, parse, startOfDay, startOfMonth, subMonths } from 'date-fns';
+import { endOfDay, endOfMonth, parse, startOfDay, startOfMonth, subMonths } from 'date-fns';
 
 import { db } from '@/db/drizzle';
 import { categories, insertCategorySchema } from '@/db/schema';
@@ -53,10 +53,7 @@ const app = new Hono()
       const startDate = from ? startOfDay(parse(from, 'yyyy-MM-dd', new Date())) : defaultFrom;
       const endDate = to ? endOfDay(parse(to, 'yyyy-MM-dd', new Date())) : defaultTo;
 
-      const lastPeriodEndDate = subMonths(endDate, 1);
-      const lastPeriodStartDate = subMonths(startDate, 1);
-
-      const allCategoriesPromise = await db
+      const allCategoriesPromise = db
         .select({
           id: categories.id,
           name: categories.name
@@ -64,23 +61,45 @@ const app = new Hono()
         .from(categories)
         .where(eq(categories.userId, auth.userId));
 
-      const [categoriesWithExpenses, categoriesWithExpensesPrev, allCategories] = await Promise.all([
-        fetchTransactionsByCategory(auth.userId, startDate, endDate, accountId, false),
-        fetchTransactionsByCategory(auth.userId, lastPeriodStartDate, lastPeriodEndDate, accountId, false),
-        allCategoriesPromise
+      const categoriesWithExpensesPromise = fetchTransactionsByCategory(
+        auth.userId,
+        startDate,
+        endDate,
+        accountId,
+        false
+      );
+
+      const prevPeriods = Array.from({ length: 6 }).map((_, i) => {
+        const offset = i + 1;
+        const periodEnd = subMonths(endDate, offset);
+        const periodStart = startOfMonth(periodEnd);
+        const periodEndOfMonth = endOfMonth(periodEnd);
+
+        return fetchTransactionsByCategory(auth.userId, periodStart, periodEndOfMonth, accountId, false);
+      });
+
+      const [allCategories, categoriesWithExpenses, ...categoriesWithExpensesPrevArr] = await Promise.all([
+        allCategoriesPromise,
+        categoriesWithExpensesPromise,
+        ...prevPeriods
       ]);
 
+      const nonEmptyPeriods = categoriesWithExpensesPrevArr.filter(
+        periodData => periodData.length > 0 && periodData.some(item => item.value > 0)
+      );
+
       const result = allCategories.map(allCategoriesItem => {
-        const currentMatch = categoriesWithExpenses.find(
-          categoriesWithExpensesItem => categoriesWithExpensesItem.id === allCategoriesItem.id
-        );
-        const prevMatch = categoriesWithExpensesPrev.find(
-          categoriesWithExpensesPrevItem => categoriesWithExpensesPrevItem.id === allCategoriesItem.id
-        );
+        const currentMatch = categoriesWithExpenses.find(item => item.id === allCategoriesItem.id);
+
+        const prevAmounts = nonEmptyPeriods.map(periodData => {
+          const match = periodData.find(item => item.id === allCategoriesItem.id);
+          return match ? match.value : 0;
+        });
+
         return {
           ...allCategoriesItem,
-          prevAmount: prevMatch ? prevMatch.value : 0,
-          amount: currentMatch ? currentMatch.value : 0
+          amount: currentMatch ? currentMatch.value : 0,
+          prevAmounts
         };
       });
 
