@@ -88,7 +88,11 @@ export const buildColumns = (data: ResponseType[]): ColumnDef<ResponseType>[] =>
         <span
           className={cn(
             'whitespace-nowrap',
-            value > prevValue ? 'text-destructive' : value === prevValue ? '' : 'text-primary'
+            value < prevValue
+              ? 'text-destructive'
+              : value === prevValue || prevValue === 0
+              ? 'text-muted-foreground'
+              : 'text-primary'
           )}
         >
           {value != null ? formatCurrency(value) : '-'}
