@@ -43,9 +43,7 @@ export const baseColumns: ColumnDef<ResponseType>[] = [
     ),
     cell: ({ row }) => (
       <span
-        className={cn(
-          row.original.amount < Math.max(...row.original.prevAmounts, 0) ? 'text-destructive' : 'text-primary'
-        )}
+        className={cn(row.original.amount < (row.original.prevAmounts?.[0] ?? 0) ? 'text-destructive' : 'text-primary')}
       >
         {row.original.name}
       </span>
@@ -63,7 +61,7 @@ export const baseColumns: ColumnDef<ResponseType>[] = [
       <span
         className={cn(
           'whitespace-nowrap',
-          row.original.amount < Math.max(...row.original.prevAmounts, 0) ? 'text-destructive' : 'text-primary'
+          row.original.amount < (row.original.prevAmounts?.[0] ?? 0) ? 'text-destructive' : 'text-primary'
         )}
       >
         {formatCurrency(row.original.amount)}
