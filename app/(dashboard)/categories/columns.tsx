@@ -85,7 +85,7 @@ export const getBaseColumns = (startDate: Date, endDate: Date): ColumnDef<Respon
   }
 ];
 
-export const buildColumns = (data: ResponseType[]): ColumnDef<ResponseType>[] => {
+export const BuildColumns = (data: ResponseType[]): ColumnDef<ResponseType>[] => {
   const params = useSearchParams();
   const from = params.get('from') || '';
   const to = params.get('to') || '';

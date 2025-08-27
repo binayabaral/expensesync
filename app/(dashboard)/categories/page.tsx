@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useBulkDeleteCategories } from '@/features/categories/api/useBulkDeleteCategories';
 import { useGetCategoriesWithExpenses } from '@/features/categories/api/useGetCategoriesWithExpenses';
 
-import { buildColumns } from './columns';
+import { BuildColumns } from './columns';
 
 function Categories() {
   const newCategory = useAddCategory();
@@ -21,7 +21,7 @@ function Categories() {
   const categories = categoriesQuery.data || [];
   const isDisabled = categoriesQuery.isLoading || deleteCategories.isPending;
 
-  const columns = buildColumns(categories);
+  const columns = BuildColumns(categories);
 
   if (categoriesQuery.isLoading) {
     return (
