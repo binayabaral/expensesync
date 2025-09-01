@@ -4,7 +4,7 @@ import { getAuth } from '@hono/clerk-auth';
 import { and, eq, inArray } from 'drizzle-orm';
 import { createId } from '@paralleldrive/cuid2';
 import { zValidator } from '@hono/zod-validator';
-import { endOfDay, endOfMonth, parse, startOfDay, startOfMonth, subMonths } from 'date-fns';
+import { endOfDay, parse, startOfDay, startOfMonth, subMonths } from 'date-fns';
 
 import { db } from '@/db/drizzle';
 import { categories, insertCategorySchema } from '@/db/schema';
@@ -73,9 +73,8 @@ const app = new Hono()
         const offset = i + 1;
         const periodEnd = subMonths(endDate, offset);
         const periodStart = startOfMonth(periodEnd);
-        const periodEndOfMonth = endOfMonth(periodEnd);
 
-        return fetchTransactionsByCategory(auth.userId, periodStart, periodEndOfMonth, accountId, false);
+        return fetchTransactionsByCategory(auth.userId, periodStart, periodEnd, accountId, false);
       });
 
       const [allCategories, categoriesWithExpenses, ...categoriesWithExpensesPrevArr] = await Promise.all([
