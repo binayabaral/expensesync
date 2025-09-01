@@ -71,11 +71,13 @@ const app = new Hono()
 
       const prevPeriods = Array.from({ length: 6 }).map((_, i) => {
         const offset = i + 1;
+
+        const periodStart = subMonths(startDate, offset);
         const periodEnd = subMonths(endDate, offset);
-        const periodStart = startOfMonth(periodEnd);
 
         return fetchTransactionsByCategory(auth.userId, periodStart, periodEnd, accountId, false);
       });
+
 
       const [allCategories, categoriesWithExpenses, ...categoriesWithExpensesPrevArr] = await Promise.all([
         allCategoriesPromise,
@@ -83,8 +85,9 @@ const app = new Hono()
         ...prevPeriods
       ]);
 
-      const nonEmptyPeriods = categoriesWithExpensesPrevArr.filter(
-        periodData => periodData.length > 0 && periodData.some(item => item.value > 0)
+      const nonEmptyPeriods = categoriesWithExpensesPrevArr.slice(
+        0,
+        categoriesWithExpensesPrevArr.findLastIndex(a => a.length > 0) + 1
       );
 
       const result = allCategories.map(allCategoriesItem => {
