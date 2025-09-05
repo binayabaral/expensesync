@@ -22,7 +22,7 @@ function Accounts() {
 
   if (accountsQuery.isLoading) {
     return (
-      <div className='container mx-auto pb-10 -mt-24'>
+      <div className='container mx-auto py-10'>
         <Card className='border-none drop-shadow-sm'>
           <CardHeader>
             <Skeleton className='h-8 w-48' />
@@ -38,7 +38,7 @@ function Accounts() {
   }
 
   return (
-    <div className='container mx-auto pb-10 -mt-24'>
+    <div className='container mx-auto py-10'>
       <Card className='border-none drop-shadow-sm'>
         <CardHeader className='gap-y-2 lg:flex-row lg:items-center lg:justify-between'>
           <CardTitle className='text-xl'>Accounts</CardTitle>

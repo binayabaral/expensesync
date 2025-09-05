@@ -53,7 +53,7 @@ function FilterDate() {
           disabled={false}
           size='sm'
           variant='outline'
-          className='w-full lg:w-auto h-9 rounded-md px-3 font-normal bg-white/10 hover:bg-white/20 hover:text-white border-none focus:ring-offset-0 focus:ring-transparent outline-none text-white focus:bg-white/30 transition'
+          className='w-full lg:w-auto h-9 rounded-md px-3 font-normal bg-primary/10 hover:bg-primary/20 hover:text-primary border-none focus:ring-offset-0 focus:ring-transparent outline-none text-primary transition'
         >
           <span>{formatDateRange(paramState)}</span>
           <ChevronDown className='ml-2 size-4 opacity-50' />
