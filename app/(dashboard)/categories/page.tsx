@@ -52,6 +52,7 @@ function Categories() {
         </CardHeader>
         <CardContent>
           <DataTable
+            hasFooter
             columns={columns}
             data={categories}
             filterKey='name'

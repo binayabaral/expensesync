@@ -16,7 +16,7 @@ import {
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 import { useConfirm } from '@/hooks/useConfirm';
@@ -25,6 +25,7 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
   filterKey: string;
   disabled?: boolean;
+  hasFooter?: boolean;
   columns: ColumnDef<TData, TValue>[];
   onDeleteAction: (rows: Row<TData>[]) => void;
 }
@@ -34,6 +35,7 @@ export function DataTable<TData, TValue>({
   columns,
   disabled,
   filterKey,
+  hasFooter,
   onDeleteAction
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({});
@@ -117,6 +119,19 @@ export function DataTable<TData, TValue>({
               </TableRow>
             )}
           </TableBody>
+          {hasFooter && (<TableFooter>
+            {table.getFooterGroups().map(footerGroup => (
+              <TableRow key={footerGroup.id}>
+                {footerGroup.headers.map(footer => {
+                  return (
+                    <TableCell key={footer.id}>
+                      {footer.isPlaceholder ? null : flexRender(footer.column.columnDef.footer, footer.getContext())}
+                    </TableCell>
+                  );
+                })}
+              </TableRow>
+            ))}
+          </TableFooter>)}
         </Table>
       </div>
       <div className='flex items-center justify-end space-x-2 py-4'>

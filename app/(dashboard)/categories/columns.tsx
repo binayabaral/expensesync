@@ -62,7 +62,8 @@ export const getBaseColumns = (startDate: Date, endDate: Date): ColumnDef<Respon
       >
         {row.original.name}
       </span>
-    )
+    ),
+    footer: () => <span className='text-muted-foreground'>Totals</span>
   },
   {
     accessorKey: 'amount',
@@ -81,7 +82,76 @@ export const getBaseColumns = (startDate: Date, endDate: Date): ColumnDef<Respon
       >
         {formatCurrency(row.original.amount)}
       </span>
-    )
+    ),
+    footer: ({ table }) => {
+      const total = table.getFilteredRowModel().rows.reduce(
+        (acc, row) => {
+          if (row.original.amount >= 0) {
+            acc.income += row.original.amount;
+          } else {
+            acc.expense += row.original.amount;
+          }
+
+          return acc;
+        },
+        { income: 0, expense: 0 }
+      );
+      const prevTotal =
+        table.getPreFilteredRowModel().rows.reduce(
+          (acc, row) => {
+            const prevAmount = row.original.prevAmounts?.[0] ?? 0;
+            if (prevAmount >= 0) {
+              acc.income += prevAmount;
+            } else {
+              acc.expense += prevAmount;
+            }
+
+            return acc;
+          },
+          { income: 0, expense: 0 }
+        ) || total;
+
+      return (
+        <>
+          <div
+            className={cn(
+              total.income === prevTotal.income
+                ? 'text-muted-foreground'
+                : total.income < prevTotal.income
+                ? 'text-destructive'
+                : 'text-primary'
+            )}
+          >
+            <span className='mr-1 inline-block min-w-8'>Inc:</span>
+            <span className='inline-block'>{formatCurrency(total.income)}</span>
+          </div>
+          <div
+            className={cn(
+              total.expense === prevTotal.expense
+                ? 'text-muted-foreground'
+                : total.expense < prevTotal.expense
+                ? 'text-destructive'
+                : 'text-primary'
+            )}
+          >
+            <span className='mr-1 inline-block min-w-8'>Exp:</span>
+            <span className='inline-block'>{formatCurrency(total.expense)}</span>
+          </div>
+          <div
+            className={cn(
+              total.income + total.expense === prevTotal.income + prevTotal.expense
+                ? 'text-muted-foreground'
+                : total.income + total.expense < prevTotal.income + prevTotal.expense
+                ? 'text-destructive'
+                : 'text-primary'
+            )}
+          >
+            <span className='mr-1 inline-block min-w-8'>Net:</span>
+            <span className='inline-block'>{formatCurrency(total.income + total.expense)}</span>
+          </div>
+        </>
+      );
+    }
   }
 ];
 
@@ -119,6 +189,76 @@ export const BuildColumns = (data: ResponseType[]): ColumnDef<ResponseType>[] =>
         >
           {value != null ? formatCurrency(value) : '-'}
         </span>
+      );
+    },
+    footer: ({ table }) => {
+      const total = table.getFilteredRowModel().rows.reduce(
+        (acc, row) => {
+          const val = row.original.prevAmounts?.[i] ?? 0;
+          if (val >= 0) {
+            acc.income += val;
+          } else {
+            acc.expense += val;
+          }
+
+          return acc;
+        },
+        { income: 0, expense: 0 }
+      );
+      const prevTotal =
+        table.getPreFilteredRowModel().rows.reduce(
+          (acc, row) => {
+            const prevVal = row.original.prevAmounts?.[i + 1] ?? row.original.prevAmounts?.[i] ?? 0;
+            if (prevVal >= 0) {
+              acc.income += prevVal;
+            } else {
+              acc.expense += prevVal;
+            }
+
+            return acc;
+          },
+          { income: 0, expense: 0 }
+        ) || total;
+
+      return (
+        <>
+          <div
+            className={cn(
+              total.income === prevTotal.income
+                ? 'text-muted-foreground'
+                : total.income < prevTotal.income
+                ? 'text-destructive'
+                : 'text-primary'
+            )}
+          >
+            <span className='mr-1 inline-block min-w-8'>Inc:</span>
+            <span className='inline-block'>{formatCurrency(total.income)}</span>
+          </div>
+          <div
+            className={cn(
+              total.expense === prevTotal.expense
+                ? 'text-muted-foreground'
+                : total.expense < prevTotal.expense
+                ? 'text-destructive'
+                : 'text-primary'
+            )}
+          >
+            <span className='mr-1 inline-block min-w-8'>Exp:</span>
+            <span className='inline-block'>{formatCurrency(total.expense)}</span>
+          </div>
+          <div
+            className={cn(
+              total.income + total.expense === prevTotal.income + prevTotal.expense
+                ? 'text-muted-foreground'
+                : total.income + total.expense < prevTotal.income + prevTotal.expense
+                ? 'text-destructive'
+                : 'text-primary'
+            )}
+          >
+            <span className='mr-1 inline-block min-w-8'>Net:</span>
+            <span className='inline-block'>{formatCurrency(total.income + total.expense)}</span>
+          </div>
+        </>
       );
     }
   }));
