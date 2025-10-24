@@ -18,7 +18,7 @@ function DataGrid() {
   const dateRangeLabel = formatDateRange({ to, from });
 
   return (
-    <div className='grid grid-cols-1 lg:grid-cols-3 gap-8 pb-2 mb-8'>
+    <div className='grid grid-cols-1 lg:grid-cols-3 gap-4 pb-6'>
       <DataCard
         icon={FaPiggyBank}
         isLoading={isLoading}

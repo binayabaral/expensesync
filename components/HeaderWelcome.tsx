@@ -9,16 +9,16 @@ function HeaderWelcome() {
   const { isLoaded, user } = useUser();
 
   return (
-    <div className='pt-10'>
+    <div className='pt-4 md:pt-6'>
       {isLoaded && user?.firstName ? (
         <>
-          <h1 className='text-2xl lg:text-5xl text-white font-medium mb-3'>Welcome, {user?.firstName} 👋</h1>
-          <p className='text-green-300 mb-3'>This is your financial overview report</p>
+          <h1 className='text-2xl lg:text-5xl font-medium mb-1 md:mb-3'>Welcome, {user?.firstName} 👋</h1>
+          <p className='mb-3'>This is your financial overview report</p>
         </>
       ) : (
         <>
-          <Skeleton className='h-8 lg:h-12 w-full md:w-1/2 bg-green-500 mb-3' />
-          <Skeleton className='h-6 w-full md:w-1/3 bg-green-500' />
+          <Skeleton className='h-8 lg:h-12 w-full md:w-1/2 mb-1 md:mb-3' />
+          <Skeleton className='h-6 w-full md:w-1/3 mb-3' />
         </>
       )}
     </div>

@@ -61,7 +61,7 @@ function Nav() {
     return (
       <div className='w-full flex justify-between items-center'>
         <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-          <SheetTrigger className='p-2 rounded font-normal bg-white/10 hover:bg-white/20 hover:text-white border-none focus-visible:ring-offset-0 focus-visible:ring-transparent outline-none text-white focus:bg-white/30 transition'>
+          <SheetTrigger className='p-2 rounded font-normal transition'>
             <Menu className='size-4' />
           </SheetTrigger>
           <SheetContent side='left' className='px-2' title='Menu'>
@@ -93,8 +93,8 @@ function Nav() {
           asChild
           variant='outline'
           className={cn(
-            'w-full mr-1 lg:w-auto justify-between font-normal hover:bg-white/20 hover:text-white border-none focus-visible:ring-offset-0 focus-visible:ring-transparent outline-none text-white focus:bg-white/20 transition',
-            pathName === route.href ? 'bg-white/10 ' : 'bg-transparent'
+            'w-full mr-1 lg:w-auto justify-between font-normal border-none outline-none transition shadow-none hover:bg-green-500/10 hover:text-primary',
+            pathName === route.href ? 'bg-green-500/10 text-primary' : 'bg-transparent'
           )}
         >
           <Link href={route.href}>{route.label}</Link>

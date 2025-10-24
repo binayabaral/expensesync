@@ -21,7 +21,7 @@ function CategorySpendingChart({ isLoading, data = [] }: Props) {
 
   if (isLoading) {
     return (
-      <Card className='border-none drop-shadow-sm'>
+      <Card className='border border-slate-200 shadow-none'>
         <CardHeader className='flex space-y-2 lg:space-y-0 lg:flex-row lg:items-center justify-between'>
           <Skeleton className='h-8 w-48' />
           <Skeleton className='h-8 w-full lg:w-28' />
@@ -36,9 +36,9 @@ function CategorySpendingChart({ isLoading, data = [] }: Props) {
   }
 
   return (
-    <Card className='border-none drop-shadow-sm'>
+    <Card className='border border-slate-200 shadow-none'>
       <CardHeader className='flex space-y-2 lg:space-y-0 lg:flex-row lg:items-center justify-between'>
-        <CardTitle className='text-xl'>Categories</CardTitle>
+        <CardTitle className='text-2xl'>Categories</CardTitle>
         <Select defaultValue={chartType} onValueChange={setChartType}>
           <SelectTrigger className='lg:w-auto h-9 rounded-md px-3'>
             <SelectValue placeholder='Chart Type' />

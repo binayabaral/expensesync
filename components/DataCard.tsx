@@ -59,7 +59,7 @@ function DataCard({
 }: DataCardProps) {
   if (isLoading) {
     return (
-      <Card className='border-none drop-shadow-sm h-48'>
+      <Card className='border border-slate-200 shadow-none h-48'>
         <CardHeader className='flex flex-row items-center justify-between gap-x-4'>
           <div className='space-y-2'>
             <Skeleton className='h-6 w-24' />
@@ -67,7 +67,7 @@ function DataCard({
           </div>
           <Skeleton className='size-12' />
         </CardHeader>
-        <CardContent>
+        <CardContent className='pt-0 md:pt-0'>
           <Skeleton className='shrink-0 h-10 w-24 mb-2' />
           <Skeleton className='shrink-0 h-4 w-40' />
         </CardContent>
@@ -75,18 +75,18 @@ function DataCard({
     );
   }
   return (
-    <Card className='border-none drop-shadow-sm'>
+    <Card className='border border-slate-200 shadow-none'>
       <CardHeader className='flex flex-row items-center justify-between gap-x-4'>
-        <div className='space-y-2'>
-          <CardTitle className='text-2xl line-clamp-1'>{title}</CardTitle>
+        <div className='space-y-1 md:space-y-2'>
+          <CardTitle className='text-xl md:text-2xl line-clamp-1'>{title}</CardTitle>
           <CardDescription className='line-clamp-1'>{subtitle}</CardDescription>
         </div>
         <div className={cn('shrink-0', boxVariants({ variant }))}>
           <Icon className={cn(iconVariants({ variant }))} />
         </div>
       </CardHeader>
-      <CardContent>
-        <h1 className='font-bold text-2xl mb-2 line-clamp-1 break-all'>
+      <CardContent className='pt-0 md:pt-0'>
+        <h1 className='font-bold text-xl md:text-2xl mb-2 line-clamp-1 break-all'>
           <CountUp start={0} decimals={2} preserveValue decimalPlaces={2} end={value} formattingFn={formatCurrency} />
         </h1>
         <p
