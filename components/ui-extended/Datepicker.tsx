@@ -1,4 +1,5 @@
 import * as React from 'react';
+import isMobile from 'is-mobile';
 import { DayPicker } from 'react-day-picker';
 import { useImperativeHandle, useRef } from 'react';
 import { type Locale, enUS } from 'date-fns/locale';
@@ -727,6 +728,59 @@ const DateTimePicker = React.forwardRef<Partial<DateTimePickerRef>, DateTimePick
         localize,
         formatLong
       };
+    }
+
+    const isMobileDevice = isMobile();
+
+    if (isMobileDevice) {
+      const formatString = hourCycle === 24 ? initHourFormat.hour24 : initHourFormat.hour12;
+
+      const formattedDisplayValue = displayDate ? format(displayDate, formatString, { locale: loc }) : '';
+
+      // Helper to generate correct datetime-local string (no UTC shift)
+      const toLocalInputValue = (date: Date) => {
+        const pad = (n: number) => String(n).padStart(2, '0');
+        const year = date.getFullYear();
+        const month = pad(date.getMonth() + 1);
+        const day = pad(date.getDate());
+        const hour = pad(date.getHours());
+        const minute = pad(date.getMinutes());
+        const second = pad(date.getSeconds());
+        return granularity === 'minute'
+          ? `${year}-${month}-${day}T${hour}:${minute}`
+          : `${year}-${month}-${day}T${hour}:${minute}:${second}`;
+      };
+
+      // Parse datetime-local string as local time (NOT UTC)
+      const parseLocalDateTime = (value: string): Date => {
+        const [datePart, timePart] = value.split('T');
+        const [year, month, day] = datePart.split('-').map(Number);
+        const [hour, minute, second = 0] = timePart.split(':').map(Number);
+        return new Date(year, month - 1, day, hour, minute, second);
+      };
+
+      return (
+        <div className={cn('relative', className)}>
+          <Input
+            type='datetime-local'
+            disabled={disabled}
+            value={displayDate ? toLocalInputValue(displayDate) : ''}
+            onChange={e => {
+              const newDate = parseLocalDateTime(e.target.value);
+              onChange?.(newDate);
+              setDisplayDate(newDate);
+            }}
+            className='opacity-0 absolute inset-0 z-10 cursor-pointer'
+          />
+
+          <div className='flex items-center border rounded-md px-3 py-2 bg-background text-foreground'>
+            <CalendarIcon className='mr-2 h-4 w-4 text-muted-foreground' />
+            <span className={cn('truncate text-sm', disabled && 'text-muted-foreground')}>
+              {formattedDisplayValue || placeholder || 'Select date'}
+            </span>
+          </div>
+        </div>
+      );
     }
 
     return (
