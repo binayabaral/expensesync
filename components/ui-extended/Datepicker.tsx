@@ -584,6 +584,7 @@ const TimePicker = React.forwardRef<TimePickerRef, TimePickerProps>(
               date={date}
               onDateChange={onChange}
               ref={secondRef}
+              disabled
               onLeftFocus={() => minuteRef?.current?.focus()}
               onRightFocus={() => periodRef?.current?.focus()}
             />
