@@ -61,8 +61,8 @@ function Nav() {
     return (
       <div className='w-full flex justify-between items-center'>
         <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-          <SheetTrigger className='p-2 rounded font-normal transition'>
-            <Menu className='size-4' />
+          <SheetTrigger className='p-1 rounded font-normal transition'>
+            <Menu className='size-6' />
           </SheetTrigger>
           <SheetContent side='left' className='px-2' title='Menu'>
             <SheetTitle className='invisible'>Menu</SheetTitle>
