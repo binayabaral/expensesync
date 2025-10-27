@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import isMobile from 'is-mobile';
 import { Trash } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -11,6 +12,7 @@ import { insertTransactionSchema } from '@/db/schema';
 import { convertAmountToMiliUnits } from '@/lib/utils';
 import { AmountInput } from '@/components/AmountInput';
 import { DateTimePicker } from '@/components/ui-extended/Datepicker';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 
 const formSchema = z.object({
@@ -65,6 +67,8 @@ export const TransactionForm = ({
     onDelete?.();
   };
 
+  const isMobileDevice = isMobile();
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className='space-y-4 pt-4'>
@@ -86,14 +90,25 @@ export const TransactionForm = ({
             <FormItem>
               <FormLabel>Account</FormLabel>
               <FormControl>
-                <Select
-                  value={field.value}
-                  disabled={disabled}
-                  options={accountOptions}
-                  allowCreatingOptions={false}
-                  placeholder='Select Account'
-                  onChangeAction={field.onChange}
-                />
+                {isMobileDevice ? (
+                  <NativeSelect value={field.value} onChange={field.onChange} disabled={disabled} className='w-full'>
+                    <NativeSelectOption value=''>Select Account</NativeSelectOption>
+                    {accountOptions.map(option => (
+                      <NativeSelectOption key={option.value} value={option.value}>
+                        {option.label}
+                      </NativeSelectOption>
+                    ))}
+                  </NativeSelect>
+                ) : (
+                  <Select
+                    value={field.value}
+                    disabled={disabled}
+                    options={accountOptions}
+                    allowCreatingOptions={false}
+                    placeholder='Select Account'
+                    onChangeAction={field.onChange}
+                  />
+                )}
               </FormControl>
             </FormItem>
           )}
@@ -105,15 +120,31 @@ export const TransactionForm = ({
             <FormItem>
               <FormLabel>Category</FormLabel>
               <FormControl>
-                <Select
-                  value={field.value}
-                  disabled={disabled}
-                  options={categoryOptions}
-                  allowCreatingOptions={true}
-                  onCreate={onCreateCategory}
-                  placeholder='Select Category'
-                  onChangeAction={field.onChange}
-                />
+                {isMobileDevice ? (
+                  <NativeSelect
+                    value={field.value ?? ''}
+                    onChange={field.onChange}
+                    disabled={disabled}
+                    className='w-full'
+                  >
+                    <NativeSelectOption value=''>Select Category</NativeSelectOption>
+                    {categoryOptions.map(option => (
+                      <NativeSelectOption key={option.value} value={option.value}>
+                        {option.label}
+                      </NativeSelectOption>
+                    ))}
+                  </NativeSelect>
+                ) : (
+                  <Select
+                    value={field.value ?? ''}
+                    disabled={disabled}
+                    options={categoryOptions}
+                    allowCreatingOptions={false}
+                    onCreate={onCreateCategory}
+                    placeholder='Select Category'
+                    onChangeAction={field.onChange}
+                  />
+                )}
               </FormControl>
             </FormItem>
           )}
