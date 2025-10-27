@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useMountedState } from 'react-use';
 
 import { AddAccount } from '@/features/accounts/components/AddAccount';
@@ -26,7 +27,9 @@ export const SheetProvider = ({ children }: { children: React.ReactNode }) => {
       <AddCategorySheet />
       <EditCategorySheet />
 
-      <AddTransactionSheet />
+      <Suspense>
+        <AddTransactionSheet />
+      </Suspense>
       <EditTransactionSheet />
 
       <AddTransferSheet />

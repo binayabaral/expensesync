@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import { Loader2 } from 'lucide-react';
+import { startOfMinute } from 'date-fns';
+import { useSearchParams } from 'next/navigation';
 
 import { insertTransactionSchema } from '@/db/schema';
 import { useGetAccounts } from '@/features/accounts/api/useGetAccounts';
@@ -18,6 +20,7 @@ const formSchema = insertTransactionSchema.omit({
 type FormValues = z.input<typeof formSchema>;
 
 export const AddTransactionSheet = () => {
+  const params = useSearchParams();
   const { isOpen, onClose } = useAddTransaction();
   const createTransactionMutation = useCreateTransaction();
 
@@ -43,8 +46,19 @@ export const AddTransactionSheet = () => {
     });
   };
 
+  const accountId = params.get('accountId') || '';
+
   const isPending = createTransactionMutation.isPending || categoryMutation.isPending;
   const isLoading = categoryQuery.isLoading || accountsQuery.isLoading;
+
+  const defaultValues = {
+    accountId,
+    payee: '',
+    notes: '',
+    amount: '',
+    categoryId: '',
+    date: startOfMinute(new Date())
+  };
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -61,6 +75,7 @@ export const AddTransactionSheet = () => {
           <TransactionForm
             onSubmit={onSubmit}
             disabled={isPending}
+            defaultValues={defaultValues}
             accountOptions={accountOptions}
             categoryOptions={categoryOptions}
             onCreateCategory={onCreateCategory}
