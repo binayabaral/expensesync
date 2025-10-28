@@ -44,7 +44,7 @@ export const columns: ColumnDef<ResponseType>[] = [
         </Button>
       );
     },
-    cell: ({ row }) => <span>{format(row.getValue('date') as Date, 'dd MMMM, yyyy HH:mm')}</span>
+    cell: ({ row }) => <span>{format(row.getValue('date') as Date, 'dd MMMM, yyyy hh:mm a')}</span>
   },
   {
     accessorKey: 'category',
