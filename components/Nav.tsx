@@ -1,45 +1,51 @@
 'use client';
 
-import Link from 'next/link';
-import { useState } from 'react';
-import { useMedia } from 'react-use';
-import { Loader2, Menu } from 'lucide-react';
+import isMobile from 'is-mobile';
+import { Loader2 } from 'lucide-react';
+import { useState, Fragment } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { ClerkLoaded, ClerkLoading, UserButton } from '@clerk/nextjs';
+import { ClerkLoaded, ClerkLoading, UserButton, useUser } from '@clerk/nextjs';
+import { FaLayerGroup, FaReceipt, FaWallet, FaTags, FaRightLeft, FaCirclePlus } from 'react-icons/fa6';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 function Nav() {
   const routes = [
     {
       href: '/',
-      label: 'Overview'
+      label: 'Overview',
+      icon: FaLayerGroup
     },
     {
       href: '/transactions',
-      label: 'Transactions'
-    },
-    {
-      href: '/accounts',
-      label: 'Accounts'
-    },
-    {
-      href: '/categories',
-      label: 'Categories'
+      label: 'Transactions',
+      icon: FaReceipt
     },
     {
       href: '/transfers',
-      label: 'Transfers'
+      label: 'Transfers',
+      icon: FaRightLeft
+    },
+    {
+      href: '/accounts',
+      label: 'Accounts',
+      icon: FaWallet
+    },
+    {
+      href: '/categories',
+      label: 'Categories',
+      icon: FaTags
     }
   ];
 
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const router = useRouter();
+  const { user } = useUser();
   const pathName = usePathname();
-  const isMobile = useMedia('(max-width: 1024px)', false);
+  const isMobileDevice = isMobile();
 
   const onSheetButtonClick = (href: string) => {
     router.push(href);
@@ -49,59 +55,89 @@ function Nav() {
   const renderUserAvatar = () => (
     <>
       <ClerkLoaded>
-        <UserButton />
+        <div className='flex flex-col items-center'>
+          <UserButton
+            appearance={{
+              elements: {
+                userButtonAvatarBox: cn(isMobileDevice ? 'size-5' : 'size-7')
+              }
+            }}
+          />
+          <span className={cn('mt-1 text-[11px]', isMobileDevice ? '' : 'hidden')}>{user?.fullName}</span>
+        </div>
       </ClerkLoaded>
       <ClerkLoading>
-        <Loader2 className='size-4 animate-spin' />
+        <Loader2 className={cn('animate-spin', isMobileDevice ? 'size-5' : 'size-7')} />
       </ClerkLoading>
     </>
   );
 
-  if (isMobile) {
-    return (
-      <div className='w-full flex justify-between items-center'>
-        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-          <SheetTrigger className='p-1 rounded font-normal transition'>
-            <Menu className='size-6' />
-          </SheetTrigger>
-          <SheetContent side='left' className='px-2' title='Menu'>
-            <SheetTitle className='invisible'>Menu</SheetTitle>
-            <nav className='flex flex-col gap-y-2 pt-6'>
-              {routes.map(route => (
-                <Button
-                  key={route.label}
-                  variant={route.href === pathName ? 'secondary' : 'ghost'}
-                  onClick={() => onSheetButtonClick(route.href)}
-                  className='w-full justify-start'
-                >
-                  {route.label}
-                </Button>
-              ))}
-            </nav>
-          </SheetContent>
-        </Sheet>
-        {renderUserAvatar()}
-      </div>
-    );
-  }
-
   return (
-    <nav className='hidden lg:flex items-center gap-x-2'>
-      {routes.map(route => (
-        <Button
-          key={route.label}
-          asChild
-          variant='outline'
-          className={cn(
-            'w-full mr-1 lg:w-auto justify-between font-normal border-none outline-none transition shadow-none hover:bg-green-500/10 hover:text-primary',
-            pathName === route.href ? 'bg-green-500/10 text-primary' : 'bg-transparent'
-          )}
-        >
-          <Link href={route.href}>{route.label}</Link>
-        </Button>
-      ))}
-      {renderUserAvatar()}
-    </nav>
+    <>
+      <nav className={cn('flex items-center', isMobileDevice ? 'w-full justify-between' : 'gap-x-2')}>
+        {routes.slice(0, isMobileDevice ? 3 : routes.length).map((route, index) => (
+          <Fragment key={route.label}>
+            <Button
+              onClick={() => router.push(route.href)}
+              variant='outline'
+              className={cn(
+                'justify-between font-normal border-none outline-none transition shadow-none hover:bg-green-500/10 hover:text-primary',
+                pathName === route.href ? 'bg-green-500/10 text-primary' : 'bg-transparent',
+                isMobileDevice ? 'w-1/5 py-5 text-[11px] px-1 h-auto flex flex-col border border-r' : 'mr-1'
+              )}
+            >
+              <route.icon className={cn(isMobileDevice ? 'size-7' : 'hidden')} />
+              <span className='block'>{route.label}</span>
+            </Button>
+            {index === 1 && isMobileDevice && (
+              <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+                <SheetTrigger asChild>
+                  <Button
+                    variant='outline'
+                    className={cn(
+                      'justify-between font-normal border-none outline-none transition shadow-none hover:bg-green-500/10 hover:text-primary',
+                      isSheetOpen ? 'bg-green-500/10 text-primary' : 'bg-transparent',
+                      isMobileDevice ? 'w-1/5 py-5 text-[11px] px-1 h-auto flex flex-col border border-r' : 'mr-1'
+                    )}
+                  >
+                    <FaCirclePlus className={cn(isMobileDevice ? 'size-7' : 'hidden')} />
+                    All Options
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side='left' className='px-2 flex flex-col justify-between' title='Menu'>
+                  <SheetTitle className='text-3xl text-center pt-40'>All Options</SheetTitle>
+                  <div className='flex flex-col'>
+                    <nav className='flex flex-wrap pt-6 pb-5'>
+                      {routes.map(route => (
+                        <Button
+                          key={route.label}
+                          variant='outline'
+                          onClick={() => onSheetButtonClick(route.href)}
+                          className={cn(
+                            'justify-between font-normal border-none outline-none transition shadow-none hover:bg-green-500/10 hover:text-primary',
+                            pathName === route.href ? 'bg-green-500/10 text-primary' : 'bg-transparent',
+                            isMobileDevice ? 'w-1/4 py-5 text-[11px] px-1 h-20 flex flex-col border border-r' : 'mr-1'
+                          )}
+                        >
+                          <route.icon className={cn(isMobileDevice ? 'size-7' : 'hidden')} />
+                          <span className='block'>{route.label}</span>
+                        </Button>
+                      ))}
+                    </nav>
+                    <SheetClose asChild>
+                      <Button variant='outline' className='w-full mb-10'>
+                        Close
+                      </Button>
+                    </SheetClose>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            )}
+          </Fragment>
+        ))}
+        <div className={cn(isMobileDevice ? 'w-1/5 text-center' : '')}>{renderUserAvatar()}</div>
+      </nav>
+    </>
   );
 }
 
