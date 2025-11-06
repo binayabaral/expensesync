@@ -85,7 +85,7 @@ const app = new Hono().get(
     const intervals = eachMonthOfInterval({ start: startDate, end: endDate });
 
     const netWorthOverTime = await Promise.all(
-      intervals.map(async date => {
+      [...intervals, endDate].map(async date => {
         const [{ balance }] = await fetchAccountBalance(auth.userId, date, undefined, true);
 
         return {
