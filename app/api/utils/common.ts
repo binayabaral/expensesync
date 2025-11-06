@@ -39,6 +39,7 @@ export const fetchAccountBalance = async (userId: string, to: Date, accountId?: 
       and(
         accountId ? eq(transactions.accountId, accountId) : undefined,
         eq(accounts.userId, userId),
+        eq(accounts.isDeleted, false),
         lte(transactions.date, to),
         showHidden ? undefined : eq(accounts.isHidden, false)
       )
