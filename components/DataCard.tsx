@@ -2,8 +2,8 @@ import { IconType } from 'react-icons';
 import { cva, VariantProps } from 'class-variance-authority';
 
 import { CountUp } from '@/components/CountUp';
+import { cn, formatCurrency } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
-import { cn, formatCurrency, formatPercentage } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 const boxVariants = cva('rounded-md p-3', {
@@ -11,6 +11,7 @@ const boxVariants = cva('rounded-md p-3', {
     variant: {
       default: 'bg-muted-foreground/20',
       warning: 'bg-yellow-500/20',
+      neutral: 'bg-blue-500/20',
       success: 'bg-green-500/20',
       destructive: 'bg-rose-500/20'
     },
@@ -25,6 +26,7 @@ const iconVariants = cva('size-6', {
     variant: {
       default: 'fill-muted-foreground',
       warning: 'fill-yellow-500',
+      neutral: 'fill-blue-500',
       success: 'fill-green-500',
       destructive: 'fill-rose-500'
     },
@@ -34,29 +36,35 @@ const iconVariants = cva('size-6', {
   }
 });
 
+const baseTextVariants = cva('text-muted-foreground text-sm line-clamp-1', {
+  variants: {
+    variant: {
+      default: 'text-muted-foreground',
+      warning: 'text-yellow-500',
+      neutral: 'text-blue-500',
+      success: 'text-primary',
+      destructive: 'text-destructive'
+    },
+    defaultVariants: {
+      variant: 'default'
+    }
+  }
+});
+
 type BoxVariants = VariantProps<typeof boxVariants>;
 type IconVariants = VariantProps<typeof iconVariants>;
+type BaseTextVariants = VariantProps<typeof baseTextVariants>;
 
-interface DataCardProps extends BoxVariants, IconVariants {
+interface DataCardProps extends BoxVariants, IconVariants, BaseTextVariants {
   title: string;
   icon: IconType;
   value?: number;
   subtitle: string;
+  baseText: string;
   isLoading?: boolean;
-  percentageChange?: number;
-  period: { from: string | undefined; to: string | undefined };
 }
 
-function DataCard({
-  title,
-  variant,
-  value = 0,
-  subtitle,
-  isLoading,
-  icon: Icon,
-  percentageChange = 0,
-  period
-}: DataCardProps) {
+function DataCard({ title, variant, baseText, subtitle, value = 0, isLoading, icon: Icon }: DataCardProps) {
   if (isLoading) {
     return (
       <Card className='border border-slate-200 shadow-none h-48'>
@@ -89,25 +97,7 @@ function DataCard({
         <h1 className='font-bold text-xl md:text-2xl mb-2 line-clamp-1 break-all'>
           <CountUp start={0} decimals={2} preserveValue decimalPlaces={2} end={value} formattingFn={formatCurrency} />
         </h1>
-        <p
-          className={cn(
-            'text-muted-foreground text-sm line-clamp-1',
-            percentageChange !== 0 &&
-              (title === 'Expenses'
-                ? percentageChange > 0
-                  ? 'text-destructive'
-                  : 'text-primary'
-                : percentageChange > 0
-                ? 'text-primary'
-                : 'text-destructive')
-          )}
-        >
-          {formatPercentage(
-            percentageChange,
-            { addPrefix: true, showEndDateOnly: title === 'Current Balance' },
-            period
-          )}
-        </p>
+        <p className={cn(baseTextVariants({ variant }))}>{baseText}</p>
       </CardContent>
     </Card>
   );
