@@ -97,7 +97,13 @@ const app = new Hono().get(
 
     const cleanedNetWorthOverTime = netWorthOverTime.slice(netWorthOverTime.findIndex(item => item.balance !== null));
 
-    return c.json({ data: { result, netWorthOverTime: cleanedNetWorthOverTime, dateInterval: { start: startDate, end: endDate } } });
+    return c.json({
+      data: {
+        summary: result,
+        netWorthOverTime: cleanedNetWorthOverTime,
+        dateInterval: { start: startDate, end: endDate }
+      }
+    });
   }
 );
 

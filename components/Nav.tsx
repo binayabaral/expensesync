@@ -6,7 +6,7 @@ import { Loader2 } from 'lucide-react';
 import { useState, Fragment } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { ClerkLoaded, ClerkLoading, UserButton, useUser } from '@clerk/nextjs';
-import { FaLayerGroup, FaReceipt, FaWallet, FaTags, FaRightLeft, FaCirclePlus } from 'react-icons/fa6';
+import { FaLayerGroup, FaReceipt, FaWallet, FaTags, FaRightLeft, FaCirclePlus, FaHeart } from 'react-icons/fa6';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -38,6 +38,11 @@ function Nav() {
       href: '/categories',
       label: 'Categories',
       icon: FaTags
+    },
+    {
+      href: '/health',
+      label: 'Financial Health',
+      icon: FaHeart
     }
   ];
 
