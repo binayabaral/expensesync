@@ -3,17 +3,30 @@
 import { scaleSymlog } from 'd3-scale';
 import { format } from 'date-fns/format';
 import { FileSearch, Loader2 } from 'lucide-react';
-import { CartesianGrid, ResponsiveContainer, XAxis, YAxis, Tooltip, LineChart, Line } from 'recharts';
+import { Area, CartesianGrid, ResponsiveContainer, XAxis, YAxis, AreaChart, Tooltip } from 'recharts';
 
-import { formatCurrency } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useGetHealth } from '@/features/health/api/useGetHealth';
-import { HealthChartTooltip } from '@/components/HealthChartTooltip';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { HealthChartTooltip } from '@/components/HealthChartTooltip';
+import { formatCurrency } from '@/lib/utils';
 
 function Chart() {
   const { data, isLoading } = useGetHealth();
   const scale = scaleSymlog();
+
+  const gradientOffset = () => {
+    const values = (data?.netWorthOverTime ?? []).map(d => d.balance);
+    if (!values.length) return 0.5;
+
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+
+    const s = scaleSymlog().domain([min, max]).range([1, 0]).clamp(true);
+    return s(0);
+  };
+
+  const off = gradientOffset();
 
   if (isLoading) {
     return (
@@ -43,9 +56,22 @@ function Chart() {
           </div>
         ) : (
           <ResponsiveContainer width='100%' height={300}>
-            <LineChart data={data?.netWorthOverTime} margin={{ left: 50, bottom: 5 }}>
+            <AreaChart data={data?.netWorthOverTime}>
               <CartesianGrid strokeDasharray='3 3' />
-              <YAxis scale={scale} style={{ fontSize: '10px' }} tickFormatter={value => formatCurrency(value)} tickCount={1000}/>
+              <defs>
+                <linearGradient id='balance' x1={0} y1={0} x2={0} y2={1}>
+                  <stop offset='0' stopColor='#16a34a' stopOpacity={0.8} />
+                  <stop offset={off} stopColor='#16a34a' stopOpacity={0} />
+                  <stop offset={off} stopColor='#f43f5e' stopOpacity={0} />
+                  <stop offset='1' stopColor='#f43f5e' stopOpacity={0.8} />
+                </linearGradient>
+              </defs>
+              <YAxis
+                scale={scale}
+                style={{ fontSize: '12px' }}
+                tickFormatter={value => formatCurrency(value, true)}
+                tickCount={8}
+              />
               <Tooltip content={<HealthChartTooltip />} />
               <XAxis
                 axisLine={false}
@@ -55,8 +81,8 @@ function Chart() {
                 style={{ fontSize: '12px' }}
                 tickMargin={16}
               />
-              <Line dataKey='balance' dot={false} stroke='#3B82F6' strokeWidth={2} className='drop-shadow-sm' />
-            </LineChart>
+              <Area type='monotone' dataKey='balance' stroke='#000' fill='url(#balance)' />
+            </AreaChart>
           </ResponsiveContainer>
         )}
       </CardContent>

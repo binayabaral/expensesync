@@ -2,6 +2,7 @@ import { format } from 'date-fns';
 import { scaleSymlog } from 'd3-scale';
 import { Tooltip, XAxis, AreaChart, Area, ResponsiveContainer, CartesianGrid, YAxis } from 'recharts';
 
+import { formatCurrency } from '@/lib/utils';
 import { ChartTooltip } from '@/components/ChartTooltip';
 
 type Props = {
@@ -29,7 +30,12 @@ function AreaVariant({ data }: Props) {
             <stop offset='98%' stopColor='#f43f5e' stopOpacity={0} />
           </linearGradient>
         </defs>
-        <YAxis scale={scale} hide={true} />
+        <YAxis
+          scale={scale}
+          style={{ fontSize: '12px' }}
+          tickFormatter={value => formatCurrency(value, true)}
+          tickCount={8}
+        />
         <XAxis
           axisLine={false}
           tickLine={false}

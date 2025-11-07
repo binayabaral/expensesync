@@ -24,11 +24,11 @@ export function convertAmountFromMiliUnits(amount: number) {
   return amount / 1000;
 }
 
-export function formatCurrency(value: number) {
+export function formatCurrency(value: number, compact: boolean = false) {
   return Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'NPR',
-    minimumFractionDigits: 2
+    ...(compact ? { notation: 'compact' } : { minimumFractionDigits: 2 })
   }).format(convertAmountFromMiliUnits(value));
 }
 
