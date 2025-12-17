@@ -86,7 +86,7 @@ const app = new Hono().get(
 
     const netWorthOverTime = await Promise.all(
       [...intervals, endDate].map(async date => {
-        const [{ balance }] = await fetchAccountBalance(auth.userId, date, undefined, true);
+        const [{ balance }] = await fetchAccountBalance(auth.userId, date, undefined, true, true);
 
         return {
           date,
