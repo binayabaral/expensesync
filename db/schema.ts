@@ -1,16 +1,21 @@
 import { z } from 'zod';
 import { relations } from 'drizzle-orm';
 import { createInsertSchema } from 'drizzle-zod';
-import { integer, pgTable, text, timestamp, pgEnum, boolean, bigint } from 'drizzle-orm/pg-core';
+import { integer, pgTable, text, timestamp, pgEnum, boolean, bigint, doublePrecision } from 'drizzle-orm/pg-core';
 
 export const TransactionTypeEnum = pgEnum('transaction_type', [
   'USER_CREATED',
   'INITIAL_BALANCE',
   'PEER_TRANSFER',
-  'SELF_TRANSFER'
+  'SELF_TRANSFER',
+  'ASSET_BUY',
+  'ASSET_RETURN',
+  'ASSET_SELL'
 ]);
 
 export const TransferTypeEnum = pgEnum('transfer_type', ['SELF_TRANSFER', 'PEER_TRANSFER']);
+
+export const AssetTypeEnum = pgEnum('asset_type', ['GOLD_22K', 'GOLD_24K', 'SILVER', 'STOCK']);
 
 export const accounts = pgTable('accounts', {
   id: text('id').primaryKey(),
@@ -81,6 +86,82 @@ export const transfersRelations = relations(transfers, ({ many }) => ({
   transactions: many(transactions)
 }));
 
+export const assets = pgTable('assets', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull(),
+  name: text('name').notNull(),
+  type: AssetTypeEnum('type').notNull(),
+  quantity: doublePrecision('quantity').notNull(),
+  unit: text('unit').notNull(),
+  assetPrice: bigint('asset_price', { mode: 'number' }).notNull(),
+  extraCharge: bigint('extra_charge', { mode: 'number' }).notNull().default(0),
+  totalPaid: bigint('total_paid', { mode: 'number' }).notNull(),
+  accountId: text('account_id')
+    .references(() => accounts.id, { onDelete: 'no action' })
+    .notNull(),
+  buyTransactionId: text('buy_transaction_id').references(() => transactions.id, { onDelete: 'set null' }),
+  sellTransactionId: text('sell_transaction_id').references(() => transactions.id, { onDelete: 'set null' }),
+  isSold: boolean('is_sold').notNull().default(false),
+  soldAt: timestamp('sold_at', { mode: 'date' }),
+  sellAmount: bigint('sell_amount', { mode: 'number' }),
+  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' })
+});
+
+export const assetsRelations = relations(assets, ({ one }) => ({
+  account: one(accounts, {
+    fields: [assets.accountId],
+    references: [accounts.id]
+  })
+}));
+
+export const assetLots = pgTable('asset_lots', {
+  id: text('id').primaryKey(),
+  assetId: text('asset_id')
+    .references(() => assets.id, { onDelete: 'cascade' })
+    .notNull(),
+  quantity: doublePrecision('quantity').notNull(),
+  unit: text('unit').notNull(),
+  assetPrice: bigint('asset_price', { mode: 'number' }).notNull(),
+  sellPrice: bigint('sell_price', { mode: 'number' }),
+  extraCharge: bigint('extra_charge', { mode: 'number' }).notNull().default(0),
+  totalPaid: bigint('total_paid', { mode: 'number' }).notNull(),
+  accountId: text('account_id')
+    .references(() => accounts.id, { onDelete: 'no action' })
+    .notNull(),
+  buyTransactionId: text('buy_transaction_id').references(() => transactions.id, { onDelete: 'set null' }),
+  sellPrincipalTransactionId: text('sell_principal_transaction_id').references(() => transactions.id, {
+    onDelete: 'set null'
+  }),
+  sellProfitTransactionId: text('sell_profit_transaction_id').references(() => transactions.id, {
+    onDelete: 'set null'
+  }),
+  date: timestamp('date', { mode: 'date' }).notNull(),
+  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' })
+});
+
+export const assetLotsRelations = relations(assetLots, ({ one }) => ({
+  asset: one(assets, {
+    fields: [assetLots.assetId],
+    references: [assets.id]
+  }),
+  account: one(accounts, {
+    fields: [assetLots.accountId],
+    references: [accounts.id]
+  })
+}));
+
+export const assetPrices = pgTable('asset_prices', {
+  id: text('id').primaryKey(),
+  type: AssetTypeEnum('type').notNull(),
+  // For metals, this is the unit (e.g. 'tola', 'gm'); for stocks it can be empty or a generic marker.
+  unit: text('unit').notNull(),
+  // Live price per unit in mili-units (to stay consistent with amounts elsewhere)
+  price: bigint('price', { mode: 'number' }).notNull(),
+  fetchedAt: timestamp('fetched_at', { mode: 'date' }).defaultNow().notNull()
+});
+
 export const insertAccountSchema = createInsertSchema(accounts);
 export const insertCategorySchema = createInsertSchema(accounts);
 export const insertTransferSchema = createInsertSchema(transfers).extend({
@@ -88,4 +169,16 @@ export const insertTransferSchema = createInsertSchema(transfers).extend({
 });
 export const insertTransactionSchema = createInsertSchema(transactions).extend({
   date: z.coerce.date()
+});
+export const insertAssetSchema = createInsertSchema(assets).extend({
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional()
+});
+export const insertAssetLotSchema = createInsertSchema(assetLots).extend({
+  date: z.coerce.date(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional()
+});
+export const insertAssetPriceSchema = createInsertSchema(assetPrices).extend({
+  fetchedAt: z.coerce.date().optional()
 });

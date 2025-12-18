@@ -1,0 +1,4 @@
+ALTER TABLE "asset_lots" ADD COLUMN "sell_principal_transaction_id" text;--> statement-breakpoint
+ALTER TABLE "asset_lots" ADD COLUMN "sell_profit_transaction_id" text;--> statement-breakpoint
+ALTER TABLE "asset_lots" ADD CONSTRAINT "asset_lots_sell_principal_transaction_id_transactions_id_fk" FOREIGN KEY ("sell_principal_transaction_id") REFERENCES "public"."transactions"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "asset_lots" ADD CONSTRAINT "asset_lots_sell_profit_transaction_id_transactions_id_fk" FOREIGN KEY ("sell_profit_transaction_id") REFERENCES "public"."transactions"("id") ON DELETE set null ON UPDATE no action;

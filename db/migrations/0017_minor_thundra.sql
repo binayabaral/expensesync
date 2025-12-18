@@ -1,0 +1,1 @@
+ALTER TABLE "asset_lots" ADD COLUMN "sell_price" bigint;

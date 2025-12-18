@@ -1,0 +1,1 @@
+ALTER TABLE "assets" ALTER COLUMN "quantity" SET DATA TYPE double precision;

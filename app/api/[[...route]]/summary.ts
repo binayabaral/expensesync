@@ -57,7 +57,7 @@ const app = new Hono().get(
       .select({
         date: transactions.date,
         income:
-          sql`SUM (CASE WHEN ${transactions.amount} >=0 AND ${transactions.type} = 'USER_CREATED' THEN ${transactions.amount} ELSE 0 END)`.mapWith(
+          sql`SUM (CASE WHEN ${transactions.amount} >=0 AND ${transactions.type} IN ('USER_CREATED','ASSET_SELL') THEN ${transactions.amount} ELSE 0 END)`.mapWith(
             Number
           ),
         expenses:

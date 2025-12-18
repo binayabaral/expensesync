@@ -11,6 +11,8 @@ import { EditTransferSheet } from '@/features/transfers/components/EditTransferS
 import { EditCategorySheet } from '@/features/categories/components/EditCategorySheet';
 import { AddTransactionSheet } from '@/features/transactions/components/AddTransactionSheet';
 import { EditTransactionSheet } from '@/features/transactions/components/EditTransactionSheet';
+import { AddAssetSheet } from '@/features/assets/components/AddAssetSheet';
+import { SellAssetSheet } from '@/features/assets/components/SellAssetSheet';
 
 export const SheetProvider = ({ children }: { children: React.ReactNode }) => {
   const isMounted = useMountedState();
@@ -34,6 +36,10 @@ export const SheetProvider = ({ children }: { children: React.ReactNode }) => {
 
       <AddTransferSheet />
       <EditTransferSheet />
+      <Suspense>
+        <AddAssetSheet />
+      </Suspense>
+      <SellAssetSheet />
       {children}
     </>
   );
