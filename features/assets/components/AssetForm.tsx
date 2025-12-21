@@ -110,11 +110,12 @@ export const AssetForm = ({ disabled, defaultValues, accountOptions, onSubmit }:
     const extraChargeNumber = parseFloat(watchedExtraCharge || '0') || 0;
 
     const total = quantityNumber * priceNumber + extraChargeNumber;
+    const roundedTotal = Math.round(total);
 
-    if (Number.isNaN(total) || total <= 0) {
+    if (Number.isNaN(roundedTotal) || roundedTotal <= 0) {
       form.setValue('totalPaid', '');
     } else {
-      form.setValue('totalPaid', total.toString());
+      form.setValue('totalPaid', roundedTotal.toString());
     }
   }, [watchedQuantity, watchedAssetPrice, watchedExtraCharge, form]);
 

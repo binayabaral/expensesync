@@ -95,11 +95,12 @@ export const SellAssetSheet = () => {
     const extra = Number(watchedExtraCharge || '0');
     const gross = qty * price;
     const net = gross - extra;
+    const roundedNet = Math.round(net);
 
-    if (!qty || qty <= 0 || !price || price <= 0 || Number.isNaN(net) || net <= 0) {
+    if (!qty || qty <= 0 || !price || price <= 0 || Number.isNaN(roundedNet) || roundedNet <= 0) {
       setTotalAmount('');
     } else {
-      setTotalAmount(net.toString());
+      setTotalAmount(roundedNet.toString());
     }
   }, [watchedQuantity, watchedUnitPrice, watchedExtraCharge]);
 
@@ -118,7 +119,8 @@ export const SellAssetSheet = () => {
     const extra = Number(values.extraCharge || '0');
     const gross = qty * unitPrice;
     const net = gross - extra;
-    const amountMili = convertAmountToMiliUnits(net);
+    const roundedNet = Math.round(net);
+    const amountMili = convertAmountToMiliUnits(roundedNet);
 
     sellMutation.mutate(
       {
