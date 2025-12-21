@@ -21,7 +21,8 @@ export const columns: ColumnDef<ResponseType>[] = [
         Asset
         <ArrowUpDown className='ml-2 h-4 w-4' />
       </Button>
-    )
+    ),
+    footer: () => ''
   },
   {
     accessorKey: 'type',
@@ -34,7 +35,8 @@ export const columns: ColumnDef<ResponseType>[] = [
         Type
         <ArrowUpDown className='ml-2 h-4 w-4' />
       </Button>
-    )
+    ),
+    footer: () => ''
   },
   {
     accessorKey: 'quantity',
@@ -47,7 +49,8 @@ export const columns: ColumnDef<ResponseType>[] = [
         Quantity
         <ArrowUpDown className='ml-2 h-4 w-4' />
       </Button>
-    )
+    ),
+    footer: () => ''
   },
   {
     accessorKey: 'unit',
@@ -60,7 +63,8 @@ export const columns: ColumnDef<ResponseType>[] = [
         Unit
         <ArrowUpDown className='ml-2 h-4 w-4' />
       </Button>
-    )
+    ),
+    footer: () => ''
   },
   {
     accessorKey: 'extraCharge',
@@ -74,7 +78,11 @@ export const columns: ColumnDef<ResponseType>[] = [
         <ArrowUpDown className='ml-2 h-4 w-4' />
       </Button>
     ),
-    cell: ({ row }) => formatCurrency(row.original.extraCharge)
+    cell: ({ row }) => formatCurrency(row.original.extraCharge),
+    footer: ({ table }) => {
+      const total = table.getFilteredRowModel().rows.reduce((sum, row) => sum + (row.original.extraCharge || 0), 0);
+      return formatCurrency(total);
+    }
   },
   {
     accessorKey: 'assetPrice',
@@ -88,7 +96,8 @@ export const columns: ColumnDef<ResponseType>[] = [
         <ArrowUpDown className='ml-2 h-4 w-4' />
       </Button>
     ),
-    cell: ({ row }) => formatCurrency(row.original.assetPrice)
+    cell: ({ row }) => formatCurrency(row.original.assetPrice),
+    footer: () => ''
   },
   {
     accessorKey: 'liveUnitPrice',
@@ -102,7 +111,8 @@ export const columns: ColumnDef<ResponseType>[] = [
         <ArrowUpDown className='ml-2 h-4 w-4' />
       </Button>
     ),
-    cell: ({ row }) => (row.original.liveUnitPrice != null ? formatCurrency(row.original.liveUnitPrice) : '-')
+    cell: ({ row }) => (row.original.liveUnitPrice != null ? formatCurrency(row.original.liveUnitPrice) : '-'),
+    footer: () => ''
   },
   {
     accessorKey: 'totalPaid',
@@ -116,7 +126,11 @@ export const columns: ColumnDef<ResponseType>[] = [
         <ArrowUpDown className='ml-2 h-4 w-4' />
       </Button>
     ),
-    cell: ({ row }) => formatCurrency(row.original.totalPaid)
+    cell: ({ row }) => formatCurrency(row.original.totalPaid),
+    footer: ({ table }) => {
+      const total = table.getFilteredRowModel().rows.reduce((sum, row) => sum + (row.original.totalPaid || 0), 0);
+      return formatCurrency(total);
+    }
   },
   {
     accessorKey: 'currentValue',
@@ -130,7 +144,11 @@ export const columns: ColumnDef<ResponseType>[] = [
         <ArrowUpDown className='ml-2 h-4 w-4' />
       </Button>
     ),
-    cell: ({ row }) => (row.original.currentValue != null ? formatCurrency(row.original.currentValue) : '-')
+    cell: ({ row }) => (row.original.currentValue != null ? formatCurrency(row.original.currentValue) : '-'),
+    footer: ({ table }) => {
+      const total = table.getFilteredRowModel().rows.reduce((sum, row) => sum + (row.original.currentValue || 0), 0);
+      return total > 0 ? formatCurrency(total) : '-';
+    }
   },
   {
     accessorKey: 'realizedProfitLoss',
@@ -159,6 +177,19 @@ export const columns: ColumnDef<ResponseType>[] = [
           )}
         >
           {formatCurrency(value)}
+        </span>
+      );
+    },
+    footer: ({ table }) => {
+      const total = table.getFilteredRowModel().rows.reduce((sum, row) => sum + (row.original.realizedProfitLoss || 0), 0);
+      return (
+        <span
+          className={cn(
+            'whitespace-nowrap font-medium',
+            total > 0 ? 'text-emerald-600 dark:text-emerald-400' : total < 0 ? 'text-red-600 dark:text-red-400' : ''
+          )}
+        >
+          {formatCurrency(total)}
         </span>
       );
     }
@@ -190,11 +221,33 @@ export const columns: ColumnDef<ResponseType>[] = [
           {formatCurrency(value)}
         </span>
       );
+    },
+    footer: ({ table }) => {
+      const rows = table.getFilteredRowModel().rows;
+      const total = rows.reduce((sum, row) => {
+        const value = row.original.unrealizedProfitLoss;
+        return sum + (value != null ? value : 0);
+      }, 0);
+      const hasNullValues = rows.some(row => row.original.unrealizedProfitLoss == null);
+      
+      if (hasNullValues && total === 0) return '-';
+      
+      return (
+        <span
+          className={cn(
+            'whitespace-nowrap font-medium',
+            total > 0 ? 'text-emerald-600 dark:text-emerald-400' : total < 0 ? 'text-red-600 dark:text-red-400' : ''
+          )}
+        >
+          {formatCurrency(total)}
+        </span>
+      );
     }
   },
   {
     id: 'actions',
-    cell: ({ row }) => <Actions id={row.original.id} />
+    cell: ({ row }) => <Actions id={row.original.id} />,
+    footer: () => ''
   }
 ];
 
