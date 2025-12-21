@@ -1,0 +1,1 @@
+ALTER TABLE "asset_prices" ADD COLUMN "symbol" text;

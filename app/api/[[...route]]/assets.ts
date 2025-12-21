@@ -43,20 +43,23 @@ const app = new Hono()
     const prices = await db
       .select({
         type: assetPrices.type,
+        symbol: assetPrices.symbol,
         unit: assetPrices.unit,
         price: assetPrices.price,
         fetchedAt: assetPrices.fetchedAt
       })
       .from(assetPrices);
 
-    const latestPriceByType: Record<string, number> = {};
+    const latestPriceByKey: Record<string, number> = {};
 
     for (const p of prices) {
-      const key = p.type;
-      const existing = latestPriceByType[key];
+      // For stocks (with symbol), use type + symbol as key (e.g., 'STOCK:AAPL')
+      // For metals (GOLD_22K, GOLD_24K, SILVER - no symbol), use just type (e.g., 'GOLD_22K')
+      const key = p.type === 'STOCK' && p.symbol ? `${p.type}:${p.symbol}` : p.type;
+      const existing = latestPriceByKey[key];
 
       if (existing == null) {
-        latestPriceByType[key] = p.price as number;
+        latestPriceByKey[key] = p.price as number;
       }
     }
 
@@ -87,7 +90,10 @@ const app = new Hono()
     }
 
     const data = userAssets.map(asset => {
-      const liveUnitPrice = latestPriceByType[asset.type] ?? null;
+      // For stocks, match by type + symbol (from asset.name, e.g., 'STOCK:AAPL')
+      // For metals (GOLD_22K, GOLD_24K, SILVER), match by type only (e.g., 'GOLD_22K')
+      const priceKey = asset.type === 'STOCK' ? `${asset.type}:${asset.name}` : asset.type;
+      const liveUnitPrice = latestPriceByKey[priceKey] ?? null;
       const currentValue = liveUnitPrice ? liveUnitPrice * asset.quantity : null;
       const realizedProfitLoss = realizedByAsset[asset.id] ?? 0;
       const unrealizedProfitLoss = currentValue != null ? currentValue - asset.totalPaid : null;

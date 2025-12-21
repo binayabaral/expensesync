@@ -155,6 +155,8 @@ export const assetLotsRelations = relations(assetLots, ({ one }) => ({
 export const assetPrices = pgTable('asset_prices', {
   id: text('id').primaryKey(),
   type: AssetTypeEnum('type').notNull(),
+  // For stocks, this is the stock symbol (e.g. 'AAPL', 'GOOGL', 'MSFT'); for metals, this is null.
+  symbol: text('symbol'),
   // For metals, this is the unit (e.g. 'tola', 'gm'); for stocks it can be empty or a generic marker.
   unit: text('unit').notNull(),
   // Live price per unit in mili-units (to stay consistent with amounts elsewhere)
