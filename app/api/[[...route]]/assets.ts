@@ -74,7 +74,7 @@ const app = new Hono()
             COALESCE(SUM(
               CASE
                 WHEN ${assetLots.quantity} < 0 THEN
-                  (${assetLots.sellPrice} * ABS(${assetLots.quantity}) - -${assetLots.totalPaid} - ${assetLots.extraCharge})
+                  (${assetLots.sellPrice} * ABS(${assetLots.quantity}) - -${assetLots.totalPaid})
                 ELSE 0
               END
             ), 0)

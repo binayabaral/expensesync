@@ -59,13 +59,12 @@ export const AssetLotsSheet = () => {
     const priceNum = parseFloat(assetPrice || '0');
     const extraNum = parseFloat(extraCharge || '0');
     const total = qtyNum * priceNum + extraNum;
-    const roundedTotal = Math.round(total);
 
-    if (!qtyNum || qtyNum <= 0 || Number.isNaN(roundedTotal) || roundedTotal <= 0) {
+    if (!qtyNum || qtyNum <= 0 || Number.isNaN(total) || total <= 0) {
       return '';
     }
 
-    return roundedTotal.toString();
+    return total.toString();
   })();
 
   const startEdit = (lot: LotResponse) => {
@@ -106,8 +105,8 @@ export const AssetLotsSheet = () => {
       return;
     }
 
-    const assetPriceMili = convertAmountToMiliUnits(priceNum);
-    const extraChargeMili = convertAmountToMiliUnits(extraNum);
+    const assetPriceMili = Math.round(convertAmountToMiliUnits(priceNum));
+    const extraChargeMili = Math.round(convertAmountToMiliUnits(extraNum));
 
     editLotMutation.mutate(
       {

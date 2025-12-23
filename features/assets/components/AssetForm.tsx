@@ -110,12 +110,11 @@ export const AssetForm = ({ disabled, defaultValues, accountOptions, onSubmit }:
     const extraChargeNumber = parseFloat(watchedExtraCharge || '0') || 0;
 
     const total = quantityNumber * priceNumber + extraChargeNumber;
-    const roundedTotal = Math.round(total);
 
-    if (Number.isNaN(roundedTotal) || roundedTotal <= 0) {
+    if (Number.isNaN(total) || total <= 0) {
       form.setValue('totalPaid', '');
     } else {
-      form.setValue('totalPaid', roundedTotal.toString());
+      form.setValue('totalPaid', total.toString());
     }
   }, [watchedQuantity, watchedAssetPrice, watchedExtraCharge, form]);
 
@@ -130,9 +129,9 @@ export const AssetForm = ({ disabled, defaultValues, accountOptions, onSubmit }:
 
   const handleSubmit = (values: FormValues) => {
     const quantity = Number(values.quantity || '0');
-    const assetPrice = convertAmountToMiliUnits(parseFloat(values.assetPrice || '0'));
-    const extraCharge = convertAmountToMiliUnits(parseFloat(values.extraCharge || '0'));
-    const totalPaid = convertAmountToMiliUnits(parseFloat(values.totalPaid || '0'));
+    const assetPrice = Math.round(convertAmountToMiliUnits(parseFloat(values.assetPrice || '0')));
+    const extraCharge = Math.round(convertAmountToMiliUnits(parseFloat(values.extraCharge || '0')));
+    const totalPaid = Math.round(convertAmountToMiliUnits(parseFloat(values.totalPaid || '0')));
 
     onSubmit({
       name: values.name,
