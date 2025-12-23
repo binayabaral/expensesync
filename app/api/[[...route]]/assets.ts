@@ -596,7 +596,7 @@ const app = new Hono()
       // Allocate original cost (principal) proportionally to the quantity being sold
       const sellRatio = values.quantity / asset.quantity;
       const principal = Math.round(asset.totalPaid * sellRatio);
-      const profit = saleAmount - principal - extraCharge;
+      const profit = saleAmount - principal;
 
       const principalReturnTransactionId = createId();
       const profitTransactionId = profit > 0 ? createId() : null;
