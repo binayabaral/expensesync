@@ -9,6 +9,7 @@ import TransfersRoute from './transfers';
 import categoriesRoute from './categories';
 import transactionsRoute from './transactions';
 import assetsRoute from './assets';
+import payeesRoute from './payees';
 
 export const runtime = 'edge';
 
@@ -23,7 +24,8 @@ const routes = app
   .route('/transfers', TransfersRoute)
   .route('/categories', categoriesRoute)
   .route('/transactions', transactionsRoute)
-  .route('/assets', assetsRoute);
+  .route('/assets', assetsRoute)
+  .route('/payees', payeesRoute);
 
 export const GET = handle(app);
 export const POST = handle(app);
