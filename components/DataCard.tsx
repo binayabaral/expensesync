@@ -36,7 +36,7 @@ const iconVariants = cva('size-6', {
   }
 });
 
-const baseTextVariants = cva('text-muted-foreground text-sm line-clamp-1', {
+const baseTextVariants = cva('text-muted-foreground text-xs line-clamp-1', {
   variants: {
     variant: {
       default: 'text-muted-foreground',
@@ -67,17 +67,17 @@ interface DataCardProps extends BoxVariants, IconVariants, BaseTextVariants {
 function DataCard({ title, variant, baseText, subtitle, value = 0, isLoading, icon: Icon }: DataCardProps) {
   if (isLoading) {
     return (
-      <Card className='border border-slate-200 shadow-none h-48'>
+      <Card className='border border-slate-200 shadow-none'>
         <CardHeader className='flex flex-row items-center justify-between gap-x-4'>
-          <div className='space-y-2'>
-            <Skeleton className='h-6 w-24' />
-            <Skeleton className='h-6 w-40' />
+          <div className='space-y-1'>
+            <Skeleton className='h-6 w-28' />
+            <Skeleton className='h-4 w-36' />
           </div>
-          <Skeleton className='size-12' />
+          <Skeleton className='h-12 w-12 rounded-md' />
         </CardHeader>
-        <CardContent className='pt-0 md:pt-0'>
-          <Skeleton className='shrink-0 h-10 w-24 mb-2' />
-          <Skeleton className='shrink-0 h-4 w-40' />
+        <CardContent className='pt-0'>
+          <Skeleton className='h-7 w-32 mb-1' />
+          <Skeleton className='h-4 w-44' />
         </CardContent>
       </Card>
     );
@@ -85,16 +85,16 @@ function DataCard({ title, variant, baseText, subtitle, value = 0, isLoading, ic
   return (
     <Card className='border border-slate-200 shadow-none'>
       <CardHeader className='flex flex-row items-center justify-between gap-x-4'>
-        <div className='space-y-1 md:space-y-2'>
-          <CardTitle className='text-xl md:text-2xl line-clamp-1'>{title}</CardTitle>
-          <CardDescription className='line-clamp-1'>{subtitle}</CardDescription>
+        <div className='space-y-1'>
+          <CardTitle className='text-base line-clamp-1'>{title}</CardTitle>
+          <CardDescription className='line-clamp-1 text-xs'>{subtitle}</CardDescription>
         </div>
         <div className={cn('shrink-0', boxVariants({ variant }))}>
           <Icon className={cn(iconVariants({ variant }))} />
         </div>
       </CardHeader>
-      <CardContent className='pt-0 md:pt-0'>
-        <h1 className='font-bold text-xl md:text-2xl mb-2 line-clamp-1 break-all'>
+      <CardContent className='pt-0'>
+        <h1 className='font-bold text-xl mb-1 line-clamp-1 break-all'>
           <CountUp start={0} decimals={2} preserveValue decimalPlaces={2} end={value} formattingFn={formatCurrency} />
         </h1>
         <p className={cn(baseTextVariants({ variant }))}>{baseText}</p>

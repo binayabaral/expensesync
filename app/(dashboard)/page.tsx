@@ -7,7 +7,7 @@ import DataChart from '@/components/DataChart';
 
 export default function DashboardPage() {
   return (
-    <div className='container mx-auto px-2 pb-5'>
+    <div className='max-w-full'>
       <Suspense>
         <DataGrid />
         <DataChart />

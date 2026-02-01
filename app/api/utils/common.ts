@@ -1,7 +1,7 @@
 import { and, eq, gte, lt, lte, sql, sum, desc } from 'drizzle-orm';
 
 import { db } from '@/db/drizzle';
-import { accounts, categories, transactions } from '@/db/schema';
+import { accounts, categories, transactions, transfers } from '@/db/schema';
 
 export const fetchFinancialData = async (userId: string, from: Date, to: Date, accountId?: string) => {
   return db
@@ -74,5 +74,50 @@ export const fetchTransactionsByCategory = async (
       )
     )
     .groupBy(categories.name, categories.id)
+    .orderBy(desc(sql`SUM(ABS(${transactions.amount}))`));
+};
+
+export const fetchTransferCharges = async (userId: string, startDate: Date, endDate: Date, accountId?: string) => {
+  return db
+    .select({
+      totalCharges: sum(transfers.transferCharge).mapWith(Number)
+    })
+    .from(transfers)
+    .where(
+      and(
+        eq(transfers.userId, userId),
+        gte(transfers.date, startDate),
+        lte(transfers.date, endDate),
+        accountId ? eq(transfers.fromAccountId, accountId) : undefined
+      )
+    );
+};
+
+export const fetchTransactionsByPayee = async (
+  userId: string,
+  startDate: Date,
+  endDate: Date,
+  accountId?: string,
+  expenseOnly: boolean = true
+) => {
+  return db
+    .select({
+      name: transactions.payee,
+      value: expenseOnly
+        ? sql`SUM(ABS(${transactions.amount}))`.mapWith(Number)
+        : sql`SUM(${transactions.amount})`.mapWith(Number)
+    })
+    .from(transactions)
+    .innerJoin(accounts, eq(transactions.accountId, accounts.id))
+    .where(
+      and(
+        expenseOnly ? lt(transactions.amount, 0) : undefined,
+        lte(transactions.date, endDate),
+        eq(accounts.userId, userId),
+        gte(transactions.date, startDate),
+        accountId ? eq(transactions.accountId, accountId) : undefined
+      )
+    )
+    .groupBy(transactions.payee)
     .orderBy(desc(sql`SUM(ABS(${transactions.amount}))`));
 };

@@ -25,7 +25,7 @@ function Categories() {
 
   if (categoriesQuery.isLoading) {
     return (
-      <div className='container mx-auto px-2 pb-5'>
+      <div className='max-w-full'>
         <Card className='border border-slate-200 shadow-none'>
           <CardHeader>
             <Skeleton className='h-8 w-48' />
@@ -41,10 +41,10 @@ function Categories() {
   }
 
   return (
-    <div className='container mx-auto px-2 pb-5'>
+    <div className='max-w-full'>
       <Card className='border border-slate-200 shadow-none'>
         <CardHeader className='gap-y-2 lg:flex-row lg:items-center lg:justify-between space-y-0'>
-          <CardTitle className='text-xl md:text-2xl'>Categories</CardTitle>
+          <CardTitle className='text-lg font-semibold'>Categories</CardTitle>
           <Button onClick={newCategory.onOpen}>
             <Plus className='size-4 mr-2' />
             Add New

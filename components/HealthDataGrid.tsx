@@ -11,7 +11,7 @@ function HealthDataGrid() {
   const { data, isLoading } = useGetHealth();
 
   return (
-    <div className='grid grid-cols-1 lg:grid-cols-3 gap-4 pb-6'>
+    <div className='grid grid-cols-1 lg:grid-cols-3 gap-3 pb-4'>
       <DataCard
         title='Assets'
         variant='success'

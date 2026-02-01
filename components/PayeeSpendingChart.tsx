@@ -1,30 +1,29 @@
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AreaChart, BarChart, FileSearch, LineChart, Loader2 } from 'lucide-react';
+import { FileSearch, Loader2, PieChart, Radar, Target } from 'lucide-react';
 
 import { Skeleton } from '@/components/ui/skeleton';
-import BarVariant from '@/components/ChartBarVariant';
-import AreaVariant from '@/components/ChartAreaVariant';
-import LineVariant from '@/components/ChartLineVariant';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PayeeSpendingChartPieVariant } from '@/components/PayeeSpendingChartPieVariant';
+import { PayeeSpendingChartRadarVariant } from '@/components/PayeeSpendingChartRadarVariant';
+import { PayeeSpendingChartRadialVariant } from '@/components/PayeeSpendingChartRadialVariant';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type Props = {
   isLoading?: boolean;
   data?: {
-    date: string;
-    income: number;
-    expenses: number;
+    name: string;
+    value: number;
   }[];
 };
 
-function Chart({ isLoading, data = [] }: Props) {
-  const [chartType, setChartType] = useState<string>('area');
+function PayeeSpendingChart({ isLoading, data = [] }: Props) {
+  const [chartType, setChartType] = useState<string>('pie');
 
   if (isLoading) {
     return (
       <Card className='border border-slate-200 shadow-none'>
         <CardHeader className='flex space-y-2 lg:space-y-0 lg:flex-row lg:items-center justify-between'>
-          <Skeleton className='h-6 w-32' />
+          <Skeleton className='h-6 w-24' />
           <Skeleton className='h-9 w-full lg:w-28' />
         </CardHeader>
         <CardContent>
@@ -39,28 +38,28 @@ function Chart({ isLoading, data = [] }: Props) {
   return (
     <Card className='border border-slate-200 shadow-none'>
       <CardHeader className='flex space-y-2 lg:space-y-0 lg:flex-row lg:items-center justify-between'>
-        <CardTitle className='text-lg font-semibold'>Transactions</CardTitle>
+        <CardTitle className='text-lg font-semibold'>Payees</CardTitle>
         <Select defaultValue={chartType} onValueChange={setChartType}>
           <SelectTrigger className='lg:w-auto h-9 rounded-md px-3'>
             <SelectValue placeholder='Chart Type' />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value='area'>
+            <SelectItem value='pie'>
               <div className='flex items-center'>
-                <AreaChart className='size-4 mr-2 shrink-0' />
-                <p>Area Chart</p>
+                <PieChart className='size-4 mr-2 shrink-0' />
+                <p>Pie Chart</p>
               </div>
             </SelectItem>
-            <SelectItem value='line'>
+            <SelectItem value='radar'>
               <div className='flex items-center'>
-                <LineChart className='size-4 mr-2 shrink-0' />
-                <p>Line Chart</p>
+                <Radar className='size-4 mr-2 shrink-0' />
+                <p>Radar Chart</p>
               </div>
             </SelectItem>
-            <SelectItem value='bar'>
+            <SelectItem value='radial'>
               <div className='flex items-center'>
-                <BarChart className='size-4 mr-2 shrink-0' />
-                <p>Bar Chart</p>
+                <Target className='size-4 mr-2 shrink-0' />
+                <p>Radial Chart</p>
               </div>
             </SelectItem>
           </SelectContent>
@@ -74,9 +73,9 @@ function Chart({ isLoading, data = [] }: Props) {
           </div>
         ) : (
           <>
-            {chartType === 'area' && <AreaVariant data={data} />}
-            {chartType === 'bar' && <BarVariant data={data} />}
-            {chartType === 'line' && <LineVariant data={data} />}
+            {chartType === 'pie' && <PayeeSpendingChartPieVariant data={data} />}
+            {chartType === 'radar' && <PayeeSpendingChartRadarVariant data={data} />}
+            {chartType === 'radial' && <PayeeSpendingChartRadialVariant data={data} />}
           </>
         )}
       </CardContent>
@@ -84,4 +83,4 @@ function Chart({ isLoading, data = [] }: Props) {
   );
 }
 
-export default Chart;
+export default PayeeSpendingChart;

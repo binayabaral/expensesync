@@ -23,11 +23,11 @@ function CategorySpendingChart({ isLoading, data = [] }: Props) {
     return (
       <Card className='border border-slate-200 shadow-none'>
         <CardHeader className='flex space-y-2 lg:space-y-0 lg:flex-row lg:items-center justify-between'>
-          <Skeleton className='h-8 w-48' />
-          <Skeleton className='h-8 w-full lg:w-28' />
+          <Skeleton className='h-7 w-28' />
+          <Skeleton className='h-9 w-full lg:w-28' />
         </CardHeader>
         <CardContent>
-          <div className='w-full h-80 flex items-center justify-center'>
+          <div className='w-full h-[300px] flex items-center justify-center'>
             <Loader2 className='h-6 w-6 text-slate-300 animate-spin' />
           </div>
         </CardContent>
@@ -38,7 +38,7 @@ function CategorySpendingChart({ isLoading, data = [] }: Props) {
   return (
     <Card className='border border-slate-200 shadow-none'>
       <CardHeader className='flex space-y-2 lg:space-y-0 lg:flex-row lg:items-center justify-between'>
-        <CardTitle className='text-2xl'>Categories</CardTitle>
+        <CardTitle className='text-lg font-semibold'>Categories</CardTitle>
         <Select defaultValue={chartType} onValueChange={setChartType}>
           <SelectTrigger className='lg:w-auto h-9 rounded-md px-3'>
             <SelectValue placeholder='Chart Type' />

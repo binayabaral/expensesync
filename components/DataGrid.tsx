@@ -2,7 +2,7 @@
 
 import { FaPiggyBank } from 'react-icons/fa';
 import { useSearchParams } from 'next/navigation';
-import { FaArrowTrendUp, FaArrowTrendDown } from 'react-icons/fa6';
+import { FaArrowTrendUp, FaArrowTrendDown, FaMoneyBillTransfer } from 'react-icons/fa6';
 
 import DataCard from '@/components/DataCard';
 import { formatDateRange, formatPercentage } from '@/lib/utils';
@@ -18,7 +18,7 @@ function DataGrid() {
   const dateRangeLabel = formatDateRange({ to, from });
 
   return (
-    <div className='grid grid-cols-1 lg:grid-cols-3 gap-4 pb-6'>
+    <div className='grid grid-cols-1 lg:grid-cols-4 gap-3 pb-4'>
       <DataCard
         icon={FaPiggyBank}
         isLoading={isLoading}
@@ -49,6 +49,15 @@ function DataGrid() {
         value={Math.abs(data?.expensesAmount || 0)}
         baseText={formatPercentage(data?.expenseChange || 0, { addPrefix: true }, { from, to })}
         variant={data?.expenseChange ? (data.expenseChange > 0 ? 'destructive' : 'success') : 'default'}
+      />
+      <DataCard
+        title='Extra Charges'
+        isLoading={isLoading}
+        icon={FaMoneyBillTransfer}
+        subtitle={dateRangeLabel}
+        value={Math.abs(data?.transferCharges || 0)}
+        baseText={formatPercentage(data?.transferChargesChange || 0, { addPrefix: true }, { from, to })}
+        variant={data?.transferChargesChange ? (data.transferChargesChange > 0 ? 'destructive' : 'success') : 'default'}
       />
     </div>
   );

@@ -23,10 +23,11 @@ function TransferPage() {
 
   if (isLoading) {
     return (
-      <div className='container mx-auto px-2 pb-5'>
+      <div className='max-w-full'>
         <Card className='border border-slate-200 shadow-none'>
-          <CardHeader>
-            <Skeleton className='h-8 w-48' />
+          <CardHeader className='gap-y-2 lg:flex-row lg:items-center lg:justify-between space-y-0'>
+            <Skeleton className='h-6 w-32' />
+            <Skeleton className='h-9 w-24' />
           </CardHeader>
           <CardContent>
             <div className='h-80 w-full flex items-center justify-center'>
@@ -39,10 +40,10 @@ function TransferPage() {
   }
 
   return (
-    <div className='container mx-auto px-2 pb-5'>
+    <div className='max-w-full'>
       <Card className='border border-slate-200 shadow-none'>
         <CardHeader className='gap-y-2 lg:flex-row lg:items-center lg:justify-between space-y-0'>
-          <CardTitle className='text-xl md:text-2xl'>Transfers History</CardTitle>
+          <CardTitle className='text-lg font-semibold'>Transfers History</CardTitle>
           <Button onClick={openAddTransferSheet.onOpen}>
             <Plus className='size-4 mr-2' />
             Add New

@@ -9,17 +9,17 @@ function HeaderWelcome() {
   const { isLoaded, user } = useUser();
 
   return (
-    <div className='pt-4 md:pt-6'>
+    <div className='min-w-0'>
       {isLoaded && user?.firstName ? (
-        <>
-          <h1 className='text-2xl lg:text-5xl font-medium mb-1 md:mb-3'>Welcome, {user?.firstName} 👋</h1>
-          <p className='mb-3'>This is your financial overview report</p>
-        </>
+        <div>
+          <h1 className='text-lg font-bold tracking-tight truncate'>Welcome back, {user?.firstName}! 👋</h1>
+          <p className='text-xs text-muted-foreground'>Here&apos;s an overview of your finances</p>
+        </div>
       ) : (
-        <>
-          <Skeleton className='h-8 lg:h-12 w-full md:w-1/2 mb-1 md:mb-3' />
-          <Skeleton className='h-6 w-full md:w-1/3 mb-3' />
-        </>
+        <div className='space-y-1'>
+          <Skeleton className='h-5 w-48' />
+          <Skeleton className='h-3 w-40' />
+        </div>
       )}
     </div>
   );

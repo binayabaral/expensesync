@@ -5,7 +5,7 @@ import FilterAccount from '@/components/FilterAccount';
 
 function Filters() {
   return (
-    <div className='flex flex-col lg:flex-row items-center gap-y-2 lg:gap-y-0 lg:gap-x-2 pb-3 md:pb-6'>
+    <div className='flex items-center gap-2'>
       <Suspense>
         <FilterAccount />
         <FilterDate />

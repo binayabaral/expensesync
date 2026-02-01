@@ -32,10 +32,10 @@ function Chart() {
     return (
       <Card className='border border-slate-200 shadow-none'>
         <CardHeader className='flex space-y-2 lg:space-y-0 lg:flex-row lg:items-center justify-between'>
-          <Skeleton className='h-8 w-48' />
+          <Skeleton className='h-7 w-40' />
         </CardHeader>
         <CardContent>
-          <div className='w-full h-80 flex items-center justify-center'>
+          <div className='w-full h-[300px] flex items-center justify-center'>
             <Loader2 className='h-6 w-6 text-slate-300 animate-spin' />
           </div>
         </CardContent>
@@ -46,7 +46,7 @@ function Chart() {
   return (
     <Card className='border border-slate-200 shadow-none'>
       <CardHeader className='flex space-y-2 lg:space-y-0 lg:flex-row lg:items-center justify-between'>
-        <CardTitle className='text-2xl'>Net worth over time</CardTitle>
+        <CardTitle className='text-lg font-semibold'>Net worth over time</CardTitle>
       </CardHeader>
       <CardContent>
         {data?.netWorthOverTime.length === 0 ? (
