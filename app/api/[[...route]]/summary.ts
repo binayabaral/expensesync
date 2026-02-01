@@ -61,7 +61,7 @@ const app = new Hono().get(
     const transferChargesChange = calculatePercentageChange(
       currentTransferCharges || 0,
       lastPeriodTransferCharges || 0,
-      true
+      false
     );
 
     const transactionsByCategory = await fetchTransactionsByCategory(auth.userId, startDate, endDate, accountId);
@@ -102,7 +102,7 @@ const app = new Hono().get(
         incomeChange,
         expensesAmount: currentPeriod.expenses,
         expenseChange,
-        transferCharges: currentTransferCharges,
+        transferCharges: currentTransferCharges || 0,
         transferChargesChange,
         categories: transactionsByCategory,
         payees: transactionsByPayee,
