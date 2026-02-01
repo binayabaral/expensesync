@@ -9,7 +9,6 @@ import {
   PaginationState,
   getCoreRowModel,
   getSortedRowModel,
-  ColumnFiltersState,
   getFilteredRowModel,
   getPaginationRowModel
 } from '@tanstack/react-table';
@@ -23,7 +22,6 @@ import { useConfirm } from '@/hooks/useConfirm';
 
 interface DataTableProps<TData, TValue> {
   data: TData[];
-  filterKey: string;
   disabled?: boolean;
   hasFooter?: boolean;
   columns: ColumnDef<TData, TValue>[];
@@ -34,13 +32,12 @@ export function DataTable<TData, TValue>({
   data,
   columns,
   disabled,
-  filterKey,
   hasFooter,
   onDeleteAction
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [globalFilter, setGlobalFilter] = React.useState('');
   const [pagination, setPagination] = React.useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
   const [ConfirmDialog, confirm] = useConfirm('Are you sure?', 'You are about to perform bulk delete');
 
@@ -52,20 +49,20 @@ export function DataTable<TData, TValue>({
     getCoreRowModel: getCoreRowModel(),
     onRowSelectionChange: setRowSelection,
     getSortedRowModel: getSortedRowModel(),
-    onColumnFiltersChange: setColumnFilters,
+    onGlobalFilterChange: setGlobalFilter,
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    state: { sorting, columnFilters, rowSelection, pagination }
+    state: { sorting, globalFilter, rowSelection, pagination }
   });
 
   return (
     <div>
       <ConfirmDialog />
-      <div className='flex items-center pb-4'>
+      <div className='flex items-center pb-4 gap-2'>
         <Input
-          placeholder={`Filter ${filterKey}...`}
-          value={(table.getColumn(filterKey)?.getFilterValue() as string) ?? ''}
-          onChange={event => table.getColumn(filterKey)?.setFilterValue(event.target.value)}
+          placeholder='Search all columns...'
+          value={globalFilter ?? ''}
+          onChange={event => setGlobalFilter(event.target.value)}
           className='max-w-sm'
         />
         {table.getFilteredSelectedRowModel().rows.length > 0 && (

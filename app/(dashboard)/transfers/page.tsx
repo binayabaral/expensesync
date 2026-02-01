@@ -50,7 +50,6 @@ function TransferPage() {
         </CardHeader>
         <CardContent>
           <DataTable
-            filterKey='date'
             columns={columns}
             data={transactions}
             disabled={isLoading}

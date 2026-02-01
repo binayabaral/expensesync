@@ -55,7 +55,6 @@ function Categories() {
             hasFooter
             columns={columns}
             data={categories}
-            filterKey='name'
             onDeleteAction={row => {
               const ids = row.map(r => r.original.id);
               deleteCategories.mutate({ ids });

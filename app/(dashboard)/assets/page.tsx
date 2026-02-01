@@ -48,7 +48,7 @@ function AssetsPageInner() {
           </Button>
         </CardHeader>
         <CardContent className='space-y-6'>
-          <DataTable columns={columns} data={assets} filterKey='name' hasFooter onDeleteAction={() => {}} />
+          <DataTable columns={columns} data={assets} hasFooter onDeleteAction={() => {}} />
           <AssetLotsSheet />
         </CardContent>
       </Card>
