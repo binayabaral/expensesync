@@ -330,7 +330,6 @@ export const AssetLotsSheet = () => {
         <DataTable
           data={lots}
           columns={columns}
-          filterKey='account'
           disabled={isLoading}
           hasFooter={false}
           onDeleteAction={() => undefined}
