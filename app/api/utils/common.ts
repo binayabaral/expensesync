@@ -100,7 +100,7 @@ export const fetchTransactionsByPayee = async (
   accountId?: string,
   expenseOnly: boolean = true
 ) => {
-  return db
+  const results = await db
     .select({
       name: transactions.payee,
       value: expenseOnly
@@ -115,9 +115,21 @@ export const fetchTransactionsByPayee = async (
         lte(transactions.date, endDate),
         eq(accounts.userId, userId),
         gte(transactions.date, startDate),
+        sql`${transactions.payee} != 'Transferred to another account'`,
         accountId ? eq(transactions.accountId, accountId) : undefined
       )
     )
     .groupBy(transactions.payee)
+    .having(sql`SUM(ABS(${transactions.amount})) > 0`)
     .orderBy(desc(sql`SUM(ABS(${transactions.amount}))`));
+
+  if (results.length <= 10) {
+    return results;
+  }
+
+  const top9 = results.slice(0, 9);
+  const remaining = results.slice(9);
+  const othersTotal = remaining.reduce((sum, item) => sum + item.value, 0);
+
+  return [...top9, { name: 'Others', value: othersTotal }];
 };
