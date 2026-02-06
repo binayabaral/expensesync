@@ -39,6 +39,7 @@ export const Actions = ({ item }: Props) => {
 
   const handleComplete = () => {
     const amount = convertAmountFromMiliUnits(item.amount).toString();
+    const transferCharge = convertAmountFromMiliUnits(item.transferCharge || 0).toString();
     const dueDate = item.nextDueDate ? new Date(item.nextDueDate) : new Date();
 
     if (item.type === 'TRANSFER') {
@@ -48,7 +49,7 @@ export const Actions = ({ item }: Props) => {
           fromAccountId: item.accountId || '',
           toAccountId: item.toAccountId || '',
           amount,
-          transferCharge: '0',
+          transferCharge,
           notes: item.notes || '',
           date: dueDate
         }

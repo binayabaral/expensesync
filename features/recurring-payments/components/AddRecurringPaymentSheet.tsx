@@ -8,7 +8,8 @@ import { useCreateRecurringPayment } from '@/features/recurring-payments/api/use
 import { useAddRecurringPayment } from '@/features/recurring-payments/hooks/useAddRecurringPayment';
 import {
   RecurringPaymentForm,
-  type RecurringPaymentFormValues
+  type RecurringPaymentFormValues,
+  type RecurringPaymentApiValues
 } from '@/features/recurring-payments/components/RecurringPaymentForm';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
@@ -42,7 +43,7 @@ export const AddRecurringPaymentSheet = () => {
   const isLoading = accountsQuery.isLoading || categoriesQuery.isLoading;
   const isPending = createRecurringPayment.isPending;
 
-  const onSubmit = (values: FormValues) => {
+  const onSubmit = (values: RecurringPaymentApiValues) => {
     createRecurringPayment.mutate(values, {
       onSuccess: () => {
         onClose();
@@ -56,6 +57,7 @@ export const AddRecurringPaymentSheet = () => {
     type: 'TRANSACTION',
     cadence: 'MONTHLY',
     amount: '',
+    transferCharge: '0',
     accountId: '',
     categoryId: '',
     toAccountId: '',
@@ -68,7 +70,7 @@ export const AddRecurringPaymentSheet = () => {
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className='space-y-4 max-h-[calc(100vh-2rem)] overflow-y-auto' tabIndex={undefined}>
+      <SheetContent className='space-y-4' tabIndex={undefined}>
         <SheetHeader>
           <SheetTitle>New Recurring Payment</SheetTitle>
           <SheetDescription>Create a new recurring payment.</SheetDescription>

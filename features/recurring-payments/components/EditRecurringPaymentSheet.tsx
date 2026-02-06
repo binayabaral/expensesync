@@ -12,7 +12,8 @@ import { useDeleteRecurringPayment } from '@/features/recurring-payments/api/use
 import { useOpenEditRecurringPaymentSheet } from '@/features/recurring-payments/hooks/useOpenEditRecurringPaymentSheet';
 import {
   RecurringPaymentForm,
-  type RecurringPaymentFormValues
+  type RecurringPaymentFormValues,
+  type RecurringPaymentApiValues
 } from '@/features/recurring-payments/components/RecurringPaymentForm';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
@@ -51,7 +52,7 @@ export const EditRecurringPaymentSheet = () => {
   const isLoading = recurringQuery.isLoading || accountsQuery.isLoading || categoriesQuery.isLoading;
   const isPending = editMutation.isPending || deleteMutation.isPending;
 
-  const onSubmit = (values: FormValues) => {
+  const onSubmit = (values: RecurringPaymentApiValues) => {
     editMutation.mutate(values, {
       onSuccess: () => {
         onClose();
@@ -75,13 +76,15 @@ export const EditRecurringPaymentSheet = () => {
     ? {
         ...recurringQuery.data,
         startDate: new Date(recurringQuery.data.startDate),
-        amount: convertAmountFromMiliUnits(recurringQuery.data.amount).toString()
+        amount: convertAmountFromMiliUnits(recurringQuery.data.amount).toString(),
+        transferCharge: convertAmountFromMiliUnits(recurringQuery.data.transferCharge || 0).toString()
       }
     : {
         name: '',
         type: 'TRANSACTION',
         cadence: 'MONTHLY',
         amount: '',
+        transferCharge: '0',
         accountId: '',
         categoryId: '',
         toAccountId: '',
@@ -96,7 +99,7 @@ export const EditRecurringPaymentSheet = () => {
     <>
       <ConfirmDialog />
       <Sheet open={isOpen} onOpenChange={onClose}>
-        <SheetContent className='space-y-4 max-h-[calc(100vh-2rem)] overflow-y-auto' tabIndex={undefined}>
+        <SheetContent className='space-y-4' tabIndex={undefined}>
           <SheetHeader>
             <SheetTitle>Edit Recurring Payment</SheetTitle>
             <SheetDescription>Edit an existing recurring payment.</SheetDescription>

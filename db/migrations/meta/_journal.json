@@ -148,6 +148,13 @@
       "when": 1770365414328,
       "tag": "0020_colossal_chronomancer",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1770367734705,
+      "tag": "0021_flimsy_vampiro",
+      "breakpoints": true
     }
   ]
 }

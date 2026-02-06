@@ -1,0 +1,1 @@
+ALTER TABLE "recurring_payments" ADD COLUMN "transfer_charge" bigint DEFAULT 0 NOT NULL;

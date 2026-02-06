@@ -20,6 +20,7 @@ const formSchema = z.object({
   type: z.enum(['TRANSACTION', 'TRANSFER']),
   cadence: z.enum(['DAILY', 'MONTHLY', 'YEARLY']),
   amount: z.string(),
+  transferCharge: z.string().optional().nullable(),
   startDate: z.coerce.date(),
   dayOfMonth: z.coerce.number().int().min(1).max(31).optional().nullable(),
   month: z.coerce.number().int().min(1).max(12).optional().nullable(),
@@ -58,8 +59,9 @@ const typeOptions = [
 
 export type RecurringPaymentFormValues = z.input<typeof formSchema>;
 
-export type RecurringPaymentApiValues = Omit<RecurringPaymentFormValues, 'amount'> & {
+export type RecurringPaymentApiValues = Omit<RecurringPaymentFormValues, 'amount' | 'transferCharge'> & {
   amount: number;
+  transferCharge?: number;
 };
 
 type Props = {
@@ -92,9 +94,11 @@ export const RecurringPaymentForm = ({
 
   const handleSubmit = (values: RecurringPaymentFormValues) => {
     const amountInMiliUnits = convertAmountToMiliUnits(parseFloat(values.amount));
+    const transferChargeInMiliUnits = convertAmountToMiliUnits(parseFloat(values.transferCharge || '0'));
     onSubmit({
       ...values,
       amount: amountInMiliUnits,
+      transferCharge: transferChargeInMiliUnits,
       dayOfMonth: values.dayOfMonth || null,
       month: values.month || null,
       accountId: values.accountId || null,
@@ -377,6 +381,27 @@ export const RecurringPaymentForm = ({
             </FormItem>
           )}
         />
+
+        {type === 'TRANSFER' && (
+          <FormField
+            name='transferCharge'
+            control={form.control}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Extra Charges (Transfer fees / Interest Amount)</FormLabel>
+                <FormControl>
+                  <AmountInput
+                    {...field}
+                    value={field.value ?? ''}
+                    disabled={disabled}
+                    placeholder={'0.00'}
+                    allowNegativeValue={false}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        )}
 
         <FormField
           name='notes'

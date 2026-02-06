@@ -85,6 +85,7 @@ export const recurringPayments = pgTable('recurring_payments', {
   type: RecurringPaymentTypeEnum('type').notNull(),
   cadence: RecurringCadenceEnum('cadence').notNull(),
   amount: bigint('amount', { mode: 'number' }).notNull(),
+  transferCharge: bigint('transfer_charge', { mode: 'number' }).notNull().default(0),
   accountId: text('account_id').references(() => accounts.id, { onDelete: 'set null' }),
   categoryId: text('category_id').references(() => categories.id, { onDelete: 'set null' }),
   toAccountId: text('to_account_id').references(() => accounts.id, { onDelete: 'set null' }),
