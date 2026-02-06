@@ -162,6 +162,8 @@ const app = new Hono()
       };
     });
 
+    enriched.sort((a, b) => a.daysRemaining - b.daysRemaining);
+
     return c.json({ data: enriched });
   })
   .get(

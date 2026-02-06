@@ -74,7 +74,7 @@ export const columns: ColumnDef<ResponseType>[] = [
         return <span className='text-destructive'>Overdue by {Math.abs(days)} days</span>;
       }
 
-      const tone = days <= warningThreshold ? 'fill-yellow-500' : 'text-primary';
+      const tone = days <= warningThreshold ? 'text-yellow-500' : 'text-primary';
 
       return <span className={cn(tone)}>{days} days</span>;
     }
