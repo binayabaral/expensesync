@@ -7,7 +7,7 @@ import { ArrowUpDown } from 'lucide-react';
 
 import { client } from '@/lib/hono';
 import { Button } from '@/components/ui/button';
-import { cn, formatCurrency } from '@/lib/utils';
+import { cn, formatCurrency, formatRemainingTime } from '@/lib/utils';
 
 import { Actions } from './Actions';
 
@@ -69,14 +69,15 @@ export const columns: ColumnDef<ResponseType>[] = [
       const days = row.original.daysRemaining ?? 0;
       const isYearly = row.original.cadence === 'YEARLY';
       const warningThreshold = isYearly ? 30 : 10;
+      const dueDate = row.original.nextDueDate ? new Date(row.original.nextDueDate) : null;
 
       if (days < 0) {
-        return <span className='text-destructive'>Overdue by {Math.abs(days)} days</span>;
+        return <span className='text-destructive'>Overdue by {formatRemainingTime(days, dueDate)}</span>;
       }
 
       const tone = days <= warningThreshold ? 'text-yellow-500' : 'text-primary';
 
-      return <span className={cn(tone)}>{days} days</span>;
+      return <span className={cn(tone)}>{formatRemainingTime(days, dueDate)}</span>;
     }
   },
   {

@@ -3,6 +3,8 @@ import { clsx, type ClassValue } from 'clsx';
 import {
   parse,
   format,
+  intervalToDuration,
+  formatDuration,
   endOfDay,
   isSameDay,
   subMonths,
@@ -152,4 +154,30 @@ export function formatPercentage(
   }
 
   return returnString;
+}
+
+export function formatRemainingTime(days: number, targetDate?: Date | null) {
+  if (!targetDate) {
+    return `${days} days`;
+  }
+
+  const today = startOfDay(new Date());
+  const endDate = startOfDay(targetDate);
+  const isOverdue = days < 0;
+  const start = isOverdue ? endDate : today;
+  const end = isOverdue ? today : endDate;
+
+  const duration = intervalToDuration({ start, end });
+  const formatted = formatDuration(duration, {
+    format: ['years', 'months', 'days'],
+    delimiter: ' ',
+    zero: false
+  });
+
+  if (formatted) {
+    return formatted;
+  }
+
+  const fallbackDays = Math.abs(days);
+  return `${fallbackDays} days`;
 }
