@@ -17,6 +17,9 @@ export const TransferTypeEnum = pgEnum('transfer_type', ['SELF_TRANSFER', 'PEER_
 
 export const AssetTypeEnum = pgEnum('asset_type', ['GOLD_22K', 'GOLD_24K', 'SILVER', 'STOCK']);
 
+export const RecurringPaymentTypeEnum = pgEnum('recurring_payment_type', ['TRANSACTION', 'TRANSFER']);
+export const RecurringCadenceEnum = pgEnum('recurring_cadence', ['DAILY', 'MONTHLY', 'YEARLY']);
+
 export const accounts = pgTable('accounts', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
@@ -75,6 +78,26 @@ export const transfers = pgTable('transfers', {
   notes: text('notes')
 });
 
+export const recurringPayments = pgTable('recurring_payments', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull(),
+  name: text('name').notNull(),
+  type: RecurringPaymentTypeEnum('type').notNull(),
+  cadence: RecurringCadenceEnum('cadence').notNull(),
+  amount: bigint('amount', { mode: 'number' }).notNull(),
+  accountId: text('account_id').references(() => accounts.id, { onDelete: 'set null' }),
+  categoryId: text('category_id').references(() => categories.id, { onDelete: 'set null' }),
+  toAccountId: text('to_account_id').references(() => accounts.id, { onDelete: 'set null' }),
+  notes: text('notes'),
+  startDate: timestamp('start_date', { mode: 'date' }).notNull(),
+  dayOfMonth: integer('day_of_month'),
+  month: integer('month'),
+  lastCompletedAt: timestamp('last_completed_at', { mode: 'date' }),
+  isActive: boolean('is_active').default(true).notNull(),
+  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' })
+});
+
 export const transactionTransferRelations = relations(transactions, ({ one }) => ({
   transfers: one(transfers, {
     fields: [transactions.transferId],
@@ -84,6 +107,21 @@ export const transactionTransferRelations = relations(transactions, ({ one }) =>
 
 export const transfersRelations = relations(transfers, ({ many }) => ({
   transactions: many(transactions)
+}));
+
+export const recurringPaymentsRelations = relations(recurringPayments, ({ one }) => ({
+  account: one(accounts, {
+    fields: [recurringPayments.accountId],
+    references: [accounts.id]
+  }),
+  toAccount: one(accounts, {
+    fields: [recurringPayments.toAccountId],
+    references: [accounts.id]
+  }),
+  category: one(categories, {
+    fields: [recurringPayments.categoryId],
+    references: [categories.id]
+  })
 }));
 
 export const assets = pgTable('assets', {
@@ -168,6 +206,12 @@ export const insertAccountSchema = createInsertSchema(accounts);
 export const insertCategorySchema = createInsertSchema(accounts);
 export const insertTransferSchema = createInsertSchema(transfers).extend({
   date: z.coerce.date()
+});
+export const insertRecurringPaymentSchema = createInsertSchema(recurringPayments).extend({
+  startDate: z.coerce.date(),
+  lastCompletedAt: z.coerce.date().optional(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional()
 });
 export const insertTransactionSchema = createInsertSchema(transactions).extend({
   date: z.coerce.date()

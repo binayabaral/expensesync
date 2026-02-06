@@ -6,6 +6,7 @@ import { useGetAccounts } from '@/features/accounts/api/useGetAccounts';
 import { TransferForm } from '@/features/transfers/components/TransferForm';
 import { useCreateTransfer } from '@/features/transfers/api/useCreateTransfer';
 import { useOpenAddTransferSheet } from '@/features/transfers/hooks/useOpenAddTransferSheet';
+import { useCompleteRecurringPayment } from '@/features/recurring-payments/api/useCompleteRecurringPayment';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -17,8 +18,9 @@ const formSchema = insertTransferSchema.omit({
 type FormValues = z.input<typeof formSchema>;
 
 export const AddTransferSheet = () => {
-  const { isOpen, onClose } = useOpenAddTransferSheet();
+  const { isOpen, onClose, defaultValues: initialValues, recurringPaymentId } = useOpenAddTransferSheet();
   const createTransferMutation = useCreateTransfer();
+  const completeRecurringPayment = useCompleteRecurringPayment(recurringPaymentId);
 
   const accountsQuery = useGetAccounts();
   const accountOptions = (accountsQuery.data ?? []).map(account => ({
@@ -28,7 +30,10 @@ export const AddTransferSheet = () => {
 
   const onSubmit = (values: FormValues) => {
     createTransferMutation.mutate(values, {
-      onSuccess: () => {
+      onSuccess: async () => {
+        if (recurringPaymentId) {
+          await completeRecurringPayment.mutateAsync({ completedAt: values.date });
+        }
         onClose();
       }
     });
@@ -36,6 +41,16 @@ export const AddTransferSheet = () => {
 
   const isPending = createTransferMutation.isPending;
   const isLoading = accountsQuery.isLoading;
+
+  const defaultValues = {
+    amount: '',
+    transferCharge: '0',
+    notes: '',
+    toAccountId: '',
+    fromAccountId: '',
+    date: new Date(),
+    ...initialValues
+  };
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -49,7 +64,12 @@ export const AddTransferSheet = () => {
             <Loader2 className='size-4 text-muted-foreground animate-spin' />
           </div>
         ) : (
-          <TransferForm onSubmit={onSubmit} disabled={isPending} accountOptions={accountOptions} />
+          <TransferForm
+            onSubmit={onSubmit}
+            disabled={isPending}
+            accountOptions={accountOptions}
+            defaultValues={defaultValues}
+          />
         )}
       </SheetContent>
     </Sheet>

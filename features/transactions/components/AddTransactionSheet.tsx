@@ -10,6 +10,7 @@ import { useCreateCategory } from '@/features/categories/api/useCreateCategory';
 import { useAddTransaction } from '@/features/transactions/hooks/useAddTransaction';
 import { TransactionForm } from '@/features/transactions/components/TransactionForm';
 import { useCreateTransaction } from '@/features/transactions/api/useCreateTransaction';
+import { useCompleteRecurringPayment } from '@/features/recurring-payments/api/useCompleteRecurringPayment';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -21,8 +22,9 @@ type FormValues = z.input<typeof formSchema>;
 
 export const AddTransactionSheet = () => {
   const params = useSearchParams();
-  const { isOpen, onClose } = useAddTransaction();
+  const { isOpen, onClose, defaultValues: initialValues, recurringPaymentId } = useAddTransaction();
   const createTransactionMutation = useCreateTransaction();
+  const completeRecurringPayment = useCompleteRecurringPayment(recurringPaymentId);
 
   const categoryQuery = useGetCategories();
   const categoryMutation = useCreateCategory();
@@ -40,7 +42,10 @@ export const AddTransactionSheet = () => {
 
   const onSubmit = (values: FormValues) => {
     createTransactionMutation.mutate(values, {
-      onSuccess: () => {
+      onSuccess: async () => {
+        if (recurringPaymentId) {
+          await completeRecurringPayment.mutateAsync({ completedAt: values.date });
+        }
         onClose();
       }
     });
@@ -57,7 +62,8 @@ export const AddTransactionSheet = () => {
     notes: '',
     amount: '',
     categoryId: '',
-    date: startOfMinute(new Date())
+    date: startOfMinute(new Date()),
+    ...initialValues
   };
 
   return (

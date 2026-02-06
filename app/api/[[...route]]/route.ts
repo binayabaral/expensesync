@@ -10,6 +10,7 @@ import categoriesRoute from './categories';
 import transactionsRoute from './transactions';
 import assetsRoute from './assets';
 import payeesRoute from './payees';
+import recurringPaymentsRoute from './recurring-payments';
 
 export const runtime = 'edge';
 
@@ -25,7 +26,8 @@ const routes = app
   .route('/categories', categoriesRoute)
   .route('/transactions', transactionsRoute)
   .route('/assets', assetsRoute)
-  .route('/payees', payeesRoute);
+  .route('/payees', payeesRoute)
+  .route('/recurring-payments', recurringPaymentsRoute);
 
 export const GET = handle(app);
 export const POST = handle(app);

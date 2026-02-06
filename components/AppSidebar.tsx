@@ -12,7 +12,8 @@ import {
   FaUsers,
   FaChartLine,
   FaArrowRightArrowLeft,
-  FaMoneyBillTransfer
+  FaMoneyBillTransfer,
+  FaArrowsRotate
 } from 'react-icons/fa6';
 
 import {
@@ -53,6 +54,11 @@ export function AppSidebar() {
       title: 'Transfers',
       url: '/transfers',
       icon: FaRightLeft
+    },
+    {
+      title: 'Recurring',
+      url: '/recurring-payments',
+      icon: FaArrowsRotate
     }
   ];
 

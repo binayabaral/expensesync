@@ -13,6 +13,8 @@ import { AddTransactionSheet } from '@/features/transactions/components/AddTrans
 import { EditTransactionSheet } from '@/features/transactions/components/EditTransactionSheet';
 import { AddAssetSheet } from '@/features/assets/components/AddAssetSheet';
 import { SellAssetSheet } from '@/features/assets/components/SellAssetSheet';
+import { AddRecurringPaymentSheet } from '@/features/recurring-payments/components/AddRecurringPaymentSheet';
+import { EditRecurringPaymentSheet } from '@/features/recurring-payments/components/EditRecurringPaymentSheet';
 
 export const SheetProvider = ({ children }: { children: React.ReactNode }) => {
   const isMounted = useMountedState();
@@ -36,6 +38,8 @@ export const SheetProvider = ({ children }: { children: React.ReactNode }) => {
 
       <AddTransferSheet />
       <EditTransferSheet />
+      <AddRecurringPaymentSheet />
+      <EditRecurringPaymentSheet />
       <Suspense>
         <AddAssetSheet />
       </Suspense>

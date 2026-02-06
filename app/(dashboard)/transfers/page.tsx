@@ -44,7 +44,7 @@ function TransferPage() {
       <Card className='border border-slate-200 shadow-none'>
         <CardHeader className='gap-y-2 lg:flex-row lg:items-center lg:justify-between space-y-0'>
           <CardTitle className='text-lg font-semibold'>Transfers History</CardTitle>
-          <Button onClick={openAddTransferSheet.onOpen}>
+          <Button onClick={() => openAddTransferSheet.onOpen()}>
             <Plus className='size-4 mr-2' />
             Add New
           </Button>

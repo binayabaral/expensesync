@@ -1,32 +1,31 @@
 'use client';
 
+import { Suspense } from 'react';
 import { Loader2, Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/DataTable';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAddTransaction } from '@/features/transactions/hooks/useAddTransaction';
-import { useGetTransactions } from '@/features/transactions/api/useGetTransactions';
-import { useBulkDeleteTransactions } from '@/features/transactions/api/useBulkDeleteTransactions';
+import { useGetRecurringPayments } from '@/features/recurring-payments/api/useGetRecurringPayments';
+import { useAddRecurringPayment } from '@/features/recurring-payments/hooks/useAddRecurringPayment';
 
 import { columns } from './columns';
-import { Suspense } from 'react';
 
-function Transactions() {
-  const newTransaction = useAddTransaction();
-  const transactionsQuery = useGetTransactions();
-  const deleteTransactions = useBulkDeleteTransactions();
+function RecurringPayments() {
+  const paymentsQuery = useGetRecurringPayments();
+  const addRecurringPayment = useAddRecurringPayment();
 
-  const transactions = transactionsQuery.data || [];
-  const isDisabled = transactionsQuery.isLoading || deleteTransactions.isPending;
+  const payments = paymentsQuery.data || [];
+  const isLoading = paymentsQuery.isLoading;
 
-  if (transactionsQuery.isLoading) {
+  if (isLoading) {
     return (
       <div className='max-w-full'>
         <Card className='border border-slate-200 shadow-none'>
-          <CardHeader>
-            <Skeleton className='h-8 w-48' />
+          <CardHeader className='gap-y-2 lg:flex-row lg:items-center lg:justify-between space-y-0'>
+            <Skeleton className='h-6 w-32' />
+            <Skeleton className='h-9 w-36' />
           </CardHeader>
           <CardContent>
             <div className='h-80 w-full flex items-center justify-center'>
@@ -42,22 +41,14 @@ function Transactions() {
     <div className='max-w-full'>
       <Card className='border border-slate-200 shadow-none'>
         <CardHeader className='gap-y-2 lg:flex-row lg:items-center lg:justify-between space-y-0'>
-          <CardTitle className='text-lg font-semibold'>Transactions History</CardTitle>
-          <Button onClick={() => newTransaction.onOpen()}>
+          <CardTitle className='text-lg font-semibold'>Recurring Payments</CardTitle>
+          <Button onClick={addRecurringPayment.onOpen}>
             <Plus className='size-4 mr-2' />
             Add New
           </Button>
         </CardHeader>
         <CardContent>
-          <DataTable
-            columns={columns}
-            data={transactions}
-            onDeleteAction={row => {
-              const ids = row.map(r => r.original.id);
-              deleteTransactions.mutate({ ids });
-            }}
-            disabled={isDisabled}
-          />
+          <DataTable columns={columns} data={payments} onDeleteAction={() => {}} />
         </CardContent>
       </Card>
     </div>
@@ -67,7 +58,7 @@ function Transactions() {
 const Page = () => {
   return (
     <Suspense>
-      <Transactions />
+      <RecurringPayments />
     </Suspense>
   );
 };
