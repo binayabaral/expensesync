@@ -29,7 +29,8 @@ export const EditTransferSheet = () => {
   const deleteMutation = useDeleteTransfer(id);
 
   const accountsQuery = useGetAccounts();
-  const accountOptions = (accountsQuery.data ?? []).map(account => ({
+  const accounts = accountsQuery.data ?? [];
+  const accountOptions = accounts.map(account => ({
     label: account.name,
     value: account.id
   }));
@@ -63,7 +64,8 @@ export const EditTransferSheet = () => {
         ...transferQuery.data,
         date: new Date(transferQuery.data.date),
         amount: convertAmountFromMiliUnits(transferQuery.data.amount).toString(),
-        transferCharge: convertAmountFromMiliUnits(transferQuery.data.transferCharge).toString()
+        transferCharge: convertAmountFromMiliUnits(transferQuery.data.transferCharge).toString(),
+        creditCardStatementId: transferQuery.data.creditCardStatementId ?? ''
       }
     : {
         notes: '',
@@ -72,7 +74,8 @@ export const EditTransferSheet = () => {
         toAccountId: '',
         date: new Date(),
         fromAccountId: '',
-        transferCharge: ''
+        transferCharge: '',
+        creditCardStatementId: ''
       };
 
   return (
@@ -96,6 +99,7 @@ export const EditTransferSheet = () => {
               disabled={isPending}
               defaultValues={defaultValues}
               accountOptions={accountOptions}
+              accounts={accounts}
             />
           )}
         </SheetContent>

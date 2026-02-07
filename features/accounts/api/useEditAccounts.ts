@@ -22,6 +22,7 @@ export const useEditAccount = (id?: string) => {
       queryClient.invalidateQueries({ queryKey: ['account'] });
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['credit-cards'] });
     },
     onError: () => {
       toast.error('Failed to update account');

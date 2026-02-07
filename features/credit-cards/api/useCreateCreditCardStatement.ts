@@ -4,26 +4,25 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { client } from '@/lib/hono';
 
-type RequestType = InferRequestType<typeof client.api.accounts.$post>['json'];
-type ResponseType = InferResponseType<typeof client.api.accounts.$post>;
+type ResponseType = InferResponseType<typeof client.api['credit-card-statements']['$post']>;
+type RequestType = InferRequestType<typeof client.api['credit-card-statements']['$post']>['json'];
 
-export const useCreateAccount = () => {
+export const useCreateCreditCardStatement = () => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation<ResponseType, Error, RequestType>({
     mutationFn: async json => {
-      const response = await client.api.accounts.$post({ json });
+      const response = await client.api['credit-card-statements'].$post({ json });
 
       return await response.json();
     },
     onSuccess: () => {
-      toast.success('Account created');
-      queryClient.invalidateQueries({ queryKey: ['summary'] });
-      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      toast.success('Statement closed');
+      queryClient.invalidateQueries({ queryKey: ['credit-card-statements'] });
       queryClient.invalidateQueries({ queryKey: ['credit-cards'] });
     },
     onError: () => {
-      toast.error('Failed to create account');
+      toast.error('Failed to close statement');
     }
   });
 

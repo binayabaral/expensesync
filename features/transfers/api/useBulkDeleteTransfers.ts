@@ -22,6 +22,8 @@ export const useBulkDeleteTransfers = () => {
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
       queryClient.invalidateQueries({ queryKey: ['transfers'] });
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['credit-cards'] });
+      queryClient.invalidateQueries({ queryKey: ['credit-card-statements'] });
     },
     onError: () => {
       toast.error('Failed to delete transfers');

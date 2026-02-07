@@ -22,6 +22,8 @@ export const useDeleteTransfer = (id?: string) => {
       queryClient.invalidateQueries({ queryKey: ['transfers'] });
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['transfer', { id }] });
+      queryClient.invalidateQueries({ queryKey: ['credit-cards'] });
+      queryClient.invalidateQueries({ queryKey: ['credit-card-statements'] });
     },
     onError: () => {
       toast.error('Failed to delete transfer');

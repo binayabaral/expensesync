@@ -19,18 +19,23 @@ export const AssetTypeEnum = pgEnum('asset_type', ['GOLD_22K', 'GOLD_24K', 'SILV
 
 export const RecurringPaymentTypeEnum = pgEnum('recurring_payment_type', ['TRANSACTION', 'TRANSFER']);
 export const RecurringCadenceEnum = pgEnum('recurring_cadence', ['DAILY', 'MONTHLY', 'YEARLY']);
+export const AccountTypeEnum = pgEnum('account_type', ['CASH', 'BANK', 'CREDIT_CARD', 'LOAN', 'OTHER']);
 
 export const accounts = pgTable('accounts', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   userId: text('user_id').notNull(),
+  accountType: AccountTypeEnum('account_type').notNull().default('CASH'),
+  creditLimit: bigint('credit_limit', { mode: 'number' }),
+  apr: doublePrecision('apr'),
+  statementCloseDay: integer('statement_close_day'),
+  statementCloseIsEom: boolean('statement_close_is_eom').notNull().default(false),
+  paymentDueDay: integer('payment_due_day'),
+  paymentDueDays: integer('payment_due_days'),
+  minimumPaymentPercentage: doublePrecision('minimum_payment_percentage').notNull().default(2),
   isHidden: boolean('is_hidden').default(false).notNull(),
   isDeleted: boolean('is_deleted').default(false).notNull()
 });
-
-export const accountsRelations = relations(accounts, ({ many }) => ({
-  transactions: many(transactions)
-}));
 
 export const categories = pgTable('categories', {
   id: text('id').primaryKey(),
@@ -74,9 +79,36 @@ export const transfers = pgTable('transfers', {
   date: timestamp('date', { mode: 'date' }).notNull(),
   fromAccountId: text('from_account_id').references(() => accounts.id, { onDelete: 'set null' }),
   toAccountId: text('to_account_id').references(() => accounts.id, { onDelete: 'set null' }),
+  creditCardStatementId: text('credit_card_statement_id').references(() => creditCardStatements.id, {
+    onDelete: 'set null'
+  }),
   transferCharge: integer('transfer_charge').notNull().default(0),
   notes: text('notes')
 });
+
+export const creditCardStatements = pgTable('credit_card_statements', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull(),
+  accountId: text('account_id')
+    .references(() => accounts.id, { onDelete: 'cascade' })
+    .notNull(),
+  periodStart: timestamp('period_start', { mode: 'date' }).notNull(),
+  statementDate: timestamp('statement_date', { mode: 'date' }).notNull(),
+  dueDate: timestamp('due_date', { mode: 'date' }).notNull(),
+  statementBalance: bigint('statement_balance', { mode: 'number' }).notNull(),
+  paymentDueAmount: bigint('payment_due_amount', { mode: 'number' }).notNull(),
+  isPaymentDueOverridden: boolean('is_payment_due_overridden').notNull().default(false),
+  minimumPayment: bigint('minimum_payment', { mode: 'number' }).notNull(),
+  paidAmount: bigint('paid_amount', { mode: 'number' }).notNull().default(0),
+  isPaid: boolean('is_paid').notNull().default(false),
+  paidAt: timestamp('paid_at', { mode: 'date' }),
+  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull()
+});
+
+export const accountsRelations = relations(accounts, ({ many }) => ({
+  transactions: many(transactions),
+  creditCardStatements: many(creditCardStatements)
+}));
 
 export const recurringPayments = pgTable('recurring_payments', {
   id: text('id').primaryKey(),
@@ -106,8 +138,20 @@ export const transactionTransferRelations = relations(transactions, ({ one }) =>
   })
 }));
 
-export const transfersRelations = relations(transfers, ({ many }) => ({
-  transactions: many(transactions)
+export const transfersRelations = relations(transfers, ({ many, one }) => ({
+  transactions: many(transactions),
+  creditCardStatement: one(creditCardStatements, {
+    fields: [transfers.creditCardStatementId],
+    references: [creditCardStatements.id]
+  })
+}));
+
+export const creditCardStatementsRelations = relations(creditCardStatements, ({ one, many }) => ({
+  account: one(accounts, {
+    fields: [creditCardStatements.accountId],
+    references: [accounts.id]
+  }),
+  transfers: many(transfers)
 }));
 
 export const recurringPaymentsRelations = relations(recurringPayments, ({ one }) => ({
@@ -207,6 +251,13 @@ export const insertAccountSchema = createInsertSchema(accounts);
 export const insertCategorySchema = createInsertSchema(accounts);
 export const insertTransferSchema = createInsertSchema(transfers).extend({
   date: z.coerce.date()
+});
+export const insertCreditCardStatementSchema = createInsertSchema(creditCardStatements).extend({
+  periodStart: z.coerce.date(),
+  statementDate: z.coerce.date(),
+  dueDate: z.coerce.date(),
+  paidAt: z.coerce.date().optional(),
+  createdAt: z.coerce.date().optional()
 });
 export const insertRecurringPaymentSchema = createInsertSchema(recurringPayments).extend({
   startDate: z.coerce.date(),

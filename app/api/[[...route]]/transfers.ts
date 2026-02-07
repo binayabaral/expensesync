@@ -7,7 +7,68 @@ import { endOfDay, parse, startOfDay, startOfMonth } from 'date-fns';
 import { aliasedTable, eq, gte, lte, and, or, inArray, sql, desc } from 'drizzle-orm';
 
 import { db } from '@/db/drizzle';
-import { accounts, insertTransferSchema, transactions, transfers } from '@/db/schema';
+import { accounts, creditCardStatements, insertTransferSchema, transactions, transfers } from '@/db/schema';
+
+const normalizeStatementPayment = async (statementId: string, deltaAmount: number, paidAt?: Date) => {
+  const [statement] = await db
+    .select({
+      id: creditCardStatements.id,
+      paidAmount: creditCardStatements.paidAmount,
+      paymentDueAmount: creditCardStatements.paymentDueAmount
+    })
+    .from(creditCardStatements)
+    .where(eq(creditCardStatements.id, statementId));
+
+  if (!statement) {
+    return;
+  }
+
+  const nextPaidAmount = Math.max(0, statement.paidAmount + deltaAmount);
+  const isPaid = nextPaidAmount >= statement.paymentDueAmount;
+
+  await db
+    .update(creditCardStatements)
+    .set({
+      paidAmount: nextPaidAmount,
+      isPaid,
+      paidAt: isPaid ? paidAt ?? new Date() : null
+    })
+    .where(eq(creditCardStatements.id, statementId));
+};
+
+const assertStatementForTransfer = async (userId: string, statementId: string, toAccountId?: string | null) => {
+  if (!toAccountId) {
+    return { error: 'Receiver account is required when applying a credit card statement payment' };
+  }
+
+  const [statement] = await db
+    .select({
+      id: creditCardStatements.id,
+      accountId: creditCardStatements.accountId
+    })
+    .from(creditCardStatements)
+    .innerJoin(accounts, eq(creditCardStatements.accountId, accounts.id))
+    .where(and(eq(accounts.userId, userId), eq(creditCardStatements.id, statementId)));
+
+  if (!statement) {
+    return { error: 'Credit card statement not found' };
+  }
+
+  if (statement.accountId !== toAccountId) {
+    return { error: 'Statement does not belong to the receiver account' };
+  }
+
+  const [account] = await db
+    .select({ accountType: accounts.accountType })
+    .from(accounts)
+    .where(and(eq(accounts.id, toAccountId), eq(accounts.userId, userId)));
+
+  if (!account || account.accountType !== 'CREDIT_CARD') {
+    return { error: 'Receiver account must be a credit card' };
+  }
+
+  return { statementId: statement.id };
+};
 
 const app = new Hono()
   .get(
@@ -91,7 +152,8 @@ const app = new Hono()
           amount: transfers.amount,
           toAccountId: transfers.toAccountId,
           fromAccountId: transfers.fromAccountId,
-          transferCharge: transfers.transferCharge
+          transferCharge: transfers.transferCharge,
+          creditCardStatementId: transfers.creditCardStatementId
         })
         .from(transfers)
         .where(and(eq(transfers.id, id), eq(transfers.userId, auth.userId)));
@@ -106,7 +168,7 @@ const app = new Hono()
   .post('/', zValidator('json', insertTransferSchema.omit({ id: true, userId: true })), async c => {
     const auth = getAuth(c);
     const values = c.req.valid('json');
-    const { transferCharge = 0, fromAccountId, toAccountId } = values;
+    const { transferCharge = 0, fromAccountId, toAccountId, creditCardStatementId } = values;
 
     if (!fromAccountId && !toAccountId) {
       return c.json({ error: 'One of Sender or Receiver account is required' }, 400);
@@ -114,6 +176,13 @@ const app = new Hono()
 
     if (!auth?.userId) {
       return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    if (creditCardStatementId) {
+      const statementCheck = await assertStatementForTransfer(auth.userId, creditCardStatementId, toAccountId);
+      if (statementCheck.error) {
+        return c.json({ error: statementCheck.error }, 400);
+      }
     }
 
     const loggedInUserAccounts = await db
@@ -141,7 +210,8 @@ const app = new Hono()
           amount: values.amount,
           transferCharge: transferCharge,
           toAccountId: values.toAccountId,
-          fromAccountId: values.fromAccountId
+          fromAccountId: values.fromAccountId,
+          creditCardStatementId: values.creditCardStatementId ?? null
         })
         .returning();
 
@@ -169,6 +239,10 @@ const app = new Hono()
           payee: 'Transferred from another account',
           type: values.fromAccountId ? 'PEER_TRANSFER' : 'SELF_TRANSFER'
         });
+      }
+
+      if (values.creditCardStatementId) {
+        await normalizeStatementPayment(values.creditCardStatementId, values.amount, values.date);
       }
 
       return c.json({ data: insertedTransfer });
@@ -221,7 +295,7 @@ const app = new Hono()
       const auth = getAuth(c);
       const { id } = c.req.valid('param');
       const values = c.req.valid('json');
-      const { transferCharge = 0, fromAccountId, toAccountId } = values;
+      const { transferCharge = 0, fromAccountId, toAccountId, creditCardStatementId } = values;
 
       if (!fromAccountId && !toAccountId) {
         return c.json({ error: 'One of Sender or Receiver account is required' }, 400);
@@ -235,7 +309,7 @@ const app = new Hono()
         return c.json({ error: 'Id is required' }, 400);
       }
 
-      const [existingTransaction] = await db
+      const [existingTransfer] = await db
         .select()
         .from(transfers)
         .where(and(eq(transfers.id, id), eq(transfers.userId, auth.userId)));
@@ -244,8 +318,15 @@ const app = new Hono()
       const fromTransaction = relatedTransactions.find(transaction => transaction.amount < 0);
       const toTransaction = relatedTransactions.find(transaction => transaction.amount > 0);
 
-      if (!existingTransaction) {
+      if (!existingTransfer) {
         return c.json({ error: 'Not found' }, 404);
+      }
+
+      if (creditCardStatementId) {
+        const statementCheck = await assertStatementForTransfer(auth.userId, creditCardStatementId, toAccountId);
+        if (statementCheck.error) {
+          return c.json({ error: statementCheck.error }, 400);
+        }
       }
 
       const loggedInUserAccounts = await db
@@ -267,10 +348,23 @@ const app = new Hono()
           .set({
             ...values,
             toAccountId: values.toAccountId?.length ? values.toAccountId : null,
-            fromAccountId: values.fromAccountId?.length ? values.fromAccountId : null
+            fromAccountId: values.fromAccountId?.length ? values.fromAccountId : null,
+            creditCardStatementId: values.creditCardStatementId?.length ? values.creditCardStatementId : null
           })
           .where(eq(transfers.id, id))
           .returning();
+
+        if (existingTransfer.creditCardStatementId) {
+          await normalizeStatementPayment(
+            existingTransfer.creditCardStatementId,
+            -existingTransfer.amount,
+            existingTransfer.date
+          );
+        }
+
+        if (values.creditCardStatementId) {
+          await normalizeStatementPayment(values.creditCardStatementId, values.amount, values.date);
+        }
 
         if (values.fromAccountId && !fromTransaction) {
           await db.insert(transactions).values({
@@ -359,6 +453,14 @@ const app = new Hono()
 
       if (!existingTransfer) {
         return c.json({ error: 'Not found' }, 404);
+      }
+
+      if (existingTransfer.creditCardStatementId) {
+        await normalizeStatementPayment(
+          existingTransfer.creditCardStatementId,
+          -existingTransfer.amount,
+          existingTransfer.date
+        );
       }
 
       const [data] = await db.delete(transfers).where(eq(transfers.id, id)).returning();

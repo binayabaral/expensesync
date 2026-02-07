@@ -6,7 +6,7 @@ import { Loader2, ChevronDown } from 'lucide-react';
 import { useState, Fragment } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { ClerkLoaded, ClerkLoading, UserButton, useUser } from '@clerk/nextjs';
-import { FaLayerGroup, FaReceipt, FaWallet, FaTags, FaRightLeft, FaCirclePlus, FaHeart, FaCoins, FaUsers, FaChartLine, FaArrowRightArrowLeft } from 'react-icons/fa6';
+import { FaLayerGroup, FaReceipt, FaWallet, FaTags, FaRightLeft, FaCirclePlus, FaHeart, FaCoins, FaUsers, FaChartLine, FaArrowRightArrowLeft, FaCreditCard } from 'react-icons/fa6';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -38,6 +38,11 @@ function Nav() {
       href: '/accounts',
       label: 'Accounts',
       icon: FaWallet
+    },
+    {
+      href: '/credit-cards',
+      label: 'Credit Cards',
+      icon: FaCreditCard
     },
     {
       href: '/assets',

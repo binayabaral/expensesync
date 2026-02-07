@@ -3,16 +3,18 @@ import isMobile from 'is-mobile';
 import { Trash } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { format } from 'date-fns';
 
 import { Select } from '@/components/Select';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { insertTransferSchema } from '@/db/schema';
-import { convertAmountToMiliUnits } from '@/lib/utils';
+import { convertAmountToMiliUnits, formatCurrency } from '@/lib/utils';
 import { AmountInput } from '@/components/AmountInput';
 import { DateTimePicker } from '@/components/ui-extended/Datepicker';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { useGetCreditCardStatements } from '@/features/credit-cards/api/useGetCreditCardStatements';
 
 const formSchema = z.object({
   amount: z.string(),
@@ -20,7 +22,8 @@ const formSchema = z.object({
   transferCharge: z.string(),
   notes: z.string().nullable().optional(),
   toAccountId: z.string().nullable().optional(),
-  fromAccountId: z.string().nullable().optional()
+  fromAccountId: z.string().nullable().optional(),
+  creditCardStatementId: z.string().nullable().optional()
 });
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -39,19 +42,41 @@ type Props = {
   defaultValues?: FormValues;
   onSubmit: (values: ApiFormValues) => void;
   accountOptions: { label: string; value: string }[];
+  accounts: { id: string; name: string; accountType?: string | null }[];
 };
 
-export const TransferForm = ({ id, onSubmit, onDelete, disabled, defaultValues, accountOptions }: Props) => {
+export const TransferForm = ({ id, onSubmit, onDelete, disabled, defaultValues, accountOptions, accounts }: Props) => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: defaultValues
   });
+
+  const toAccountId = form.watch('toAccountId');
+  const selectedAccount = accounts.find(account => account.id === toAccountId);
+  const isCreditCard = selectedAccount?.accountType === 'CREDIT_CARD';
+
+  const statementQuery = useGetCreditCardStatements({
+    accountId: isCreditCard ? toAccountId ?? undefined : undefined,
+    status: id ? undefined : 'unpaid'
+  });
+
+  const statementOptions = (statementQuery.data ?? []).map(statement => ({
+    value: statement.id,
+    label: `Statement ${format(new Date(statement.statementDate), 'MMM dd')} · Due ${format(
+      new Date(statement.dueDate),
+      'MMM dd'
+    )} · ${formatCurrency(statement.paymentDueAmount)}`
+  }));
+
+  const requiresStatementSelection =
+    !id && isCreditCard && statementOptions.length > 0 && !form.watch('creditCardStatementId');
 
   const handleSubmit = (values: FormValues) => {
     const amountInMiliUnits = convertAmountToMiliUnits(parseFloat(values.amount));
     const transferChargeInMiliUnits = convertAmountToMiliUnits(parseFloat(values.transferCharge));
     onSubmit({
       ...values,
+      creditCardStatementId: values.creditCardStatementId ? values.creditCardStatementId : null,
       amount: amountInMiliUnits,
       date: new Date(values.date),
       transferCharge: transferChargeInMiliUnits
@@ -184,7 +209,50 @@ export const TransferForm = ({ id, onSubmit, onDelete, disabled, defaultValues, 
             </FormItem>
           )}
         />
-        <Button className='w-full' disabled={disabled}>
+        {isCreditCard && statementOptions.length > 0 && (
+          <FormField
+            name='creditCardStatementId'
+            control={form.control}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Apply Payment To</FormLabel>
+                <FormControl>
+                  {isMobileDevice ? (
+                    <NativeSelect
+                      value={field.value ?? ''}
+                      onChange={field.onChange}
+                      disabled={disabled}
+                      className='w-full'
+                    >
+                      <NativeSelectOption value=''>Select Statement</NativeSelectOption>
+                      {statementOptions.map(option => (
+                        <NativeSelectOption key={option.value} value={option.value}>
+                          {option.label}
+                        </NativeSelectOption>
+                      ))}
+                    </NativeSelect>
+                  ) : (
+                    <Select
+                      value={field.value ?? ''}
+                      disabled={disabled}
+                      options={statementOptions}
+                      allowCreatingOptions={false}
+                      placeholder='Select Statement'
+                      onChangeAction={field.onChange}
+                    />
+                  )}
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        )}
+        {isCreditCard && statementOptions.length === 0 && (
+          <div className='text-sm text-muted-foreground'>No open statements to apply.</div>
+        )}
+        {requiresStatementSelection && (
+          <div className='text-sm text-destructive'>Please select a statement to apply this payment.</div>
+        )}
+        <Button className='w-full' disabled={disabled || requiresStatementSelection}>
           {id ? 'Save Changes' : 'Create Transfer'}
         </Button>
         {!!id && (

@@ -9,7 +9,15 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '
 const formSchema = z.object({
   name: z.string(),
   isHidden: z.boolean(),
-  startingBalance: z.number()
+  startingBalance: z.number(),
+  accountType: z.enum(['CASH', 'BANK', 'CREDIT_CARD', 'LOAN', 'OTHER']),
+  creditLimit: z.number().nullable().optional(),
+  apr: z.number().nullable().optional(),
+  statementCloseDay: z.number().nullable().optional(),
+  statementCloseIsEom: z.boolean().optional(),
+  paymentDueDay: z.number().nullable().optional(),
+  paymentDueDays: z.number().nullable().optional(),
+  minimumPaymentPercentage: z.number().optional()
 });
 
 type FormValues = z.input<typeof formSchema>;
@@ -33,7 +41,24 @@ export const AddAccount = () => {
           <SheetTitle>New Account</SheetTitle>
           <SheetDescription>Create a new account to track your transactions.</SheetDescription>
         </SheetHeader>
-        <AccountForm onSubmit={onSubmit} disabled={mutation.isPending} defaultValues={{ name: '', isHidden: false }} />
+        <AccountForm
+          onSubmit={onSubmit}
+          disabled={mutation.isPending}
+          defaultValues={{
+            name: '',
+            isHidden: false,
+            startingBalance: '0',
+            accountType: 'CASH',
+            creditLimit: '',
+            apr: '',
+            statementCloseMode: 'DAY',
+            statementCloseDay: '',
+            paymentDueMode: 'DAY',
+            paymentDueDay: '',
+            paymentDueDays: '',
+            minimumPaymentPercentage: '2'
+          }}
+        />
       </SheetContent>
     </Sheet>
   );

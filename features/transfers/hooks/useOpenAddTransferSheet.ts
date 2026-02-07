@@ -7,6 +7,7 @@ export type AddTransferDefaults = {
   transferCharge?: string;
   notes?: string | null;
   date?: Date;
+  creditCardStatementId?: string | null;
 };
 
 type OpenAddTransferSheetType = {

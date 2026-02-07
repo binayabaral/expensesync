@@ -23,7 +23,8 @@ export const AddTransferSheet = () => {
   const completeRecurringPayment = useCompleteRecurringPayment(recurringPaymentId);
 
   const accountsQuery = useGetAccounts();
-  const accountOptions = (accountsQuery.data ?? []).map(account => ({
+  const accounts = accountsQuery.data ?? [];
+  const accountOptions = accounts.map(account => ({
     label: account.name,
     value: account.id
   }));
@@ -49,6 +50,7 @@ export const AddTransferSheet = () => {
     toAccountId: '',
     fromAccountId: '',
     date: new Date(),
+    creditCardStatementId: '',
     ...initialValues
   };
 
@@ -68,6 +70,7 @@ export const AddTransferSheet = () => {
             onSubmit={onSubmit}
             disabled={isPending}
             accountOptions={accountOptions}
+            accounts={accounts}
             defaultValues={defaultValues}
           />
         )}

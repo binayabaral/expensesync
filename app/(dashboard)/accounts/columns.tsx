@@ -85,6 +85,26 @@ export const columns: ColumnDef<ResponseType>[] = [
     )
   },
   {
+    accessorKey: 'accountType',
+    header: ({ column }) => (
+      <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+        Type
+        <ArrowUpDown className='ml-2 h-4 w-4' />
+      </Button>
+    ),
+    cell: ({ row }) => (
+      <span className='whitespace-nowrap text-muted-foreground'>
+        {row.original.accountType
+          ? row.original.accountType
+              .toLowerCase()
+              .split('_')
+              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+              .join(' ')
+          : 'Cash'}
+      </span>
+    )
+  },
+  {
     id: 'actions',
     cell: ({ row }) => <Actions id={row.original.id} />
   }
