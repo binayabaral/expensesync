@@ -5,6 +5,8 @@ import { Separator } from '@/components/ui/separator';
 import Filters from '@/components/Filters';
 import HeaderWelcome from '@/components/HeaderWelcome';
 
+export const dynamic = 'force-dynamic';
+
 type Props = {
   children: React.ReactNode;
 };
