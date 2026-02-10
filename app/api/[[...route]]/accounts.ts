@@ -43,7 +43,7 @@ const app = new Hono()
           minimumPaymentPercentage: accounts.minimumPaymentPercentage
         })
         .from(accounts)
-        .where(and(eq(accounts.userId, auth.userId), eq(accounts.isDeleted, false)))
+        .where(and(eq(accounts.userId, auth.userId), to ? undefined : eq(accounts.isDeleted, false)))
         .orderBy(asc(accounts.isHidden));
 
       const today = new Date();
