@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { Hono } from 'hono';
-import { endOfDay } from 'date-fns';
+import { endOfDay, parse } from 'date-fns';
 import { getAuth } from '@hono/clerk-auth';
 import { createId } from '@paralleldrive/cuid2';
 import { zValidator } from '@hono/zod-validator';
@@ -12,44 +12,54 @@ import { accounts, insertAccountSchema, transactions } from '@/db/schema';
 import { fetchAccountBalance } from '../utils/common';
 
 const app = new Hono()
-  .get('/', async c => {
-    const auth = getAuth(c);
-
-    if (!auth?.userId) {
-      return c.json({ error: 'Unauthorized' }, 401);
-    }
-
-    const data = await db
-      .select({
-        id: accounts.id,
-        name: accounts.name,
-        isHidden: accounts.isHidden,
-        accountType: accounts.accountType,
-        creditLimit: accounts.creditLimit,
-        apr: accounts.apr,
-        statementCloseDay: accounts.statementCloseDay,
-        statementCloseIsEom: accounts.statementCloseIsEom,
-        paymentDueDay: accounts.paymentDueDay,
-        paymentDueDays: accounts.paymentDueDays,
-        minimumPaymentPercentage: accounts.minimumPaymentPercentage
+  .get(
+    '/',
+    zValidator(
+      'query',
+      z.object({
+        to: z.string().optional()
       })
-      .from(accounts)
-      .where(and(eq(accounts.userId, auth.userId), eq(accounts.isDeleted, false)))
-      .orderBy(asc(accounts.isHidden));
+    ),
+    async c => {
+      const auth = getAuth(c);
+      const { to } = c.req.valid('query');
 
-    const today = new Date();
-    const defaultTo = endOfDay(today);
+      if (!auth?.userId) {
+        return c.json({ error: 'Unauthorized' }, 401);
+      }
 
-    const result = await Promise.all(
-      data.map(async item => {
-        const [{ balance }] = await fetchAccountBalance(auth.userId, defaultTo, item.id, true);
+      const data = await db
+        .select({
+          id: accounts.id,
+          name: accounts.name,
+          isHidden: accounts.isHidden,
+          accountType: accounts.accountType,
+          creditLimit: accounts.creditLimit,
+          apr: accounts.apr,
+          statementCloseDay: accounts.statementCloseDay,
+          statementCloseIsEom: accounts.statementCloseIsEom,
+          paymentDueDay: accounts.paymentDueDay,
+          paymentDueDays: accounts.paymentDueDays,
+          minimumPaymentPercentage: accounts.minimumPaymentPercentage
+        })
+        .from(accounts)
+        .where(and(eq(accounts.userId, auth.userId), eq(accounts.isDeleted, false)))
+        .orderBy(asc(accounts.isHidden));
 
-        return {
-          ...item,
-          balance
-        };
-      })
-    );
+      const today = new Date();
+      const defaultTo = endOfDay(today);
+      const endDate = to ? endOfDay(parse(to, 'yyyy-MM-dd', new Date())) : defaultTo;
+
+      const result = await Promise.all(
+        data.map(async item => {
+          const [{ balance }] = await fetchAccountBalance(auth.userId, endDate, item.id, true);
+
+          return {
+            ...item,
+            balance
+          };
+        })
+      );
 
     const sortedByAccountNameAndIsHidden = result.sort((a, b) => {
       if (a.isHidden !== b.isHidden) {

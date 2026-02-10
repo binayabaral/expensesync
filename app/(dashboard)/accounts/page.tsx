@@ -11,6 +11,7 @@ import { useBulkDeleteAccount } from '@/features/accounts/api/useBulkDelete';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 import { columns } from './columns';
+import { Suspense } from 'react';
 
 function Accounts() {
   const newAccount = useAddAccount();
@@ -63,4 +64,12 @@ function Accounts() {
   );
 }
 
-export default Accounts;
+const Page = () => {
+  return (
+    <Suspense>
+      <Accounts />
+    </Suspense>
+  );
+};
+
+export default Page;
