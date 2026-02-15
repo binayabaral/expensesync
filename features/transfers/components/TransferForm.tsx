@@ -76,6 +76,8 @@ export const TransferForm = ({ id, onSubmit, onDelete, disabled, defaultValues, 
     const transferChargeInMiliUnits = convertAmountToMiliUnits(parseFloat(values.transferCharge));
     onSubmit({
       ...values,
+      fromAccountId: values.fromAccountId || null,
+      toAccountId: values.toAccountId || null,
       creditCardStatementId: values.creditCardStatementId ? values.creditCardStatementId : null,
       amount: amountInMiliUnits,
       date: new Date(values.date),
