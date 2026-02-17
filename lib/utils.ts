@@ -175,9 +175,9 @@ export function formatRemainingTime(days: number, targetDate?: Date | null) {
   });
 
   if (formatted) {
-    return formatted;
+    return `${isOverdue ? 'Overdue by ' : ''} ${formatted}`;
   }
 
   const fallbackDays = Math.abs(days);
-  return `${fallbackDays} days`;
+  return `${isOverdue ? 'Overdue by ' : ''} ${fallbackDays} days`;
 }

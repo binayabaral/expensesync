@@ -71,13 +71,11 @@ export const columns: ColumnDef<ResponseType>[] = [
       const warningThreshold = isYearly ? 30 : 10;
       const dueDate = row.original.nextDueDate ? new Date(row.original.nextDueDate) : null;
 
-      if (days < 0) {
-        return <span className='text-destructive'>Overdue by {formatRemainingTime(days, dueDate)}</span>;
-      }
-
-      const tone = days <= warningThreshold ? 'text-yellow-500' : 'text-primary';
-
-      return <span className={cn(tone)}>{formatRemainingTime(days, dueDate)}</span>;
+      return <span className={cn({
+        'text-destructive': days < 0,
+        'text-yellow-500': days >= 0 && days <= warningThreshold,
+        'text-primary': days > warningThreshold
+      })}>{formatRemainingTime(days, dueDate)}</span>;
     }
   },
   {
