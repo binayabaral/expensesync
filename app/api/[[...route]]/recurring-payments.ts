@@ -61,50 +61,46 @@ const getNextDueDate = (item: {
   dayOfMonth: number | null;
   month: number | null;
 }) => {
-  const today = startOfDay(new Date());
-  let next = item.lastCompletedAt ? new Date(item.lastCompletedAt) : new Date(item.startDate);
+  const baseDate = startOfDay(item.lastCompletedAt ? new Date(item.lastCompletedAt) : new Date(item.startDate));
 
   if (item.cadence === 'DAILY') {
     if (item.lastCompletedAt) {
-      next = addDays(next, 1);
+      return addDays(baseDate, 1);
     }
+    return baseDate;
   }
 
   if (item.cadence === 'MONTHLY') {
-    const day = item.dayOfMonth ?? next.getDate();
+    const day = item.dayOfMonth ?? baseDate.getDate();
+    let next: Date;
+    
     if (item.lastCompletedAt) {
-      next = addMonths(next, 1);
+      next = addMonths(baseDate, 1);
+    } else {
+      next = new Date(baseDate);
     }
     next.setDate(clampDayOfMonth(next, day));
+    
+    return next;
   }
 
   if (item.cadence === 'YEARLY') {
-    const day = item.dayOfMonth ?? next.getDate();
-    const month = item.month ? item.month - 1 : next.getMonth();
+    const day = item.dayOfMonth ?? baseDate.getDate();
+    const targetMonth = item.month ? item.month - 1 : baseDate.getMonth();
+    let next: Date;
+    
     if (item.lastCompletedAt) {
-      next = addYears(next, 1);
-    }
-    next.setMonth(month);
-    next.setDate(clampDayOfMonth(next, day));
-  }
-
-  while (next < today) {
-    if (item.cadence === 'DAILY') {
-      next = addDays(next, 1);
-    } else if (item.cadence === 'MONTHLY') {
-      next = addMonths(next, 1);
-      const day = item.dayOfMonth ?? next.getDate();
-      next.setDate(clampDayOfMonth(next, day));
+      next = addYears(baseDate, 1);
     } else {
-      next = addYears(next, 1);
-      const day = item.dayOfMonth ?? next.getDate();
-      const month = item.month ? item.month - 1 : next.getMonth();
-      next.setMonth(month);
-      next.setDate(clampDayOfMonth(next, day));
+      next = new Date(baseDate);
     }
+    next.setMonth(targetMonth);
+    next.setDate(clampDayOfMonth(next, day));
+    
+    return next;
   }
 
-  return next;
+  return baseDate;
 };
 
 const app = new Hono()
