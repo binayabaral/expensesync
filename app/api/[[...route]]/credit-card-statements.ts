@@ -62,7 +62,8 @@ const buildStatementPreview = async (userId: string, accountId: string, tzOffset
       and(
         eq(transactions.accountId, accountId),
         gte(transactions.date, startOfDay(periodStart)),
-        lte(transactions.date, endOfDay(statementDate))
+        lte(transactions.date, endOfDay(statementDate)),
+        eq(transactions.type, 'USER_CREATED')
       )
     );
 
