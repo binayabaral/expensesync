@@ -52,8 +52,8 @@ export const CreditCardPaymentsWidget = () => {
                       <div>
                         Payment Due: <span className='font-medium'>{formatCurrency(statement.paymentDueAmount)}</span>
                       </div>
-                      <div className={statement.daysUntilDue ?? 0 < 0 ? 'text-destructive' : 'text-muted-foreground'}>
-                        {formatRemainingTime(statement.daysUntilDue ?? 0, new Date(statement.dueDate))}
+                      <div className={(statement.daysUntilDue ?? 0) < 0 ? 'text-destructive' : 'text-muted-foreground'}>
+                        {formatRemainingTime((statement.daysUntilDue ?? 0), new Date(statement.dueDate))}
                       </div>
                     </div>
                     <div className='mt-1 text-xs text-muted-foreground'>
