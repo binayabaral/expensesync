@@ -1,4 +1,4 @@
-import { addDays, addMonths, endOfMonth, getDaysInMonth, startOfDay } from 'date-fns';
+import { addDays, addMonths, getDaysInMonth, startOfDay } from 'date-fns';
 
 type CreditCardSettings = {
   statementCloseDay?: number | null;
@@ -14,20 +14,30 @@ const clampDayOfMonth = (date: Date, day: number) => {
 
 export const getStatementCloseDateForMonth = (referenceDate: Date, settings: CreditCardSettings) => {
   const base = startOfDay(referenceDate);
+  
+  // Extract UTC calendar date components to avoid timezone issues
+  const year = base.getUTCFullYear();
+  const month = base.getUTCMonth();
+  
   if (settings.statementCloseIsEom) {
-    return endOfMonth(base);
+    // Get last day of the month in UTC
+    const lastDay = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+    const result = new Date(Date.UTC(year, month, lastDay, 0, 0, 0, 0));
+    return result;
   }
 
-  const day = settings.statementCloseDay ?? base.getDate();
-  const clampedDay = clampDayOfMonth(base, day);
-  const closeDate = new Date(base);
-  closeDate.setDate(clampedDay);
-  return closeDate;
+  const day = settings.statementCloseDay ?? base.getUTCDate();
+  // Get the actual last day of the current month
+  const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+  const clampedDay = Math.min(Math.max(day, 1), daysInMonth);
+  const result = new Date(Date.UTC(year, month, clampedDay, 0, 0, 0, 0));
+  return result;
 };
 
 export const getMostRecentStatementCloseDate = (referenceDate: Date, settings: CreditCardSettings) => {
   const base = startOfDay(referenceDate);
   const closeThisMonth = getStatementCloseDateForMonth(base, settings);
+  
   if (closeThisMonth <= base) {
     return closeThisMonth;
   }

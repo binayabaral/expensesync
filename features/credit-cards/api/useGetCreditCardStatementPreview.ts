@@ -20,10 +20,11 @@ export const useGetCreditCardStatementPreview = (accountId?: string) => {
         throw new Error('Failed to fetch statement preview');
       }
 
-      const { data } = await response.json();
+      const result = await response.json();
 
-      return data;
-    }
+      return result;
+    },
+    retry: false
   });
 
   return query;

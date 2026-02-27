@@ -37,7 +37,7 @@ const buildStatementPreview = async (userId: string, accountId: string, tzOffset
     .where(and(eq(accounts.userId, userId), eq(accounts.id, accountId), eq(accounts.isDeleted, false)));
 
   if (!account || account.accountType !== 'CREDIT_CARD') {
-    return { error: 'Credit card account not found' } as const;
+    return { available: false, reason: 'Credit card account not found' } as const;
   }
 
   const localNow = startOfDay(getLocalNow(tzOffsetMinutes));
@@ -46,13 +46,29 @@ const buildStatementPreview = async (userId: string, accountId: string, tzOffset
   const periodStart = addDays(previousCloseDate, 1);
   const dueDate = getPaymentDueDate(statementDate, account);
 
+  // Check for existing statement using UTC calendar date comparison
+  // Extract the UTC calendar date (year, month, day) from the calculated statement date
+  const stmtYear = statementDate.getUTCFullYear();
+  const stmtMonth = statementDate.getUTCMonth();
+  const stmtDay = statementDate.getUTCDate();
+  
+  // Create UTC day boundaries: start at 00:00:00.000 UTC, end at 23:59:59.999 UTC
+  const dayStartUTC = new Date(Date.UTC(stmtYear, stmtMonth, stmtDay, 0, 0, 0, 0));
+  const dayEndUTC = new Date(Date.UTC(stmtYear, stmtMonth, stmtDay, 23, 59, 59, 999));
+  
   const [existingStatement] = await db
-    .select({ id: creditCardStatements.id })
+    .select({ id: creditCardStatements.id, statementDate: creditCardStatements.statementDate })
     .from(creditCardStatements)
-    .where(and(eq(creditCardStatements.accountId, accountId), eq(creditCardStatements.statementDate, statementDate)));
+    .where(
+      and(
+        eq(creditCardStatements.accountId, accountId),
+        gte(creditCardStatements.statementDate, dayStartUTC),
+        lte(creditCardStatements.statementDate, dayEndUTC)
+      )
+    );
 
   if (existingStatement) {
-    return { error: 'Statement already closed for this period' } as const;
+    return { available: false, reason: 'Statement already closed for this period' } as const;
   }
 
   const [totals] = await db
@@ -61,9 +77,7 @@ const buildStatementPreview = async (userId: string, accountId: string, tzOffset
     .where(
       and(
         eq(transactions.accountId, accountId),
-        gte(transactions.date, startOfDay(periodStart)),
-        lte(transactions.date, endOfDay(statementDate)),
-        eq(transactions.type, 'USER_CREATED')
+        lte(transactions.date, endOfDay(statementDate))
       )
     );
 
@@ -76,6 +90,7 @@ const buildStatementPreview = async (userId: string, accountId: string, tzOffset
   );
 
   return {
+    available: true,
     data: {
       accountId,
       periodStart,
@@ -155,11 +170,12 @@ const app = new Hono()
       }
 
       const preview = await buildStatementPreview(auth.userId, accountId, tzOffsetMinutes);
-      if ('error' in preview) {
-        return c.json({ error: preview.error }, 400);
+      
+      if (!preview.available) {
+        return c.json({ available: false, reason: preview.reason });
       }
 
-      return c.json({ data: preview.data });
+      return c.json({ available: true, data: preview.data });
     }
   )
   .post(
@@ -181,8 +197,9 @@ const app = new Hono()
       }
 
       const preview = await buildStatementPreview(auth.userId, accountId, tzOffsetMinutes);
-      if ('error' in preview) {
-        return c.json({ error: preview.error }, 400);
+      
+      if (!preview.available) {
+        return c.json({ error: preview.reason }, 400);
       }
 
       const paymentDueAmount =

@@ -30,7 +30,9 @@ export const CloseStatementSheet = () => {
     defaultValues: { paymentDueAmount: '' }
   });
 
-  const preview = previewQuery.data;
+  const result = previewQuery.data;
+  const preview = result && 'data' in result ? result.data : null;
+  const unavailableReason = result && 'reason' in result ? result.reason : null;
   const isLoading = previewQuery.isLoading || createStatement.isPending;
 
   useEffect(() => {
@@ -85,6 +87,14 @@ export const CloseStatementSheet = () => {
         {previewQuery.isLoading ? (
           <div className='flex justify-center'>
             <Loader2 className='size-12 text-muted-foreground animate-spin' />
+          </div>
+        ) : previewQuery.isError ? (
+          <div className='text-sm text-destructive'>
+            {previewQuery.error?.message || 'Failed to load statement preview'}
+          </div>
+        ) : unavailableReason ? (
+          <div className='text-sm text-muted-foreground'>
+            {unavailableReason}
           </div>
         ) : preview ? (
           <Form {...form}>
