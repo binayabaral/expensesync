@@ -25,7 +25,7 @@ const formSchema = insertRecurringPaymentSchema.omit({
 type FormValues = z.input<typeof formSchema>;
 
 export const AddRecurringPaymentSheet = () => {
-  const { isOpen, onClose } = useAddRecurringPayment();
+  const { isOpen, onClose, initialValues } = useAddRecurringPayment();
   const createRecurringPayment = useCreateRecurringPayment();
 
   const accountsQuery = useGetAccounts();
@@ -54,17 +54,18 @@ export const AddRecurringPaymentSheet = () => {
   const now = new Date();
   const defaultValues: RecurringPaymentFormValues = {
     name: '',
-    type: 'TRANSACTION',
+    type: initialValues?.toAccountId ? 'TRANSFER' : 'TRANSACTION',
     cadence: 'MONTHLY',
     amount: '',
     transferCharge: '0',
     accountId: '',
     categoryId: '',
-    toAccountId: '',
+    toAccountId: initialValues?.toAccountId ?? '',
     notes: '',
     startDate: now,
-    dayOfMonth: now.getDate(),
+    dayOfMonth: initialValues?.dayOfMonth ?? now.getDate(),
     month: now.getMonth() + 1,
+    intervalMonths: 1,
     isActive: true
   };
 

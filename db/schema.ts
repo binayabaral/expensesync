@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { relations } from 'drizzle-orm';
 import { createInsertSchema } from 'drizzle-zod';
-import { integer, pgTable, text, timestamp, pgEnum, boolean, bigint, doublePrecision } from 'drizzle-orm/pg-core';
+import { integer, pgTable, text, timestamp, pgEnum, boolean, bigint, doublePrecision, date } from 'drizzle-orm/pg-core';
 
 export const TransactionTypeEnum = pgEnum('transaction_type', [
   'USER_CREATED',
@@ -20,6 +20,7 @@ export const AssetTypeEnum = pgEnum('asset_type', ['GOLD_22K', 'GOLD_24K', 'SILV
 export const RecurringPaymentTypeEnum = pgEnum('recurring_payment_type', ['TRANSACTION', 'TRANSFER']);
 export const RecurringCadenceEnum = pgEnum('recurring_cadence', ['DAILY', 'MONTHLY', 'YEARLY']);
 export const AccountTypeEnum = pgEnum('account_type', ['CASH', 'BANK', 'CREDIT_CARD', 'LOAN', 'OTHER']);
+export const LoanSubTypeEnum = pgEnum('loan_sub_type', ['EMI', 'PEER']);
 
 export const accounts = pgTable('accounts', {
   id: text('id').primaryKey(),
@@ -33,6 +34,12 @@ export const accounts = pgTable('accounts', {
   paymentDueDay: integer('payment_due_day'),
   paymentDueDays: integer('payment_due_days'),
   minimumPaymentPercentage: doublePrecision('minimum_payment_percentage').notNull().default(2),
+  loanSubType: LoanSubTypeEnum('loan_sub_type'),
+  peerName: text('peer_name'),
+  loanTenureMonths: integer('loan_tenure_months'),
+  emiIntervalMonths: integer('emi_interval_months').notNull().default(1),
+  isClosed: boolean('is_closed').notNull().default(false),
+  closedAt: date('closed_at'),
   isHidden: boolean('is_hidden').default(false).notNull(),
   isDeleted: boolean('is_deleted').default(false).notNull()
 });
@@ -125,6 +132,7 @@ export const recurringPayments = pgTable('recurring_payments', {
   startDate: timestamp('start_date', { mode: 'date' }).notNull(),
   dayOfMonth: integer('day_of_month'),
   month: integer('month'),
+  intervalMonths: integer('interval_months').notNull().default(1),
   lastCompletedAt: timestamp('last_completed_at', { mode: 'date' }),
   isActive: boolean('is_active').default(true).notNull(),
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),

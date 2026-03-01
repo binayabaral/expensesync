@@ -6,6 +6,7 @@ import { ArrowUpDown } from 'lucide-react';
 import { ColumnDef } from '@tanstack/react-table';
 
 import { cn, formatCurrency } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 
@@ -44,18 +45,25 @@ export const columns: ColumnDef<ResponseType>[] = [
       );
     },
     cell: ({ row }) => (
-      <span
-        className={cn(
-          cn(
-            row.original.isHidden
+      <span className='flex items-center gap-2'>
+        <span
+          className={cn(
+            row.original.isClosed
+              ? 'text-muted-foreground'
+              : row.original.isHidden
               ? 'text-muted-foreground'
               : row.original.balance < 0
               ? 'text-destructive'
               : 'text-primary'
-          )
+          )}
+        >
+          {row.original.name}
+        </span>
+        {row.original.isClosed && (
+          <Badge variant='outline' className='text-xs text-muted-foreground'>
+            Closed
+          </Badge>
         )}
-      >
-        {row.original.name}
       </span>
     )
   },

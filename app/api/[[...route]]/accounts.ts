@@ -40,7 +40,12 @@ const app = new Hono()
           statementCloseIsEom: accounts.statementCloseIsEom,
           paymentDueDay: accounts.paymentDueDay,
           paymentDueDays: accounts.paymentDueDays,
-          minimumPaymentPercentage: accounts.minimumPaymentPercentage
+          minimumPaymentPercentage: accounts.minimumPaymentPercentage,
+          loanSubType: accounts.loanSubType,
+          loanTenureMonths: accounts.loanTenureMonths,
+          emiIntervalMonths: accounts.emiIntervalMonths,
+          isClosed: accounts.isClosed,
+          closedAt: accounts.closedAt
         })
         .from(accounts)
         .where(and(eq(accounts.userId, auth.userId), to ? undefined : eq(accounts.isDeleted, false)))
@@ -103,7 +108,12 @@ const app = new Hono()
           statementCloseIsEom: accounts.statementCloseIsEom,
           paymentDueDay: accounts.paymentDueDay,
           paymentDueDays: accounts.paymentDueDays,
-          minimumPaymentPercentage: accounts.minimumPaymentPercentage
+          minimumPaymentPercentage: accounts.minimumPaymentPercentage,
+          loanSubType: accounts.loanSubType,
+          loanTenureMonths: accounts.loanTenureMonths,
+          emiIntervalMonths: accounts.emiIntervalMonths,
+          isClosed: accounts.isClosed,
+          closedAt: accounts.closedAt
         })
         .from(accounts)
         .where(and(eq(accounts.userId, auth.userId), eq(accounts.id, id), eq(accounts.isDeleted, false)));
@@ -131,7 +141,10 @@ const app = new Hono()
           statementCloseIsEom: z.boolean().optional(),
           paymentDueDay: z.number().int().min(1).max(31).nullable().optional(),
           paymentDueDays: z.number().int().min(1).max(60).nullable().optional(),
-          minimumPaymentPercentage: z.number().min(0).max(100).optional()
+          minimumPaymentPercentage: z.number().min(0).max(100).optional(),
+          loanSubType: z.enum(['EMI', 'PEER']).nullable().optional(),
+          loanTenureMonths: z.number().int().min(1).nullable().optional(),
+          emiIntervalMonths: z.number().int().min(1).max(24).optional()
         })
         .refine(
           data =>
@@ -159,6 +172,7 @@ const app = new Hono()
       }
 
       const isCreditCard = values.accountType === 'CREDIT_CARD';
+      const isLoan = values.accountType === 'LOAN';
 
       const [insertedData] = await db
         .insert(accounts)
@@ -169,12 +183,15 @@ const app = new Hono()
           isHidden: values.isHidden,
           accountType: values.accountType,
           creditLimit: isCreditCard ? values.creditLimit ?? null : null,
-          apr: isCreditCard ? values.apr ?? null : null,
+          apr: isCreditCard ? values.apr ?? null : isLoan && values.loanSubType === 'EMI' ? values.apr ?? null : null,
           statementCloseDay: isCreditCard ? values.statementCloseDay ?? null : null,
           statementCloseIsEom: isCreditCard ? values.statementCloseIsEom ?? false : false,
-          paymentDueDay: isCreditCard ? values.paymentDueDay ?? null : null,
+          paymentDueDay: isCreditCard ? values.paymentDueDay ?? null : isLoan && values.loanSubType === 'EMI' ? values.paymentDueDay ?? null : null,
           paymentDueDays: isCreditCard ? values.paymentDueDays ?? null : null,
-          minimumPaymentPercentage: isCreditCard ? values.minimumPaymentPercentage ?? 2 : 2
+          minimumPaymentPercentage: isCreditCard ? values.minimumPaymentPercentage ?? 2 : 2,
+          loanSubType: isLoan ? values.loanSubType ?? null : null,
+          loanTenureMonths: isLoan && values.loanSubType === 'EMI' ? values.loanTenureMonths ?? null : null,
+          emiIntervalMonths: isLoan && values.loanSubType === 'EMI' ? values.emiIntervalMonths ?? 1 : 1
         })
         .returning();
 
@@ -236,7 +253,10 @@ const app = new Hono()
           statementCloseIsEom: true,
           paymentDueDay: true,
           paymentDueDays: true,
-          minimumPaymentPercentage: true
+          minimumPaymentPercentage: true,
+          loanSubType: true,
+          loanTenureMonths: true,
+          emiIntervalMonths: true
         })
         .partial()
     ),
@@ -285,23 +305,28 @@ const app = new Hono()
       }
 
       const isCreditCard = values.accountType === 'CREDIT_CARD';
+      const isLoan = values.accountType === 'LOAN';
+      const isEmi = isLoan && values.loanSubType === 'EMI';
       const normalizedValues = {
         ...values,
         creditLimit: isCreditCard ? values.creditLimit : values.accountType ? null : values.creditLimit,
-        apr: isCreditCard ? values.apr : values.accountType ? null : values.apr,
+        apr: isCreditCard ? values.apr : isEmi ? values.apr : values.accountType ? null : values.apr,
         statementCloseDay: isCreditCard ? values.statementCloseDay : values.accountType ? null : values.statementCloseDay,
         statementCloseIsEom: isCreditCard
           ? values.statementCloseIsEom ?? false
           : values.accountType
           ? false
           : values.statementCloseIsEom,
-        paymentDueDay: isCreditCard ? values.paymentDueDay : values.accountType ? null : values.paymentDueDay,
+        paymentDueDay: isCreditCard ? values.paymentDueDay : isEmi ? values.paymentDueDay : values.accountType ? null : values.paymentDueDay,
         paymentDueDays: isCreditCard ? values.paymentDueDays : values.accountType ? null : values.paymentDueDays,
         minimumPaymentPercentage: isCreditCard
           ? values.minimumPaymentPercentage ?? 2
           : values.accountType
           ? 2
-          : values.minimumPaymentPercentage
+          : values.minimumPaymentPercentage,
+        loanSubType: isLoan ? values.loanSubType ?? null : values.accountType ? null : values.loanSubType,
+        loanTenureMonths: isEmi ? values.loanTenureMonths ?? null : isLoan ? null : values.accountType ? null : values.loanTenureMonths,
+        emiIntervalMonths: isEmi ? values.emiIntervalMonths ?? 1 : 1
       };
 
       const [data] = await db

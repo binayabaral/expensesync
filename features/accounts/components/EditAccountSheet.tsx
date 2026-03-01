@@ -5,6 +5,7 @@ import { convertAmountFromMiliUnits } from '@/lib/utils';
 import { useGetAccount } from '@/features/accounts/api/useGetAccount';
 import { useEditAccount } from '@/features/accounts/api/useEditAccounts';
 import { useDeleteAccount } from '@/features/accounts/api/useDeleteAccounts';
+import { useCloseLoan } from '@/features/loans/api/useCloseLoan';
 import { EditAccountForm } from '@/features/accounts/components/EditAccountForm';
 import { useOpenEditAccountSheet } from '@/features/accounts/hooks/useOpenEditAccountSheet';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -21,6 +22,9 @@ type DefaultValues = {
   paymentDueDay?: string | null;
   paymentDueDays?: string | null;
   minimumPaymentPercentage?: string | null;
+  loanSubType?: 'EMI' | 'PEER' | null;
+  loanTenureMonths?: string | null;
+  emiIntervalMonths?: string | null;
 };
 
 type SubmitValues = {
@@ -34,6 +38,9 @@ type SubmitValues = {
   paymentDueDay?: number | null;
   paymentDueDays?: number | null;
   minimumPaymentPercentage?: number;
+  loanSubType?: 'EMI' | 'PEER' | null;
+  loanTenureMonths?: number | null;
+  emiIntervalMonths?: number;
 };
 
 export const EditAccountSheet = () => {
@@ -42,10 +49,11 @@ export const EditAccountSheet = () => {
 
   const editMutation = useEditAccount(id);
   const deleteMutation = useDeleteAccount(id);
+  const closeLoanMutation = useCloseLoan(id);
   const accountQuery = useGetAccount(id);
 
   const isLoading = accountQuery.isLoading;
-  const isPending = editMutation.isPending || deleteMutation.isPending;
+  const isPending = editMutation.isPending || deleteMutation.isPending || closeLoanMutation.isPending;
 
   const onSubmit = (values: SubmitValues) => {
     editMutation.mutate(values, {
@@ -67,6 +75,14 @@ export const EditAccountSheet = () => {
     }
   };
 
+  const onCloseLoan = () => {
+    closeLoanMutation.mutate(undefined, {
+      onSuccess: () => {
+        onClose();
+      }
+    });
+  };
+
   const defaultValues: DefaultValues = accountQuery.data
     ? {
         name: accountQuery.data.name,
@@ -83,7 +99,10 @@ export const EditAccountSheet = () => {
         paymentDueDays: accountQuery.data.paymentDueDays ? accountQuery.data.paymentDueDays.toString() : '',
         minimumPaymentPercentage: accountQuery.data.minimumPaymentPercentage
           ? accountQuery.data.minimumPaymentPercentage.toString()
-          : '2'
+          : '2',
+        loanSubType: (accountQuery.data.loanSubType ?? null) as DefaultValues['loanSubType'],
+        loanTenureMonths: accountQuery.data.loanTenureMonths ? accountQuery.data.loanTenureMonths.toString() : '',
+        emiIntervalMonths: (accountQuery.data.emiIntervalMonths ?? 1).toString()
       }
     : {
         name: '',
@@ -96,7 +115,10 @@ export const EditAccountSheet = () => {
         paymentDueMode: 'DAY',
         paymentDueDay: '',
         paymentDueDays: '',
-        minimumPaymentPercentage: '2'
+        minimumPaymentPercentage: '2',
+        loanSubType: null,
+        loanTenureMonths: '',
+        emiIntervalMonths: '1'
       };
 
   return (
@@ -115,7 +137,9 @@ export const EditAccountSheet = () => {
           ) : (
             <EditAccountForm
               id={id}
+              isClosed={accountQuery.data?.isClosed ?? false}
               onDelete={onDelete}
+              onCloseLoan={onCloseLoan}
               onSubmit={onSubmit}
               disabled={isPending}
               defaultValues={defaultValues}

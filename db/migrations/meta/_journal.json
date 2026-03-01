@@ -162,6 +162,27 @@
       "when": 1770452262011,
       "tag": "0022_tan_veda",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1772378438530,
+      "tag": "0023_violet_scorpion",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1772382993087,
+      "tag": "0024_safe_wither",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1772383706902,
+      "tag": "0025_melted_vertigo",
+      "breakpoints": true
     }
   ]
 }

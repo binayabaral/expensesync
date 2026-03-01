@@ -24,6 +24,7 @@ const formSchema = z.object({
   startDate: z.coerce.date(),
   dayOfMonth: z.coerce.number().int().min(1).max(31).optional().nullable(),
   month: z.coerce.number().int().min(1).max(12).optional().nullable(),
+  intervalMonths: z.coerce.number().int().min(1).max(24).optional().nullable(),
   accountId: z.string().optional().nullable(),
   categoryId: z.string().optional().nullable(),
   toAccountId: z.string().optional().nullable(),
@@ -62,6 +63,7 @@ export type RecurringPaymentFormValues = z.input<typeof formSchema>;
 export type RecurringPaymentApiValues = Omit<RecurringPaymentFormValues, 'amount' | 'transferCharge'> & {
   amount: number;
   transferCharge?: number;
+  intervalMonths?: number;
 };
 
 type Props = {
@@ -101,6 +103,7 @@ export const RecurringPaymentForm = ({
       transferCharge: transferChargeInMiliUnits,
       dayOfMonth: values.dayOfMonth || null,
       month: values.month || null,
+      intervalMonths: values.cadence === 'MONTHLY' ? (values.intervalMonths || 1) : undefined,
       accountId: values.accountId || null,
       categoryId: values.categoryId || null,
       toAccountId: values.toAccountId || null
@@ -212,6 +215,29 @@ export const RecurringPaymentForm = ({
                     onChange={field.onChange}
                     disabled={disabled}
                     placeholder='1-31'
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        )}
+
+        {cadence === 'MONTHLY' && (
+          <FormField
+            name='intervalMonths'
+            control={form.control}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Repeat Every (months)</FormLabel>
+                <FormControl>
+                  <Input
+                    type='number'
+                    min={1}
+                    max={24}
+                    value={field.value ?? 1}
+                    onChange={field.onChange}
+                    disabled={disabled}
+                    placeholder='1'
                   />
                 </FormControl>
               </FormItem>

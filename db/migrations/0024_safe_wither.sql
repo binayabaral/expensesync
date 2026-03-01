@@ -1,0 +1,1 @@
+ALTER TABLE "recurring_payments" ADD COLUMN "interval_months" integer DEFAULT 1 NOT NULL;

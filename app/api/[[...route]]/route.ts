@@ -13,6 +13,7 @@ import payeesRoute from './payees';
 import recurringPaymentsRoute from './recurring-payments';
 import creditCardsRoute from './credit-cards';
 import creditCardStatementsRoute from './credit-card-statements';
+import loansRoute from './loans';
 
 export const runtime = 'edge';
 
@@ -31,7 +32,8 @@ const routes = app
   .route('/payees', payeesRoute)
   .route('/recurring-payments', recurringPaymentsRoute)
   .route('/credit-cards', creditCardsRoute)
-  .route('/credit-card-statements', creditCardStatementsRoute);
+  .route('/credit-card-statements', creditCardStatementsRoute)
+  .route('/loans', loansRoute);
 
 export const GET = handle(app);
 export const POST = handle(app);

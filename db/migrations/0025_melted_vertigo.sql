@@ -1,0 +1,1 @@
+ALTER TABLE "accounts" ADD COLUMN "emi_interval_months" integer DEFAULT 1 NOT NULL;

@@ -92,6 +92,7 @@ export const EditRecurringPaymentSheet = () => {
         startDate: new Date(),
         dayOfMonth: null,
         month: null,
+        intervalMonths: 1,
         isActive: true
       };
 

@@ -1,8 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import { Loader2, Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { DataTable } from '@/components/DataTable';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useGetAccounts } from '@/features/accounts/api/useGetAccounts';
@@ -14,11 +16,13 @@ import { columns } from './columns';
 import { Suspense } from 'react';
 
 function Accounts() {
+  const [showClosed, setShowClosed] = useState(false);
   const newAccount = useAddAccount();
   const accountsQuery = useGetAccounts();
   const deleteAccounts = useBulkDeleteAccount();
 
-  const accounts = accountsQuery.data || [];
+  const allAccounts = accountsQuery.data || [];
+  const accounts = showClosed ? allAccounts : allAccounts.filter(a => !a.isClosed);
   const isDisabled = accountsQuery.isLoading || deleteAccounts.isPending;
 
   if (accountsQuery.isLoading) {
@@ -43,10 +47,16 @@ function Accounts() {
       <Card className='border border-slate-200 shadow-none'>
         <CardHeader className='gap-y-2 lg:flex-row lg:items-center lg:justify-between space-y-0'>
           <CardTitle className='text-lg font-semibold'>Accounts</CardTitle>
-          <Button onClick={newAccount.onOpen}>
-            <Plus className='size-4 mr-2' />
-            Add New
-          </Button>
+          <div className='flex items-center gap-4'>
+            <label className='flex items-center gap-2 text-sm text-muted-foreground cursor-pointer'>
+              <Switch checked={showClosed} onCheckedChange={setShowClosed} />
+              Show closed
+            </label>
+            <Button onClick={newAccount.onOpen}>
+              <Plus className='size-4 mr-2' />
+              Add New
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <DataTable

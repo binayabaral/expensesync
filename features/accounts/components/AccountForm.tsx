@@ -25,10 +25,12 @@ const formSchema = z.object({
   paymentDueMode: z.enum(['DAY', 'DAYS']),
   paymentDueDay: z.string().optional().nullable(),
   paymentDueDays: z.string().optional().nullable(),
-  minimumPaymentPercentage: z.string().optional().nullable()
+  minimumPaymentPercentage: z.string().optional().nullable(),
+  loanSubType: z.enum(['EMI', 'PEER']).optional().nullable(),
+  loanTenureMonths: z.string().optional().nullable(),
+  emiIntervalMonths: z.string().optional().nullable()
 });
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const apiSchema = z.object({
   name: z.string(),
   isHidden: z.boolean(),
@@ -40,26 +42,14 @@ const apiSchema = z.object({
   statementCloseIsEom: z.boolean().optional(),
   paymentDueDay: z.number().nullable().optional(),
   paymentDueDays: z.number().nullable().optional(),
-  minimumPaymentPercentage: z.number().optional()
-});
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const editSchema = z.object({
-  name: z.string(),
-  isHidden: z.boolean(),
-  accountType: z.enum(['CASH', 'BANK', 'CREDIT_CARD', 'LOAN', 'OTHER']),
-  creditLimit: z.number().nullable().optional(),
-  apr: z.number().nullable().optional(),
-  statementCloseDay: z.number().nullable().optional(),
-  statementCloseIsEom: z.boolean().optional(),
-  paymentDueDay: z.number().nullable().optional(),
-  paymentDueDays: z.number().nullable().optional(),
-  minimumPaymentPercentage: z.number().optional()
+  minimumPaymentPercentage: z.number().optional(),
+  loanSubType: z.enum(['EMI', 'PEER']).nullable().optional(),
+  loanTenureMonths: z.number().nullable().optional(),
+  emiIntervalMonths: z.number().optional()
 });
 
 type FormValues = z.input<typeof formSchema>;
 type ApiFormValues = z.input<typeof apiSchema>;
-type EditFormValues = z.input<typeof editSchema>;
 
 type Props = {
   id?: string;
@@ -78,8 +68,10 @@ export const AccountForm = ({ id, onSubmit, onDelete, disabled, defaultValues }:
   const handleSubmit = (values: FormValues) => {
     const amountInMiliUnits = convertAmountToMiliUnits(parseFloat(values.startingBalance));
     const isCreditCard = values.accountType === 'CREDIT_CARD';
+    const isLoan = values.accountType === 'LOAN';
+    const isEmi = isLoan && values.loanSubType === 'EMI';
     const creditLimit = isCreditCard && values.creditLimit ? convertAmountToMiliUnits(parseFloat(values.creditLimit)) : null;
-    const apr = isCreditCard && values.apr ? parseFloat(values.apr) : null;
+    const apr = isCreditCard && values.apr ? parseFloat(values.apr) : isEmi && values.apr ? parseFloat(values.apr) : null;
     const minimumPaymentPercentage = isCreditCard && values.minimumPaymentPercentage
       ? parseFloat(values.minimumPaymentPercentage)
       : 2;
@@ -89,13 +81,18 @@ export const AccountForm = ({ id, onSubmit, onDelete, disabled, defaultValues }:
         ? parseInt(values.statementCloseDay, 10)
         : null;
     const paymentDueDay =
-      isCreditCard && values.paymentDueMode === 'DAY' && values.paymentDueDay
+      (isCreditCard && values.paymentDueMode === 'DAY' && values.paymentDueDay)
+        ? parseInt(values.paymentDueDay, 10)
+        : isEmi && values.paymentDueDay
         ? parseInt(values.paymentDueDay, 10)
         : null;
     const paymentDueDays =
       isCreditCard && values.paymentDueMode === 'DAYS' && values.paymentDueDays
         ? parseInt(values.paymentDueDays, 10)
         : null;
+    const loanSubType = isLoan ? (values.loanSubType ?? null) : null;
+    const loanTenureMonths = isEmi && values.loanTenureMonths ? parseInt(values.loanTenureMonths, 10) : null;
+    const emiIntervalMonths = isEmi && values.emiIntervalMonths ? parseInt(values.emiIntervalMonths, 10) : 1;
 
     onSubmit({
       name: values.name,
@@ -108,7 +105,10 @@ export const AccountForm = ({ id, onSubmit, onDelete, disabled, defaultValues }:
       statementCloseIsEom,
       paymentDueDay,
       paymentDueDays,
-      minimumPaymentPercentage
+      minimumPaymentPercentage,
+      loanSubType,
+      loanTenureMonths,
+      emiIntervalMonths
     });
   };
 
@@ -365,6 +365,123 @@ export const AccountForm = ({ id, onSubmit, onDelete, disabled, defaultValues }:
                 </FormItem>
               )}
             />
+          </>
+        )}
+        {form.watch('accountType') === 'LOAN' && (
+          <>
+            <FormField
+              name='loanSubType'
+              control={form.control}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Loan Type</FormLabel>
+                  <FormControl>
+                    {isMobile() ? (
+                      <NativeSelect value={field.value ?? ''} onChange={field.onChange} disabled={disabled} className='w-full'>
+                        <NativeSelectOption value=''>Select type</NativeSelectOption>
+                        <NativeSelectOption value='EMI'>EMI (Installment)</NativeSelectOption>
+                        <NativeSelectOption value='PEER'>Peer (Person to person)</NativeSelectOption>
+                      </NativeSelect>
+                    ) : (
+                      <Select
+                        value={field.value ?? ''}
+                        disabled={disabled}
+                        allowCreatingOptions={false}
+                        placeholder='Select loan type'
+                        onChangeAction={field.onChange}
+                        options={[
+                          { label: 'EMI (Installment)', value: 'EMI' },
+                          { label: 'Peer (Person to person)', value: 'PEER' }
+                        ]}
+                      />
+                    )}
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            {form.watch('loanSubType') === 'EMI' && (
+              <>
+                <FormField
+                  name='apr'
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Interest Rate (%)</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          value={field.value ?? ''}
+                          type='number'
+                          step='0.01'
+                          min='0'
+                          disabled={disabled}
+                          placeholder='12.5'
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  name='loanTenureMonths'
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tenure (months) <span className='text-muted-foreground font-normal'>(optional)</span></FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          value={field.value ?? ''}
+                          type='number'
+                          min='1'
+                          disabled={disabled}
+                          placeholder='Leave blank for open-ended'
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  name='emiIntervalMonths'
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Payment Frequency (months)</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          value={field.value ?? '1'}
+                          type='number'
+                          min='1'
+                          max='24'
+                          disabled={disabled}
+                          placeholder='1'
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  name='paymentDueDay'
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>EMI Due Day of Month</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          value={field.value ?? ''}
+                          type='number'
+                          min='1'
+                          max='31'
+                          disabled={disabled}
+                          placeholder='15'
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </>
+            )}
           </>
         )}
         <FormField

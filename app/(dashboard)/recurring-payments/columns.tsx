@@ -42,7 +42,15 @@ export const columns: ColumnDef<ResponseType>[] = [
         Cadence
         <ArrowUpDown className='ml-2 h-4 w-4' />
       </Button>
-    )
+    ),
+    cell: ({ row }) => {
+      const cadence = row.original.cadence;
+      const interval = row.original.intervalMonths ?? 1;
+      if (cadence === 'MONTHLY' && interval > 1) {
+        return <span>Every {interval} months</span>;
+      }
+      return <span>{cadence.charAt(0) + cadence.slice(1).toLowerCase()}</span>;
+    }
   },
   {
     accessorKey: 'nextDueDate',

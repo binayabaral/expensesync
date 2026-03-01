@@ -32,6 +32,7 @@ const baseRecurringPaymentSchema = z.object({
   startDate: z.coerce.date(),
   dayOfMonth: z.number().int().min(1).max(31).nullable().optional(),
   month: z.number().int().min(1).max(12).nullable().optional(),
+  intervalMonths: z.number().int().min(1).max(24).optional(),
   isActive: z.boolean().optional()
 });
 
@@ -60,6 +61,7 @@ const getNextDueDate = (item: {
   lastCompletedAt: Date | null;
   dayOfMonth: number | null;
   month: number | null;
+  intervalMonths: number;
 }) => {
   const baseDate = startOfDay(item.lastCompletedAt ? new Date(item.lastCompletedAt) : new Date(item.startDate));
 
@@ -72,15 +74,16 @@ const getNextDueDate = (item: {
 
   if (item.cadence === 'MONTHLY') {
     const day = item.dayOfMonth ?? baseDate.getDate();
+    const interval = item.intervalMonths ?? 1;
     let next: Date;
-    
+
     if (item.lastCompletedAt) {
-      next = addMonths(baseDate, 1);
+      next = addMonths(baseDate, interval);
     } else {
       next = new Date(baseDate);
     }
     next.setDate(clampDayOfMonth(next, day));
-    
+
     return next;
   }
 
@@ -126,6 +129,7 @@ const app = new Hono()
         startDate: recurringPayments.startDate,
         dayOfMonth: recurringPayments.dayOfMonth,
         month: recurringPayments.month,
+        intervalMonths: recurringPayments.intervalMonths,
         lastCompletedAt: recurringPayments.lastCompletedAt,
         isActive: recurringPayments.isActive,
         accountId: recurringPayments.accountId,
@@ -147,7 +151,8 @@ const app = new Hono()
         startDate: item.startDate,
         lastCompletedAt: item.lastCompletedAt,
         dayOfMonth: item.dayOfMonth,
-        month: item.month
+        month: item.month,
+        intervalMonths: item.intervalMonths ?? 1
       });
       const daysRemaining = differenceInCalendarDays(nextDueDate, startOfDay(new Date()));
 
@@ -194,6 +199,7 @@ const app = new Hono()
           startDate: recurringPayments.startDate,
           dayOfMonth: recurringPayments.dayOfMonth,
           month: recurringPayments.month,
+          intervalMonths: recurringPayments.intervalMonths,
           lastCompletedAt: recurringPayments.lastCompletedAt,
           isActive: recurringPayments.isActive,
           accountId: recurringPayments.accountId,

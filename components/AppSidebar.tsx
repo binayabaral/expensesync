@@ -14,7 +14,8 @@ import {
   FaArrowRightArrowLeft,
   FaMoneyBillTransfer,
   FaArrowsRotate,
-  FaCreditCard
+  FaCreditCard,
+  FaFileInvoiceDollar
 } from 'react-icons/fa6';
 
 import {
@@ -73,6 +74,11 @@ export function AppSidebar() {
       title: 'Credit Cards',
       url: '/credit-cards',
       icon: FaCreditCard
+    },
+    {
+      title: 'Loans',
+      url: '/loans',
+      icon: FaFileInvoiceDollar
     },
     {
       title: 'Assets',
