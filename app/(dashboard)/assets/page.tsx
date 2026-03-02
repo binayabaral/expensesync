@@ -1,9 +1,10 @@
 'use client';
 
-import { Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { Loader2, Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { DataTable } from '@/components/DataTable';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,11 +15,14 @@ import { AssetLotsSheet } from '@/features/assets/components/AssetLotsSheet';
 import { columns } from './columns';
 
 function AssetsPageInner() {
+  const [showSold, setShowSold] = useState(false);
+
   const assetsQuery = useGetAssets();
   const openAddAsset = useAddAsset();
 
   const assets = assetsQuery.data || [];
   const isLoading = assetsQuery.isLoading;
+  const visibleAssets = showSold ? assets : assets.filter(a => !a.isSold);
 
   if (isLoading) {
     return (
@@ -43,13 +47,19 @@ function AssetsPageInner() {
       <Card className='border border-slate-200 shadow-none'>
         <CardHeader className='gap-y-2 lg:flex-row lg:items-center lg:justify-between space-y-0'>
           <CardTitle className='text-lg font-semibold'>Assets</CardTitle>
-          <Button onClick={openAddAsset.onOpen}>
-            <Plus className='size-4 mr-2' />
-            Add New
-          </Button>
+          <div className='flex items-center gap-4'>
+            <label className='flex items-center gap-2 text-sm text-muted-foreground cursor-pointer'>
+              <Switch checked={showSold} onCheckedChange={setShowSold} />
+              Show sold
+            </label>
+            <Button onClick={openAddAsset.onOpen}>
+              <Plus className='size-4 mr-2' />
+              Add New
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className='space-y-6'>
-          <DataTable columns={columns} data={assets} hasFooter onDeleteAction={() => {}} />
+          <DataTable columns={columns} data={visibleAssets} hasFooter onDeleteAction={() => {}} />
           <AssetLotsSheet />
         </CardContent>
       </Card>
