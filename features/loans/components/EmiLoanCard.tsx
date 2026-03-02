@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useCloseLoan } from '@/features/loans/api/useCloseLoan';
 import { LoanResponseType } from '@/features/loans/api/useGetLoans';
 import { useConfirm } from '@/hooks/useConfirm';
@@ -133,3 +134,34 @@ export const EmiLoanCard = ({ loan }: Props) => {
     </>
   );
 };
+
+export const EmiLoanCardSkeleton = () => (
+  <Card className='border border-slate-200 shadow-none'>
+    <CardHeader className='pb-0 pt-2 px-4 space-y-0'>
+      <div className='flex items-center gap-2'>
+        <Skeleton className='h-4 w-40' />
+        <Skeleton className='h-5 w-9 rounded-full' />
+      </div>
+    </CardHeader>
+    <CardContent className='px-4 pb-2 pt-1 space-y-1'>
+      <div className='space-y-1'>
+        <div className='flex justify-between'>
+          <Skeleton className='h-4 w-14' />
+          <Skeleton className='h-4 w-8' />
+        </div>
+        <Skeleton className='h-2 w-full rounded-full' />
+        <div className='flex justify-between'>
+          <Skeleton className='h-4 w-28' />
+          <Skeleton className='h-4 w-24' />
+        </div>
+      </div>
+      <div className='flex gap-4'>
+        <Skeleton className='h-4 w-24' />
+        <Skeleton className='h-4 w-20' />
+        <Skeleton className='h-4 w-14' />
+        <Skeleton className='h-4 w-10' />
+      </div>
+      <Skeleton className='h-6 w-full rounded-md' />
+    </CardContent>
+  </Card>
+);

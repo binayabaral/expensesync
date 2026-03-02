@@ -5,6 +5,7 @@ import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YA
 
 import { formatCurrency } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { LoanResponseType } from '@/features/loans/api/useGetLoans';
 
 const COLORS = ['#3b82f6', '#8b5cf6', '#f59e0b', '#10b981', '#ef4444', '#ec4899'];
@@ -143,3 +144,19 @@ export const LoanPaymentChart = ({ loans }: Props) => {
     </Card>
   );
 };
+
+export const LoanPaymentChartSkeleton = () => (
+  <Card className='border border-slate-200 shadow-none'>
+    <CardHeader className='pb-2'>
+      <Skeleton className='h-6 w-56' />
+    </CardHeader>
+    <CardContent>
+      <Skeleton className='h-[260px] w-full rounded-md' />
+      <div className='flex gap-3 mt-3 justify-center flex-wrap'>
+        {[...Array(6)].map((_, i) => (
+          <Skeleton key={i} className='h-4 w-24' />
+        ))}
+      </div>
+    </CardContent>
+  </Card>
+);

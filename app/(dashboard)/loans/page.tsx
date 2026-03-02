@@ -1,15 +1,14 @@
 'use client';
 
 import { useState, Suspense } from 'react';
-import { Loader2 } from 'lucide-react';
 
 import { Switch } from '@/components/ui/switch';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useGetLoans } from '@/features/loans/api/useGetLoans';
-import { EmiLoanCard } from '@/features/loans/components/EmiLoanCard';
-import { PeerLoanCard } from '@/features/loans/components/PeerLoanCard';
+import { EmiLoanCard, EmiLoanCardSkeleton } from '@/features/loans/components/EmiLoanCard';
+import { PeerLoanCard, PeerLoanCardSkeleton } from '@/features/loans/components/PeerLoanCard';
 import { ClosedLoanCard } from '@/features/loans/components/ClosedLoanCard';
-import { LoanPaymentChart } from '@/features/loans/components/LoanPaymentChart';
+import { LoanPaymentChart, LoanPaymentChartSkeleton } from '@/features/loans/components/LoanPaymentChart';
 
 function Loans() {
   const [showAllPeer, setShowAllPeer] = useState(false);
@@ -26,17 +25,32 @@ function Loans() {
 
   if (loansQuery.isLoading) {
     return (
-      <div className='max-w-full'>
-        <Card className='border border-slate-200 shadow-none'>
-          <CardHeader>
-            <CardTitle className='text-lg font-semibold'>Loans</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className='h-40 flex items-center justify-center'>
-              <Loader2 className='size-12 text-slate-300 animate-spin' />
-            </div>
-          </CardContent>
-        </Card>
+      <div className='max-w-full space-y-6'>
+        <section>
+          <Skeleton className='h-6 w-24 mb-3' />
+          <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4'>
+            {[...Array(3)].map((_, i) => <EmiLoanCardSkeleton key={i} />)}
+          </div>
+        </section>
+
+        <section>
+          <div className='flex items-center justify-between mb-3'>
+            <Skeleton className='h-6 w-16' />
+            <Skeleton className='h-5 w-20' />
+          </div>
+          <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4'>
+            {[...Array(3)].map((_, i) => <PeerLoanCardSkeleton key={i} />)}
+          </div>
+        </section>
+
+        <LoanPaymentChartSkeleton />
+
+        <section>
+          <div className='flex items-center justify-between mb-3'>
+            <Skeleton className='h-6 w-14' />
+            <Skeleton className='h-5 w-28' />
+          </div>
+        </section>
       </div>
     );
   }
