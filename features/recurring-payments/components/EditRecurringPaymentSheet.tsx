@@ -39,7 +39,7 @@ export const EditRecurringPaymentSheet = () => {
   const accountsQuery = useGetAccounts();
   const categoriesQuery = useGetCategories();
 
-  const accountOptions = (accountsQuery.data ?? []).map(account => ({
+  const accountOptions = (accountsQuery.data ?? []).filter(account => !account.isClosed).map(account => ({
     label: account.name,
     value: account.id
   }));

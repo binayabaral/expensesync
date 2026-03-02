@@ -4,10 +4,10 @@ import { endOfDay, parse } from 'date-fns';
 import { getAuth } from '@hono/clerk-auth';
 import { createId } from '@paralleldrive/cuid2';
 import { zValidator } from '@hono/zod-validator';
-import { and, asc, eq, inArray } from 'drizzle-orm';
+import { and, asc, eq, inArray, or } from 'drizzle-orm';
 
 import { db } from '@/db/drizzle';
-import { accounts, insertAccountSchema, transactions } from '@/db/schema';
+import { accounts, insertAccountSchema, recurringPayments, transactions } from '@/db/schema';
 
 import { fetchAccountBalance } from '../utils/common';
 
@@ -223,13 +223,28 @@ const app = new Hono()
         return c.json({ error: 'Unauthorized' }, 401);
       }
 
-      const data = await db
+      const today = new Date().toISOString().split('T')[0];
+      
+      const [updatedAccount] = await db
         .update(accounts)
-        .set({ isDeleted: true })
+        .set({ isClosed: true, closedAt: today })
         .where(and(eq(accounts.userId, auth.userId), inArray(accounts.id, values.ids)))
         .returning({ id: accounts.id });
 
-      return c.json({ data });
+      // Deactivate linked recurring payment if any
+      const [linkedRecurringPayment] = await db
+        .select({ id: recurringPayments.id })
+        .from(recurringPayments)
+        .where(and(eq(recurringPayments.userId, auth.userId), or(inArray(recurringPayments.accountId, values.ids), inArray(recurringPayments.toAccountId, values.ids))));
+
+      if (linkedRecurringPayment) {
+        await db
+          .update(recurringPayments)
+          .set({ isActive: false })
+          .where(eq(recurringPayments.id, linkedRecurringPayment.id));
+      }
+
+      return c.json({ updatedAccount });
     }
   )
   .patch(
@@ -282,7 +297,7 @@ const app = new Hono()
           paymentDueDays: accounts.paymentDueDays
         })
         .from(accounts)
-        .where(and(eq(accounts.userId, auth.userId), eq(accounts.id, id), eq(accounts.isDeleted, false)));
+        .where(and(eq(accounts.userId, auth.userId), eq(accounts.id, id), eq(accounts.isClosed, false)));
 
       if (!existingAccount) {
         return c.json({ error: 'Not found' }, 404);
@@ -332,7 +347,7 @@ const app = new Hono()
       const [data] = await db
         .update(accounts)
         .set(normalizedValues)
-        .where(and(eq(accounts.userId, auth.userId), eq(accounts.id, id), eq(accounts.isDeleted, false)))
+        .where(and(eq(accounts.userId, auth.userId), eq(accounts.id, id), eq(accounts.isClosed, false)))
         .returning();
 
       if (!data) {
@@ -362,17 +377,32 @@ const app = new Hono()
         return c.json({ error: 'Id is required' }, 400);
       }
 
-      const [data] = await db
+      const today = new Date().toISOString().split('T')[0];
+      
+      const [updatedAccount] = await db
         .update(accounts)
-        .set({ isDeleted: true })
+        .set({ isClosed: true, closedAt: today })
         .where(and(eq(accounts.userId, auth.userId), eq(accounts.id, id)))
         .returning({ id: accounts.id });
 
-      if (!data) {
+      // Deactivate linked recurring payment if any
+      const [linkedRecurringPayment] = await db
+        .select({ id: recurringPayments.id })
+        .from(recurringPayments)
+        .where(and(eq(recurringPayments.userId, auth.userId), or(eq(recurringPayments.accountId, id), eq(recurringPayments.toAccountId, id))));
+
+      if (linkedRecurringPayment) {
+        await db
+          .update(recurringPayments)
+          .set({ isActive: false })
+          .where(eq(recurringPayments.id, linkedRecurringPayment.id));
+      }
+
+      if (!updatedAccount) {
         return c.json({ error: 'Not found' }, 404);
       }
 
-      return c.json({ data });
+      return c.json({ data: updatedAccount });
     }
   );
 

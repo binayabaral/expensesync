@@ -24,7 +24,7 @@ export const AddTransferSheet = () => {
 
   const accountsQuery = useGetAccounts();
   const accounts = accountsQuery.data ?? [];
-  const accountOptions = accounts.map(account => ({
+  const accountOptions = accounts.filter(account => !account.isClosed).map(account => ({
     label: account.name,
     value: account.id
   }));

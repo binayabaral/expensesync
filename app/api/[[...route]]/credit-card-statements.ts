@@ -34,7 +34,7 @@ const buildStatementPreview = async (userId: string, accountId: string, tzOffset
       minimumPaymentPercentage: accounts.minimumPaymentPercentage
     })
     .from(accounts)
-    .where(and(eq(accounts.userId, userId), eq(accounts.id, accountId), eq(accounts.isDeleted, false)));
+    .where(and(eq(accounts.userId, userId), eq(accounts.id, accountId), eq(accounts.isClosed, false)));
 
   if (!account || account.accountType !== 'CREDIT_CARD') {
     return { available: false, reason: 'Credit card account not found' } as const;

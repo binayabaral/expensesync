@@ -25,7 +25,7 @@ export const EditAssetSheet = () => {
   const assetQuery = useGetAsset(id);
 
   const accountsQuery = useGetAccounts();
-  const accountOptions = (accountsQuery.data ?? []).map(account => ({
+  const accountOptions = (accountsQuery.data ?? []).filter(account => !account.isClosed).map(account => ({
     label: account.name,
     value: account.id
   }));

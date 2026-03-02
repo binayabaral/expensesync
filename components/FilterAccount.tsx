@@ -48,7 +48,7 @@ function FilterAccount() {
       </SelectTrigger>
       <SelectContent>
         <SelectItem value='all'>All Accounts</SelectItem>
-        {accounts?.map(account => (
+        {accounts?.filter(account => !account.isClosed)?.map(account => (
           <SelectItem key={account.id} value={account.id}>
             {account.name}
           </SelectItem>

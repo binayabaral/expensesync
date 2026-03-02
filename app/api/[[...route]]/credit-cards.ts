@@ -29,7 +29,7 @@ const app = new Hono().get('/', async c => {
       minimumPaymentPercentage: accounts.minimumPaymentPercentage
     })
     .from(accounts)
-    .where(and(eq(accounts.userId, auth.userId), eq(accounts.accountType, 'CREDIT_CARD'), eq(accounts.isDeleted, false)))
+    .where(and(eq(accounts.userId, auth.userId), eq(accounts.accountType, 'CREDIT_CARD'), eq(accounts.isClosed, false)))
     .orderBy(asc(accounts.name));
 
   const today = startOfDay(new Date());

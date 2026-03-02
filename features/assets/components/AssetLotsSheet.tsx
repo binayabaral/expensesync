@@ -43,7 +43,7 @@ export const AssetLotsSheet = () => {
 
   const accountsQuery = useGetAccounts();
   const accountOptions =
-    accountsQuery.data?.map(account => ({
+    accountsQuery.data?.filter(account => !account.isClosed).map(account => ({
       label: account.name,
       value: account.id
     })) ?? [];

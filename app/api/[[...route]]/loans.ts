@@ -187,7 +187,7 @@ const app = new Hono()
       const [existingAccount] = await db
         .select({ id: accounts.id, accountType: accounts.accountType })
         .from(accounts)
-        .where(and(eq(accounts.userId, auth.userId), eq(accounts.id, id), eq(accounts.isDeleted, false)));
+        .where(and(eq(accounts.userId, auth.userId), eq(accounts.id, id), eq(accounts.isClosed, false)));
 
       if (!existingAccount) {
         return c.json({ error: 'Not found' }, 404);
