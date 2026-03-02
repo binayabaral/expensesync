@@ -89,7 +89,7 @@ export const LoanPaymentChart = ({ loans }: Props) => {
             <Tooltip
               content={({ active, payload, label }) => {
                 if (!active || !payload || payload.length === 0) return null;
-                const entries = payload.filter(p => (p.value as number) > 0);
+                const entries = payload.filter(p => (p.value as number) > 0).sort((a, b) => (b.value as number) - (a.value as number));
                 if (entries.length === 0) return null;
                 const total = entries.reduce((s, p) => s + (p.value as number), 0);
                 return (

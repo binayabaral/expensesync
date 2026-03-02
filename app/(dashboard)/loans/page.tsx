@@ -43,8 +43,6 @@ function Loans() {
 
   return (
     <div className='max-w-full space-y-6'>
-      <LoanPaymentChart loans={loans} />
-
       {/* EMI Loans */}
       <section>
         <h2 className='text-base font-semibold mb-3'>EMI Loans</h2>
@@ -95,6 +93,8 @@ function Loans() {
           </div>
         </section>
       )}
+
+      <LoanPaymentChart loans={loans} />
 
       {/* Closed Loans */}
       <section>
