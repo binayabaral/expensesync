@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 import { columns } from './columns';
 import { Suspense } from 'react';
+import { DEFAULT_CURRENCY } from '@/lib/utils';
 
 function Accounts() {
   const [showClosed, setShowClosed] = useState(false);
@@ -22,7 +23,9 @@ function Accounts() {
   const deleteAccounts = useBulkDeleteAccount();
 
   const allAccounts = accountsQuery.data || [];
-  const accounts = showClosed ? allAccounts : allAccounts.filter(a => !a.isClosed);
+  const visibleAccounts = showClosed ? allAccounts : allAccounts.filter(a => !a.isClosed);
+  const nprAccounts = visibleAccounts.filter(a => (a.currency ?? DEFAULT_CURRENCY) === DEFAULT_CURRENCY);
+  const foreignAccounts = visibleAccounts.filter(a => (a.currency ?? DEFAULT_CURRENCY) !== DEFAULT_CURRENCY);
   const isDisabled = accountsQuery.isLoading || deleteAccounts.isPending;
 
   if (accountsQuery.isLoading) {
@@ -61,7 +64,7 @@ function Accounts() {
         <CardContent>
           <DataTable
             columns={columns}
-            data={accounts}
+            data={nprAccounts}
             onDeleteAction={row => {
               const ids = row.map(r => r.original.id);
               deleteAccounts.mutate({ ids });
@@ -70,6 +73,27 @@ function Accounts() {
           />
         </CardContent>
       </Card>
+      {foreignAccounts.length > 0 && (
+        <Card className='border border-slate-200 shadow-none mt-4'>
+          <CardHeader className='gap-y-2 lg:flex-row lg:items-center lg:justify-between space-y-0'>
+            <div>
+              <CardTitle className='text-lg font-semibold'>Foreign Currency Accounts</CardTitle>
+              <p className='text-sm text-muted-foreground mt-1'>Balances shown in each account&apos;s native currency — not included in NPR summary</p>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <DataTable
+              columns={columns}
+              data={foreignAccounts}
+              onDeleteAction={row => {
+                const ids = row.map(r => r.original.id);
+                deleteAccounts.mutate({ ids });
+              }}
+              disabled={isDisabled}
+            />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

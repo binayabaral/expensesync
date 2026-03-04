@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { insertTransactionSchema } from '@/db/schema';
-import { convertAmountToMiliUnits } from '@/lib/utils';
+import { DEFAULT_CURRENCY, convertAmountToMiliUnits } from '@/lib/utils';
 import { AmountInput } from '@/components/AmountInput';
 import { DateTimePicker } from '@/components/ui-extended/Datepicker';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
@@ -41,6 +41,7 @@ type Props = {
   onSubmit: (values: ApiFormValues) => void;
   accountOptions: { label: string; value: string }[];
   categoryOptions: { label: string; value: string }[];
+  accounts?: { id: string; currency?: string | null }[];
 };
 
 export const TransactionForm = ({
@@ -51,12 +52,16 @@ export const TransactionForm = ({
   defaultValues,
   accountOptions,
   categoryOptions,
-  onCreateCategory
+  onCreateCategory,
+  accounts = []
 }: Props) => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: defaultValues
   });
+
+  const watchedAccountId = form.watch('accountId');
+  const accountCurrency = accounts.find(a => a.id === watchedAccountId)?.currency ?? DEFAULT_CURRENCY;
 
   const handleSubmit = (values: FormValues) => {
     const amountInMiliUnits = convertAmountToMiliUnits(parseFloat(values.amount));
@@ -168,7 +173,7 @@ export const TransactionForm = ({
             <FormItem>
               <FormLabel>Amount</FormLabel>
               <FormControl>
-                <AmountInput {...field} disabled={disabled} placeholder={'0.00'} />
+                <AmountInput {...field} disabled={disabled} placeholder={'0.00'} currency={accountCurrency} />
               </FormControl>
             </FormItem>
           )}

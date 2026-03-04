@@ -7,7 +7,7 @@ import { parse, startOfMonth, endOfDay, startOfDay, subMonths } from 'date-fns';
 
 import { db } from '@/db/drizzle';
 import { accounts, transactions } from '@/db/schema';
-import { calculatePercentageChange, fillMissingDays } from '@/lib/utils';
+import { DEFAULT_CURRENCY, calculatePercentageChange, fillMissingDays } from '@/lib/utils';
 
 import { fetchAccountBalance, fetchFinancialData, fetchTransactionsByCategory, fetchTransferCharges, fetchTransactionsByPayee } from '../utils/common';
 
@@ -86,7 +86,8 @@ const app = new Hono().get(
           lte(transactions.date, endDate),
           eq(accounts.userId, auth.userId),
           gte(transactions.date, startDate),
-          accountId ? eq(transactions.accountId, accountId) : undefined
+          accountId ? eq(transactions.accountId, accountId) : undefined,
+          accountId ? undefined : eq(accounts.currency, DEFAULT_CURRENCY)
         )
       )
       .groupBy(transactions.date)

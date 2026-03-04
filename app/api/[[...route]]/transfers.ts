@@ -105,9 +105,12 @@ const app = new Hono()
           date: transfers.date,
           notes: transfers.notes,
           amount: transfers.amount,
+          toAmount: transfers.toAmount,
           toAccount: sql<string>`CASE WHEN ${toAccount.isDeleted} THEN CONCAT(${toAccount.name}, ' (deleted account)') ELSE ${toAccount.name} END`,
           fromAccount: sql<string>`CASE WHEN ${fromAccount.isDeleted} THEN CONCAT(${fromAccount.name}, ' (deleted account)') ELSE ${fromAccount.name} END`,
-          transferCharge: transfers.transferCharge
+          transferCharge: transfers.transferCharge,
+          fromAccountCurrency: fromAccount.currency,
+          toAccountCurrency: toAccount.currency
         })
         .from(transfers)
         .leftJoin(toAccount, eq(transfers.toAccountId, toAccount.id))
@@ -150,6 +153,7 @@ const app = new Hono()
           date: transfers.date,
           notes: transfers.notes,
           amount: transfers.amount,
+          toAmount: transfers.toAmount,
           toAccountId: transfers.toAccountId,
           fromAccountId: transfers.fromAccountId,
           transferCharge: transfers.transferCharge,
@@ -208,6 +212,7 @@ const app = new Hono()
           userId: auth.userId,
           notes: values.notes,
           amount: values.amount,
+          toAmount: values.toAmount ?? null,
           transferCharge: transferCharge,
           toAccountId: values.toAccountId,
           fromAccountId: values.fromAccountId,
@@ -229,10 +234,11 @@ const app = new Hono()
       }
 
       if (values.toAccountId) {
+        const creditAmount = values.toAmount ?? values.amount;
         await db.insert(transactions).values({
           id: createId(),
           date: values.date,
-          amount: values.amount,
+          amount: creditAmount,
           accountId: values.toAccountId,
           transferId: insertedTransfer.id,
           notes: `TRANSFER: ${values.notes}`,
@@ -347,6 +353,7 @@ const app = new Hono()
           .update(transfers)
           .set({
             ...values,
+            toAmount: values.toAmount ?? null,
             toAccountId: values.toAccountId?.length ? values.toAccountId : null,
             fromAccountId: values.fromAccountId?.length ? values.fromAccountId : null,
             creditCardStatementId: values.creditCardStatementId?.length ? values.creditCardStatementId : null
@@ -394,23 +401,25 @@ const app = new Hono()
         }
 
         if (values.toAccountId && !toTransaction) {
+          const creditAmount = values.toAmount ?? values.amount;
           await db.insert(transactions).values({
             id: createId(),
             transferId: id,
             date: values.date,
-            amount: values.amount,
+            amount: creditAmount,
             accountId: values.toAccountId,
             notes: `TRANSFER: ${values.notes}`,
             payee: 'Transferred from another account',
             type: values.fromAccountId ? 'PEER_TRANSFER' : 'SELF_TRANSFER'
           });
         } else if (values.toAccountId && toTransaction) {
+          const creditAmount = values.toAmount ?? values.amount;
           await db
             .update(transactions)
             .set({
               ...toTransaction,
               date: values.date,
-              amount: values.amount,
+              amount: creditAmount,
               accountId: values.toAccountId,
               notes: `TRANSFER: ${values.notes}`,
               type: values.fromAccountId ? 'PEER_TRANSFER' : 'SELF_TRANSFER'

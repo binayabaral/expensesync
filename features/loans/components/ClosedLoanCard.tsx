@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { format } from 'date-fns';
 
-import { formatCurrency } from '@/lib/utils';
+import { DEFAULT_CURRENCY, formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,6 +21,7 @@ export const ClosedLoanCard = ({ loan }: Props) => {
   const isEmi = loan.loanSubType === 'EMI';
   const originalPrincipal = loan.originalPrincipal ?? 0;
   const amountPaid = loan.amountPaid ?? 0;
+  const currency = loan.currency ?? DEFAULT_CURRENCY;
   const hasPayments = (loan.paymentHistory?.length ?? 0) > 0;
 
   return (
@@ -60,12 +61,12 @@ export const ClosedLoanCard = ({ loan }: Props) => {
               {originalPrincipal > 0 && (
                 <div>
                   <span className='text-muted-foreground'>Principal: </span>
-                  <span className='font-semibold'>{formatCurrency(originalPrincipal)}</span>
+                  <span className='font-semibold'>{formatCurrency(originalPrincipal, false, currency)}</span>
                 </div>
               )}
               <div>
                 <span className='text-muted-foreground'>Total paid: </span>
-                <span className='font-semibold'>{formatCurrency(amountPaid)}</span>
+                <span className='font-semibold'>{formatCurrency(amountPaid, false, currency)}</span>
               </div>
               {loan.paymentCount != null && loan.paymentCount > 0 && (
                 <div>
@@ -79,7 +80,7 @@ export const ClosedLoanCard = ({ loan }: Props) => {
           ) : (
             <div>
               <span className='text-muted-foreground'>Final balance: </span>
-              <span className='font-semibold'>{formatCurrency(Math.abs(balance))}</span>
+              <span className='font-semibold'>{formatCurrency(Math.abs(balance), false, currency)}</span>
             </div>
           )}
         </div>
@@ -96,7 +97,7 @@ export const ClosedLoanCard = ({ loan }: Props) => {
                     {format(new Date(payment.date), 'MMM d, yyyy')}
                   </span>
                   <span className='text-muted-foreground truncate flex-1'>{note ?? '—'}</span>
-                  <span className='font-medium tabular-nums shrink-0'>{formatCurrency(payment.amount)}</span>
+                  <span className='font-medium tabular-nums shrink-0'>{formatCurrency(payment.amount, false, currency)}</span>
                 </div>
               );
             })}

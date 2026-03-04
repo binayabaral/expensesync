@@ -30,7 +30,8 @@ const app = new Hono()
         paymentDueDay: accounts.paymentDueDay,
         isClosed: accounts.isClosed,
         closedAt: accounts.closedAt,
-        isHidden: accounts.isHidden
+        isHidden: accounts.isHidden,
+        currency: accounts.currency
       })
       .from(accounts)
       .where(and(eq(accounts.userId, auth.userId), eq(accounts.accountType, 'LOAN'), eq(accounts.isDeleted, false)));

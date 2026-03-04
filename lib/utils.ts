@@ -26,10 +26,12 @@ export function convertAmountFromMiliUnits(amount: number) {
   return amount / 1000;
 }
 
-export function formatCurrency(value: number, compact: boolean = false) {
+export const DEFAULT_CURRENCY = 'NPR' as const;
+
+export function formatCurrency(value: number, compact: boolean = false, currency: string = DEFAULT_CURRENCY) {
   return Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'NPR',
+    currency,
     ...(compact ? { notation: 'compact' } : { minimumFractionDigits: 2 })
   }).format(convertAmountFromMiliUnits(value));
 }

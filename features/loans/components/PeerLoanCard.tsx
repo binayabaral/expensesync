@@ -1,6 +1,6 @@
 'use client';
 
-import { formatCurrency } from '@/lib/utils';
+import { DEFAULT_CURRENCY, formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,6 +19,7 @@ export const PeerLoanCard = ({ loan }: Props) => {
 
   const balance = loan.currentBalance ?? 0;
   const isPositive = balance >= 0;
+  const currency = loan.currency ?? DEFAULT_CURRENCY;
 
   const handleClose = async () => {
     const ok = await confirm();
@@ -56,7 +57,7 @@ export const PeerLoanCard = ({ loan }: Props) => {
               {isPositive ? 'They owe you' : 'You owe them'}
             </p>
             <p className={`text-xl font-bold ${isPositive ? 'text-primary' : 'text-destructive'}`}>
-              {formatCurrency(Math.abs(balance))}
+              {formatCurrency(Math.abs(balance), false, currency)}
             </p>
           </div>
         </CardContent>

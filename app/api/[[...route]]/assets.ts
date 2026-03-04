@@ -27,6 +27,7 @@ const app = new Hono()
         extraCharge: assets.extraCharge,
         totalPaid: assets.totalPaid,
         accountId: assets.accountId,
+        accountCurrency: accounts.currency,
         isSold: assets.isSold,
         soldAt: assets.soldAt,
         sellAmount: assets.sellAmount,
@@ -34,6 +35,7 @@ const app = new Hono()
         updatedAt: assets.updatedAt
       })
       .from(assets)
+      .leftJoin(accounts, eq(assets.accountId, accounts.id))
       .where(eq(assets.userId, auth.userId))
       .orderBy(desc(assets.createdAt));
 
@@ -152,7 +154,8 @@ const app = new Hono()
           totalPaid: assetLots.totalPaid,
           accountId: assetLots.accountId,
           date: assetLots.date,
-          account: accounts.name
+          account: accounts.name,
+          accountCurrency: accounts.currency
         })
         .from(assetLots)
         .innerJoin(accounts, eq(assetLots.accountId, accounts.id))

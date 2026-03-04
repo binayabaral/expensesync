@@ -51,6 +51,7 @@ export const AddTransferSheet = () => {
     fromAccountId: '',
     date: new Date(),
     creditCardStatementId: '',
+    exchangeRate: '',
     ...initialValues
   };
 

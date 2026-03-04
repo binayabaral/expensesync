@@ -4,7 +4,7 @@ import { Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import { convertAmountToMiliUnits } from '@/lib/utils';
+import { DEFAULT_CURRENCY, convertAmountToMiliUnits } from '@/lib/utils';
 import { useGetAccounts } from '@/features/accounts/api/useGetAccounts';
 import { useGetAsset } from '@/features/assets/api/useGetAsset';
 import { useSellAsset } from '@/features/assets/api/useSellAsset';
@@ -49,11 +49,11 @@ export const SellAssetSheet = () => {
   const sellMutation = useSellAsset(id);
 
   const accountsQuery = useGetAccounts();
-  const accountOptions =
-    accountsQuery.data?.filter(account => !account.isClosed).map(account => ({
-      label: account.name,
-      value: account.id
-    })) ?? [];
+  const accounts = accountsQuery.data ?? [];
+  const accountOptions = accounts.filter(account => !account.isClosed).map(account => ({
+    label: account.name,
+    value: account.id
+  }));
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -88,6 +88,8 @@ export const SellAssetSheet = () => {
   const watchedQuantity = form.watch('quantity');
   const watchedUnitPrice = form.watch('unitPrice');
   const watchedExtraCharge = form.watch('extraCharge');
+  const watchedAccountId = form.watch('accountId');
+  const accountCurrency = accounts.find(a => a.id === watchedAccountId)?.currency ?? DEFAULT_CURRENCY;
 
   useEffect(() => {
     const qty = Number(watchedQuantity || '0');
@@ -208,6 +210,7 @@ export const SellAssetSheet = () => {
                 allowNegativeValue={false}
                 disabled={isPending}
                 placeholder='0.00'
+                currency={accountCurrency}
               />
               {form.formState.errors.unitPrice && (
                 <p className='text-xs text-destructive'>{form.formState.errors.unitPrice.message}</p>
@@ -222,6 +225,7 @@ export const SellAssetSheet = () => {
                 allowNegativeValue={false}
                 disabled={isPending}
                 placeholder='0.00'
+                currency={accountCurrency}
               />
               {form.formState.errors.extraCharge && (
                 <p className='text-xs text-destructive'>{form.formState.errors.extraCharge.message}</p>
@@ -230,7 +234,14 @@ export const SellAssetSheet = () => {
 
             <div className='space-y-2'>
               <label className='text-sm font-medium'>Total Amount</label>
-              <Input value={totalAmount} readOnly disabled placeholder='0.00' />
+              <AmountInput
+                value={totalAmount}
+                onChange={() => {}}
+                disabled
+                placeholder='0.00'
+                allowNegativeValue={false}
+                currency={accountCurrency}
+              />
             </div>
 
             <div className='space-y-2'>

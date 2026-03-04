@@ -7,7 +7,7 @@ import { ColumnDef } from '@tanstack/react-table';
 
 import { client } from '@/lib/hono';
 import { Button } from '@/components/ui/button';
-import { cn, formatCurrency } from '@/lib/utils';
+import { DEFAULT_CURRENCY, cn, formatCurrency } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 
 import { Actions } from './Actions';
@@ -86,10 +86,21 @@ export const columns: ColumnDef<ResponseType>[] = [
     },
     cell: ({ row }) => {
       const amount = parseFloat(row.getValue('amount'));
+      const fromCurrency = row.original.fromAccountCurrency ?? DEFAULT_CURRENCY;
+      const toCurrency = row.original.toAccountCurrency ?? DEFAULT_CURRENCY;
+      const toAmount = row.original.toAmount;
+      const isCross = toAmount !== null && toAmount !== undefined && fromCurrency !== toCurrency;
 
       return (
-        <span className={cn('whitespace-nowrap', amount < 0 ? 'text-destructive' : 'text-primary')}>
-          {formatCurrency(amount)}
+        <span className='flex flex-col gap-0.5'>
+          <span className={cn('whitespace-nowrap', amount < 0 ? 'text-destructive' : 'text-primary')}>
+            {formatCurrency(amount, false, fromCurrency)}
+          </span>
+          {isCross && (
+            <span className='text-xs text-muted-foreground whitespace-nowrap'>
+              → {formatCurrency(toAmount!, false, toCurrency)}
+            </span>
+          )}
         </span>
       );
     }
@@ -106,6 +117,7 @@ export const columns: ColumnDef<ResponseType>[] = [
     },
     cell: ({ row }) => {
       const charge = parseFloat(row.getValue('transferCharge'));
+      const fromCurrency = row.original.fromAccountCurrency ?? DEFAULT_CURRENCY;
 
       return (
         <span
@@ -114,7 +126,7 @@ export const columns: ColumnDef<ResponseType>[] = [
             charge === 0 ? 'text-muted-foreground' : charge < 0 ? 'text-primary' : 'text-destructive'
           )}
         >
-          {formatCurrency(charge)}
+          {formatCurrency(charge, false, fromCurrency)}
         </span>
       );
     }

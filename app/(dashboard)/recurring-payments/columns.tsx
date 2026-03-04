@@ -7,7 +7,7 @@ import { ArrowUpDown } from 'lucide-react';
 
 import { client } from '@/lib/hono';
 import { Button } from '@/components/ui/button';
-import { cn, formatCurrency, formatRemainingTime } from '@/lib/utils';
+import { DEFAULT_CURRENCY, cn, formatCurrency, formatRemainingTime } from '@/lib/utils';
 
 import { Actions } from './Actions';
 
@@ -96,7 +96,8 @@ export const columns: ColumnDef<ResponseType>[] = [
     ),
     cell: ({ row }) => {
       const amount = row.original.amount ?? 0;
-      return <span className={cn('whitespace-nowrap')}>{formatCurrency(amount)}</span>;
+      const currency = row.original.accountCurrency ?? DEFAULT_CURRENCY;
+      return <span className={cn('whitespace-nowrap')}>{formatCurrency(amount, false, currency)}</span>;
     }
   },
   {

@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { convertAmountToMiliUnits } from '@/lib/utils';
+import { DEFAULT_CURRENCY, convertAmountToMiliUnits } from '@/lib/utils';
 import { AmountInput } from '@/components/AmountInput';
 import { DateTimePicker } from '@/components/ui-extended/Datepicker';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
@@ -74,6 +74,7 @@ type Props = {
   onSubmit: (values: RecurringPaymentApiValues) => void;
   accountOptions: { label: string; value: string }[];
   categoryOptions: { label: string; value: string }[];
+  accounts?: { id: string; currency?: string | null }[];
 };
 
 export const RecurringPaymentForm = ({
@@ -83,7 +84,8 @@ export const RecurringPaymentForm = ({
   defaultValues,
   onSubmit,
   accountOptions,
-  categoryOptions
+  categoryOptions,
+  accounts = []
 }: Props) => {
   const form = useForm<RecurringPaymentFormValues>({
     resolver: zodResolver(formSchema),
@@ -92,6 +94,8 @@ export const RecurringPaymentForm = ({
 
   const cadence = form.watch('cadence');
   const type = form.watch('type');
+  const watchedAccountId = form.watch('accountId');
+  const accountCurrency = accounts.find(a => a.id === watchedAccountId)?.currency ?? DEFAULT_CURRENCY;
   const isMobileDevice = isMobile();
 
   const handleSubmit = (values: RecurringPaymentFormValues) => {
@@ -402,7 +406,7 @@ export const RecurringPaymentForm = ({
             <FormItem>
               <FormLabel>Amount</FormLabel>
               <FormControl>
-                <AmountInput {...field} disabled={disabled} placeholder={'0.00'} allowNegativeValue={false} />
+                <AmountInput {...field} disabled={disabled} placeholder={'0.00'} allowNegativeValue={false} currency={accountCurrency} />
               </FormControl>
             </FormItem>
           )}
@@ -422,6 +426,7 @@ export const RecurringPaymentForm = ({
                     disabled={disabled}
                     placeholder={'0.00'}
                     allowNegativeValue={false}
+                    currency={accountCurrency}
                   />
                 </FormControl>
               </FormItem>

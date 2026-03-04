@@ -1,6 +1,6 @@
 'use client';
 
-import { formatCurrency } from '@/lib/utils';
+import { DEFAULT_CURRENCY, formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -33,6 +33,7 @@ export const EmiLoanCard = ({ loan }: Props) => {
   const isOpenEnded = !loan.loanTenureMonths && originalPrincipal === 0;
 
   const remaining = Math.abs(loan.currentBalance ?? 0);
+  const currency = loan.currency ?? DEFAULT_CURRENCY;
 
   const handleClose = async () => {
     const ok = await confirm();
@@ -73,15 +74,15 @@ export const EmiLoanCard = ({ loan }: Props) => {
             </div>
             <Progress value={progressDisplay} className='h-2' />
             <div className='flex justify-between text-xs text-muted-foreground'>
-              <span>Paid: {formatCurrency(amountPaid)}</span>
-              <span>Total: {formatCurrency(amountPaid + remaining)}</span>
+              <span>Paid: {formatCurrency(amountPaid, false, currency)}</span>
+              <span>Total: {formatCurrency(amountPaid + remaining, false, currency)}</span>
             </div>
           </div>
 
           <div className='flex flex-wrap gap-x-4 gap-y-1 text-xs'>
             <div>
               <span className='text-muted-foreground'>Remaining: </span>
-              <span className='font-semibold text-destructive'>{formatCurrency(remaining)}</span>
+              <span className='font-semibold text-destructive'>{formatCurrency(remaining, false, currency)}</span>
             </div>
             {paymentCount > 0 && (
               <div>
@@ -110,9 +111,9 @@ export const EmiLoanCard = ({ loan }: Props) => {
                 <span className='font-medium'>{loan.linkedRecurringPayment.name}</span>
                 <span className='text-muted-foreground'>
                   {' · '}
-                  {formatCurrency(loan.linkedRecurringPayment.amount)} principal
+                  {formatCurrency(loan.linkedRecurringPayment.amount, false, currency)} principal
                   {loan.linkedRecurringPayment.transferCharge > 0 && (
-                    <> + {formatCurrency(loan.linkedRecurringPayment.transferCharge)} interest</>
+                    <> + {formatCurrency(loan.linkedRecurringPayment.transferCharge, false, currency)} interest</>
                   )}
                   {loan.linkedRecurringPayment.intervalMonths && loan.linkedRecurringPayment.intervalMonths > 1
                     ? ` · every ${loan.linkedRecurringPayment.intervalMonths} months`

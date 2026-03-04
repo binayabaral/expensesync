@@ -1,7 +1,7 @@
 import { Loader2 } from 'lucide-react';
 
 import { useConfirm } from '@/hooks/useConfirm';
-import { convertAmountFromMiliUnits } from '@/lib/utils';
+import { DEFAULT_CURRENCY, convertAmountFromMiliUnits } from '@/lib/utils';
 import { useGetAccount } from '@/features/accounts/api/useGetAccount';
 import { useEditAccount } from '@/features/accounts/api/useEditAccounts';
 import { useDeleteAccount } from '@/features/accounts/api/useDeleteAccounts';
@@ -12,6 +12,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '
 
 type DefaultValues = {
   name: string;
+  currency?: string;
   isHidden: boolean;
   accountType: 'CASH' | 'BANK' | 'CREDIT_CARD' | 'LOAN' | 'OTHER';
   creditLimit?: string | null;
@@ -86,6 +87,7 @@ export const EditAccountSheet = () => {
   const defaultValues: DefaultValues = accountQuery.data
     ? {
         name: accountQuery.data.name,
+        currency: accountQuery.data.currency ?? DEFAULT_CURRENCY,
         isHidden: accountQuery.data.isHidden,
         accountType: (accountQuery.data.accountType ?? 'CASH') as DefaultValues['accountType'],
         creditLimit: accountQuery.data.creditLimit
@@ -106,6 +108,7 @@ export const EditAccountSheet = () => {
       }
     : {
         name: '',
+        currency: DEFAULT_CURRENCY,
         isHidden: false,
         accountType: 'CASH',
         creditLimit: '',

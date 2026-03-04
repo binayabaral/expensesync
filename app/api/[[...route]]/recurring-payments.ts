@@ -137,6 +137,7 @@ const app = new Hono()
         categoryId: recurringPayments.categoryId,
         account: sql<string>`CASE WHEN ${fromAccount.isDeleted} THEN CONCAT(${fromAccount.name}, ' (deleted account)') ELSE ${fromAccount.name} END`,
         toAccount: sql<string>`CASE WHEN ${toAccount.isDeleted} THEN CONCAT(${toAccount.name}, ' (deleted account)') ELSE ${toAccount.name} END`,
+        accountCurrency: fromAccount.currency,
         category: categories.name
       })
       .from(recurringPayments)

@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Select } from '@/components/Select';
 import { Button } from '@/components/ui/button';
 import { AmountInput } from '@/components/AmountInput';
-import { convertAmountToMiliUnits } from '@/lib/utils';
+import { DEFAULT_CURRENCY, convertAmountToMiliUnits } from '@/lib/utils';
 import { DateTimePicker } from '@/components/ui-extended/Datepicker';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
@@ -84,10 +84,11 @@ type Props = {
   disabled: boolean;
   defaultValues: FormValues;
   accountOptions: { label: string; value: string }[];
+  accounts?: { id: string; currency?: string | null }[];
   onSubmit: (values: ApiFormValues & { date: Date }) => void;
 };
 
-export const AssetForm = ({ disabled, defaultValues, accountOptions, onSubmit }: Props) => {
+export const AssetForm = ({ disabled, defaultValues, accountOptions, accounts = [], onSubmit }: Props) => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues
@@ -95,9 +96,11 @@ export const AssetForm = ({ disabled, defaultValues, accountOptions, onSubmit }:
 
   const isMobileDevice = isMobile();
   const selectedType = form.watch('type');
+  const watchedAccountId = form.watch('accountId');
   const watchedQuantity = form.watch('quantity');
   const watchedAssetPrice = form.watch('assetPrice');
   const watchedExtraCharge = form.watch('extraCharge');
+  const accountCurrency = accounts.find(a => a.id === watchedAccountId)?.currency ?? DEFAULT_CURRENCY;
 
   useEffect(() => {
     // Reset unit when type changes so the user is forced to pick a valid option
@@ -312,7 +315,7 @@ export const AssetForm = ({ disabled, defaultValues, accountOptions, onSubmit }:
             <FormItem>
               <FormLabel>Asset Price (per unit)</FormLabel>
               <FormControl>
-                <AmountInput {...field} disabled={disabled} placeholder='0.00' allowNegativeValue={false} />
+                <AmountInput {...field} disabled={disabled} placeholder='0.00' allowNegativeValue={false} currency={accountCurrency} />
               </FormControl>
             </FormItem>
           )}
@@ -324,7 +327,7 @@ export const AssetForm = ({ disabled, defaultValues, accountOptions, onSubmit }:
             <FormItem>
               <FormLabel>Extra Charge (fees, making charges)</FormLabel>
               <FormControl>
-                <AmountInput {...field} disabled={disabled} placeholder='0.00' allowNegativeValue={false} />
+                <AmountInput {...field} disabled={disabled} placeholder='0.00' allowNegativeValue={false} currency={accountCurrency} />
               </FormControl>
             </FormItem>
           )}
@@ -336,7 +339,7 @@ export const AssetForm = ({ disabled, defaultValues, accountOptions, onSubmit }:
             <FormItem>
               <FormLabel>Total Paid</FormLabel>
               <FormControl>
-                <AmountInput {...field} disabled placeholder='0.00' allowNegativeValue={false} />
+                <AmountInput {...field} disabled placeholder='0.00' allowNegativeValue={false} currency={accountCurrency} />
               </FormControl>
             </FormItem>
           )}

@@ -6,15 +6,17 @@ import { zodResolver } from '@hookform/resolvers/zod';
 
 import { Select } from '@/components/Select';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AmountInput } from '@/components/AmountInput';
-import { convertAmountToMiliUnits } from '@/lib/utils';
+import { DEFAULT_CURRENCY, convertAmountToMiliUnits } from '@/lib/utils';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 
 const editAccountSchema = z.object({
   name: z.string(),
+  currency: z.string().optional(),
   isHidden: z.boolean(),
   accountType: z.enum(['CASH', 'BANK', 'CREDIT_CARD', 'LOAN', 'OTHER']),
   creditLimit: z.string().optional().nullable(),
@@ -61,6 +63,8 @@ export const EditAccountForm = ({ id, isClosed, onSubmit, onDelete, onCloseLoan,
     resolver: zodResolver(editAccountSchema),
     defaultValues: defaultValues
   });
+
+  const accountCurrency = form.watch('currency') ?? DEFAULT_CURRENCY;
 
   const handleSubmit = (values: FormValues) => {
     const isCreditCard = values.accountType === 'CREDIT_CARD';
@@ -127,6 +131,19 @@ export const EditAccountForm = ({ id, isClosed, onSubmit, onDelete, onCloseLoan,
           )}
         />
         <FormField
+          name='currency'
+          control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Currency</FormLabel>
+              <div className='flex items-center h-9 px-3 py-2 border rounded-md bg-muted'>
+                <Badge variant='secondary' className='font-mono'>{field.value ?? DEFAULT_CURRENCY}</Badge>
+                <span className='ml-2 text-sm text-muted-foreground'>Currency cannot be changed after creation</span>
+              </div>
+            </FormItem>
+          )}
+        />
+        <FormField
           name='isHidden'
           control={form.control}
           render={({ field }) => (
@@ -188,6 +205,7 @@ export const EditAccountForm = ({ id, isClosed, onSubmit, onDelete, onCloseLoan,
                       disabled={disabled}
                       placeholder={'0.00'}
                       allowNegativeValue={false}
+                      currency={accountCurrency}
                     />
                   </FormControl>
                 </FormItem>

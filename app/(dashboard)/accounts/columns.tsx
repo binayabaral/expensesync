@@ -5,7 +5,7 @@ import { InferResponseType } from 'hono';
 import { ArrowUpDown } from 'lucide-react';
 import { ColumnDef } from '@tanstack/react-table';
 
-import { cn, formatCurrency } from '@/lib/utils';
+import { DEFAULT_CURRENCY, cn, formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -64,6 +64,11 @@ export const columns: ColumnDef<ResponseType>[] = [
             Closed
           </Badge>
         )}
+        {row.original.currency && row.original.currency !== DEFAULT_CURRENCY && (
+          <Badge variant='secondary' className='text-xs font-mono'>
+            {row.original.currency}
+          </Badge>
+        )}
       </span>
     )
   },
@@ -88,7 +93,7 @@ export const columns: ColumnDef<ResponseType>[] = [
             : 'text-primary'
         )}
       >
-        {formatCurrency(row.original.balance)}
+        {formatCurrency(row.original.balance, false, row.original.currency ?? DEFAULT_CURRENCY)}
       </span>
     )
   },

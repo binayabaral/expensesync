@@ -1,18 +1,19 @@
 import CurrencyInput from 'react-currency-input-field';
 import { Info, MinusCircle, PlusCircle } from 'lucide-react';
 
-import { cn } from '@/lib/utils';
+import { DEFAULT_CURRENCY, cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 
 type Props = {
   value: string;
   disabled?: boolean;
   placeholder?: string;
+  currency?: string;
   allowNegativeValue?: boolean;
   onChange: (value: string | undefined) => void;
 };
 
-export const AmountInput = ({ value, disabled, placeholder, onChange, allowNegativeValue = true }: Props) => {
+export const AmountInput = ({ value, disabled, placeholder, onChange, currency = DEFAULT_CURRENCY, allowNegativeValue = true }: Props) => {
   const parsedValue = parseFloat(value);
   const isIncome = parsedValue > 0;
   const isExpense = parsedValue < 0;
@@ -47,7 +48,7 @@ export const AmountInput = ({ value, disabled, placeholder, onChange, allowNegat
         </TooltipProvider>
       )}
       <CurrencyInput
-        prefix='Rs. '
+        intlConfig={{ locale: 'en-US', currency }}
         value={value}
         decimalScale={2}
         decimalsLimit={2}

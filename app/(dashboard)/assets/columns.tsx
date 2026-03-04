@@ -3,7 +3,7 @@ import { InferResponseType } from 'hono';
 import { ArrowUpDown } from 'lucide-react';
 
 import { client } from '@/lib/hono';
-import { cn, formatCurrency } from '@/lib/utils';
+import { DEFAULT_CURRENCY, cn, formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Actions } from './Actions';
 
@@ -78,7 +78,7 @@ export const columns: ColumnDef<ResponseType>[] = [
         <ArrowUpDown className='ml-2 h-4 w-4' />
       </Button>
     ),
-    cell: ({ row }) => formatCurrency(row.original.extraCharge),
+    cell: ({ row }) => formatCurrency(row.original.extraCharge, false, row.original.accountCurrency ?? DEFAULT_CURRENCY),
     footer: ({ table }) => {
       const total = table.getFilteredRowModel().rows.reduce((sum, row) => sum + (row.original.extraCharge || 0), 0);
       return formatCurrency(total);
@@ -96,7 +96,7 @@ export const columns: ColumnDef<ResponseType>[] = [
         <ArrowUpDown className='ml-2 h-4 w-4' />
       </Button>
     ),
-    cell: ({ row }) => formatCurrency(row.original.assetPrice),
+    cell: ({ row }) => formatCurrency(row.original.assetPrice, false, row.original.accountCurrency ?? DEFAULT_CURRENCY),
     footer: () => ''
   },
   {
@@ -111,7 +111,7 @@ export const columns: ColumnDef<ResponseType>[] = [
         <ArrowUpDown className='ml-2 h-4 w-4' />
       </Button>
     ),
-    cell: ({ row }) => (row.original.liveUnitPrice != null ? formatCurrency(row.original.liveUnitPrice) : '-'),
+    cell: ({ row }) => (row.original.liveUnitPrice != null ? formatCurrency(row.original.liveUnitPrice, false, row.original.accountCurrency ?? DEFAULT_CURRENCY) : '-'),
     footer: () => ''
   },
   {
@@ -126,7 +126,7 @@ export const columns: ColumnDef<ResponseType>[] = [
         <ArrowUpDown className='ml-2 h-4 w-4' />
       </Button>
     ),
-    cell: ({ row }) => formatCurrency(row.original.totalPaid),
+    cell: ({ row }) => formatCurrency(row.original.totalPaid, false, row.original.accountCurrency ?? DEFAULT_CURRENCY),
     footer: ({ table }) => {
       const total = table.getFilteredRowModel().rows.reduce((sum, row) => sum + (row.original.totalPaid || 0), 0);
       return formatCurrency(total);
@@ -144,7 +144,7 @@ export const columns: ColumnDef<ResponseType>[] = [
         <ArrowUpDown className='ml-2 h-4 w-4' />
       </Button>
     ),
-    cell: ({ row }) => (row.original.currentValue != null ? formatCurrency(row.original.currentValue) : '-'),
+    cell: ({ row }) => (row.original.currentValue != null ? formatCurrency(row.original.currentValue, false, row.original.accountCurrency ?? DEFAULT_CURRENCY) : '-'),
     footer: ({ table }) => {
       const total = table.getFilteredRowModel().rows.reduce((sum, row) => sum + (row.original.currentValue || 0), 0);
       return total > 0 ? formatCurrency(total) : '-';
@@ -164,9 +164,10 @@ export const columns: ColumnDef<ResponseType>[] = [
     ),
     cell: ({ row }) => {
       const value = row.original.realizedProfitLoss ?? 0;
+      const currency = row.original.accountCurrency ?? DEFAULT_CURRENCY;
 
       if (!value) {
-        return <span className='whitespace-nowrap text-muted-foreground'>{formatCurrency(0)}</span>;
+        return <span className='whitespace-nowrap text-muted-foreground'>{formatCurrency(0, false, currency)}</span>;
       }
 
       return (
@@ -176,7 +177,7 @@ export const columns: ColumnDef<ResponseType>[] = [
             value > 0 ? 'text-emerald-600 dark:text-emerald-400' : value < 0 ? 'text-red-600 dark:text-red-400' : ''
           )}
         >
-          {formatCurrency(value)}
+          {formatCurrency(value, false, currency)}
         </span>
       );
     },
@@ -208,6 +209,7 @@ export const columns: ColumnDef<ResponseType>[] = [
     ),
     cell: ({ row }) => {
       const value = row.original.unrealizedProfitLoss;
+      const currency = row.original.accountCurrency ?? DEFAULT_CURRENCY;
 
       if (value == null) return '-';
 
@@ -218,7 +220,7 @@ export const columns: ColumnDef<ResponseType>[] = [
             value > 0 ? 'text-emerald-600 dark:text-emerald-400' : value < 0 ? 'text-red-600 dark:text-red-400' : ''
           )}
         >
-          {formatCurrency(value)}
+          {formatCurrency(value, false, currency)}
         </span>
       );
     },

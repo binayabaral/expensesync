@@ -21,6 +21,13 @@ export const RecurringPaymentTypeEnum = pgEnum('recurring_payment_type', ['TRANS
 export const RecurringCadenceEnum = pgEnum('recurring_cadence', ['DAILY', 'MONTHLY', 'YEARLY']);
 export const AccountTypeEnum = pgEnum('account_type', ['CASH', 'BANK', 'CREDIT_CARD', 'LOAN', 'OTHER']);
 export const LoanSubTypeEnum = pgEnum('loan_sub_type', ['EMI', 'PEER']);
+export const SUPPORTED_CURRENCIES = [
+  'NPR', 'USD', 'EUR', 'GBP', 'CHF', 'AUD', 'CAD', 'SGD', 'JPY',
+  'CNY', 'SAR', 'QAR', 'THB', 'AED', 'MYR', 'KRW', 'SEK', 'DKK',
+  'HKD', 'KWD', 'BHD', 'OMR'
+] as const;
+export type Currency = typeof SUPPORTED_CURRENCIES[number];
+export const CurrencyEnum = pgEnum('currency', [...SUPPORTED_CURRENCIES]);
 
 export const accounts = pgTable('accounts', {
   id: text('id').primaryKey(),
@@ -41,7 +48,8 @@ export const accounts = pgTable('accounts', {
   isClosed: boolean('is_closed').notNull().default(false),
   closedAt: date('closed_at'),
   isHidden: boolean('is_hidden').default(false).notNull(),
-  isDeleted: boolean('is_deleted').default(false).notNull()
+  isDeleted: boolean('is_deleted').default(false).notNull(),
+  currency: CurrencyEnum('currency').notNull().default('NPR')
 });
 
 export const categories = pgTable('categories', {
@@ -90,6 +98,7 @@ export const transfers = pgTable('transfers', {
     onDelete: 'set null'
   }),
   transferCharge: integer('transfer_charge').notNull().default(0),
+  toAmount: integer('to_amount'),
   notes: text('notes')
 });
 

@@ -7,7 +7,8 @@ import { zValidator } from '@hono/zod-validator';
 import { and, asc, eq, inArray, or } from 'drizzle-orm';
 
 import { db } from '@/db/drizzle';
-import { accounts, insertAccountSchema, recurringPayments, transactions } from '@/db/schema';
+import { DEFAULT_CURRENCY } from '@/lib/utils';
+import { SUPPORTED_CURRENCIES, accounts, insertAccountSchema, recurringPayments, transactions } from '@/db/schema';
 
 import { fetchAccountBalance } from '../utils/common';
 
@@ -45,7 +46,8 @@ const app = new Hono()
           loanTenureMonths: accounts.loanTenureMonths,
           emiIntervalMonths: accounts.emiIntervalMonths,
           isClosed: accounts.isClosed,
-          closedAt: accounts.closedAt
+          closedAt: accounts.closedAt,
+          currency: accounts.currency
         })
         .from(accounts)
         .where(and(eq(accounts.userId, auth.userId), to ? undefined : eq(accounts.isDeleted, false)))
@@ -113,7 +115,8 @@ const app = new Hono()
           loanTenureMonths: accounts.loanTenureMonths,
           emiIntervalMonths: accounts.emiIntervalMonths,
           isClosed: accounts.isClosed,
-          closedAt: accounts.closedAt
+          closedAt: accounts.closedAt,
+          currency: accounts.currency
         })
         .from(accounts)
         .where(and(eq(accounts.userId, auth.userId), eq(accounts.id, id), eq(accounts.isDeleted, false)));
@@ -144,7 +147,8 @@ const app = new Hono()
           minimumPaymentPercentage: z.number().min(0).max(100).optional(),
           loanSubType: z.enum(['EMI', 'PEER']).nullable().optional(),
           loanTenureMonths: z.number().int().min(1).nullable().optional(),
-          emiIntervalMonths: z.number().int().min(1).max(24).optional()
+          emiIntervalMonths: z.number().int().min(1).max(24).optional(),
+          currency: z.enum([...SUPPORTED_CURRENCIES]).optional()
         })
         .refine(
           data =>
@@ -191,7 +195,8 @@ const app = new Hono()
           minimumPaymentPercentage: isCreditCard ? values.minimumPaymentPercentage ?? 2 : 2,
           loanSubType: isLoan ? values.loanSubType ?? null : null,
           loanTenureMonths: isLoan && values.loanSubType === 'EMI' ? values.loanTenureMonths ?? null : null,
-          emiIntervalMonths: isLoan && values.loanSubType === 'EMI' ? values.emiIntervalMonths ?? 1 : 1
+          emiIntervalMonths: isLoan && values.loanSubType === 'EMI' ? values.emiIntervalMonths ?? 1 : 1,
+          currency: values.currency ?? DEFAULT_CURRENCY
         })
         .returning();
 

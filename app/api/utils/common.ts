@@ -1,7 +1,16 @@
 import { and, eq, gte, lt, lte, sql, sum, desc } from 'drizzle-orm';
 
 import { db } from '@/db/drizzle';
+import { DEFAULT_CURRENCY } from '@/lib/utils';
 import { accounts, categories, transactions, transfers } from '@/db/schema';
+
+/**
+ * When fetching global (all-account) aggregates, restrict to the default
+ * currency so foreign accounts don't pollute NPR-denominated summaries.
+ * Per-account queries pass an accountId and are left unrestricted.
+ */
+const buildGlobalCurrencyFilter = (accountId: string | undefined) =>
+  accountId ? undefined : eq(accounts.currency, DEFAULT_CURRENCY);
 
 export const fetchFinancialData = async (userId: string, from: Date, to: Date, accountId?: string) => {
   return db
@@ -23,7 +32,8 @@ export const fetchFinancialData = async (userId: string, from: Date, to: Date, a
         accountId ? eq(transactions.accountId, accountId) : undefined,
         eq(accounts.userId, userId),
         gte(transactions.date, from),
-        lte(transactions.date, to)
+        lte(transactions.date, to),
+        buildGlobalCurrencyFilter(accountId)
       )
     );
 };
@@ -41,7 +51,8 @@ export const fetchAccountBalance = async (userId: string, to: Date, accountId?: 
         eq(accounts.userId, userId),
         showDeleted ? undefined : eq(accounts.isDeleted, false),
         lte(transactions.date, to),
-        showHidden ? undefined : eq(accounts.isHidden, false)
+        showHidden ? undefined : eq(accounts.isHidden, false),
+        buildGlobalCurrencyFilter(accountId)
       )
     );
 };
@@ -70,7 +81,8 @@ export const fetchTransactionsByCategory = async (
         lte(transactions.date, endDate),
         eq(accounts.userId, userId),
         gte(transactions.date, startDate),
-        accountId ? eq(transactions.accountId, accountId) : undefined
+        accountId ? eq(transactions.accountId, accountId) : undefined,
+        buildGlobalCurrencyFilter(accountId)
       )
     )
     .groupBy(categories.name, categories.id)
@@ -83,12 +95,14 @@ export const fetchTransferCharges = async (userId: string, startDate: Date, endD
       totalCharges: sum(transfers.transferCharge).mapWith(Number)
     })
     .from(transfers)
+    .leftJoin(accounts, eq(transfers.fromAccountId, accounts.id))
     .where(
       and(
         eq(transfers.userId, userId),
         gte(transfers.date, startDate),
         lte(transfers.date, endDate),
-        accountId ? eq(transfers.fromAccountId, accountId) : undefined
+        accountId ? eq(transfers.fromAccountId, accountId) : undefined,
+        buildGlobalCurrencyFilter(accountId)
       )
     );
 };
@@ -116,7 +130,8 @@ export const fetchTransactionsByPayee = async (
         eq(accounts.userId, userId),
         gte(transactions.date, startDate),
         sql`${transactions.payee} != 'Transferred to another account'`,
-        accountId ? eq(transactions.accountId, accountId) : undefined
+        accountId ? eq(transactions.accountId, accountId) : undefined,
+        buildGlobalCurrencyFilter(accountId)
       )
     )
     .groupBy(transactions.payee)

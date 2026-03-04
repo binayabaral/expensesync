@@ -3,7 +3,7 @@ import { Loader2 } from 'lucide-react';
 
 import { useConfirm } from '@/hooks/useConfirm';
 import { insertTransferSchema } from '@/db/schema';
-import { convertAmountFromMiliUnits } from '@/lib/utils';
+import { DEFAULT_CURRENCY, convertAmountFromMiliUnits } from '@/lib/utils';
 import { useGetAccounts } from '@/features/accounts/api/useGetAccounts';
 import { useGetTransfer } from '@/features/transfers/api/useGetTransfer';
 import { useEditTransfer } from '@/features/transfers/api/useEditTransfer';
@@ -65,7 +65,24 @@ export const EditTransferSheet = () => {
         date: new Date(transferQuery.data.date),
         amount: convertAmountFromMiliUnits(transferQuery.data.amount).toString(),
         transferCharge: convertAmountFromMiliUnits(transferQuery.data.transferCharge).toString(),
-        creditCardStatementId: transferQuery.data.creditCardStatementId ?? ''
+        creditCardStatementId: transferQuery.data.creditCardStatementId ?? '',
+        exchangeRate: (() => {
+          const t = transferQuery.data;
+          if (!t.toAmount || !t.amount) return '';
+          const fromAcc = accounts.find(a => a.id === t.fromAccountId);
+          const toAcc = accounts.find(a => a.id === t.toAccountId);
+          const fromCur = fromAcc?.currency ?? DEFAULT_CURRENCY;
+          const toCur = toAcc?.currency ?? DEFAULT_CURRENCY;
+          const sentAmt = convertAmountFromMiliUnits(t.amount);
+          const receivedAmt = convertAmountFromMiliUnits(t.toAmount);
+          if (fromCur === DEFAULT_CURRENCY) {
+            // NPR → foreign: rate = sentNPR / receivedForeign → "1 foreign = rate NPR"
+            return receivedAmt > 0 ? (sentAmt / receivedAmt).toString() : '';
+          } else {
+            // foreign → NPR or foreign → foreign: rate = receivedAmt / sentAmt → "1 from = rate to"
+            return sentAmt > 0 ? (receivedAmt / sentAmt).toString() : '';
+          }
+        })()
       }
     : {
         notes: '',

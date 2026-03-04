@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { DEFAULT_CURRENCY } from '@/lib/utils';
 import { AccountForm } from '@/features/accounts/components/AccountForm';
 import { useAddAccount } from '@/features/accounts/hooks/useAddAccounts';
 import { useCreateAccount } from '@/features/accounts/api/useCreateAccounts';
@@ -46,6 +47,7 @@ export const AddAccount = () => {
           disabled={mutation.isPending}
           defaultValues={{
             name: '',
+            currency: DEFAULT_CURRENCY,
             isHidden: false,
             startingBalance: '0',
             accountType: 'CASH',

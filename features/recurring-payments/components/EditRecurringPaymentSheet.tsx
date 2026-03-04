@@ -39,7 +39,8 @@ export const EditRecurringPaymentSheet = () => {
   const accountsQuery = useGetAccounts();
   const categoriesQuery = useGetCategories();
 
-  const accountOptions = (accountsQuery.data ?? []).filter(account => !account.isClosed).map(account => ({
+  const accounts = accountsQuery.data ?? [];
+  const accountOptions = accounts.filter(account => !account.isClosed).map(account => ({
     label: account.name,
     value: account.id
   }));
@@ -118,6 +119,7 @@ export const EditRecurringPaymentSheet = () => {
               defaultValues={defaultValues}
               accountOptions={accountOptions}
               categoryOptions={categoryOptions}
+              accounts={accounts}
             />
           )}
         </SheetContent>

@@ -1,16 +1,18 @@
 import { z } from 'zod';
 import isMobile from 'is-mobile';
 import { Trash } from 'lucide-react';
+import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 
 import { Select } from '@/components/Select';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { insertTransferSchema } from '@/db/schema';
-import { convertAmountToMiliUnits, formatCurrency } from '@/lib/utils';
 import { AmountInput } from '@/components/AmountInput';
+import { insertTransferSchema } from '@/db/schema';
+import { DEFAULT_CURRENCY, convertAmountToMiliUnits, formatCurrency } from '@/lib/utils';
 import { DateTimePicker } from '@/components/ui-extended/Datepicker';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
@@ -20,6 +22,7 @@ const formSchema = z.object({
   amount: z.string(),
   date: z.coerce.date(),
   transferCharge: z.string(),
+  exchangeRate: z.string().optional(),
   notes: z.string().nullable().optional(),
   toAccountId: z.string().nullable().optional(),
   fromAccountId: z.string().nullable().optional(),
@@ -42,8 +45,22 @@ type Props = {
   defaultValues?: FormValues;
   onSubmit: (values: ApiFormValues) => void;
   accountOptions: { label: string; value: string }[];
-  accounts: { id: string; name: string; accountType?: string | null }[];
+  accounts: { id: string; name: string; accountType?: string | null; currency?: string | null }[];
 };
+
+/**
+ * Converts a sent amount to the destination amount given a rate expressed as
+ * "1 foreign = rate NPR".
+ *
+ * - NPR → foreign: divide by rate (1 foreign = rate NPR → 1 NPR = 1/rate foreign)
+ * - foreign → anything: multiply by rate
+ *
+ * Returns null when inputs are invalid or the rate is zero.
+ */
+function computeRawToAmount(amount: number, rate: number, fromCurrency: string): number | null {
+  if (Number.isNaN(amount) || Number.isNaN(rate) || rate === 0) return null;
+  return fromCurrency === DEFAULT_CURRENCY ? amount / rate : amount * rate;
+}
 
 export const TransferForm = ({ id, onSubmit, onDelete, disabled, defaultValues, accountOptions, accounts }: Props) => {
   const form = useForm<FormValues>({
@@ -52,21 +69,48 @@ export const TransferForm = ({ id, onSubmit, onDelete, disabled, defaultValues, 
   });
 
   const toAccountId = form.watch('toAccountId');
-  const selectedAccount = accounts.find(account => account.id === toAccountId);
-  const isCreditCard = selectedAccount?.accountType === 'CREDIT_CARD';
+  const fromAccountId = form.watch('fromAccountId');
+  const watchedAmount = form.watch('amount');
+  const watchedExchangeRate = form.watch('exchangeRate');
+
+  const selectedFromAccount = accounts.find(account => account.id === fromAccountId);
+  const selectedToAccount = accounts.find(account => account.id === toAccountId);
+
+  const isCreditCard = selectedToAccount?.accountType === 'CREDIT_CARD';
+  const fromCurrency = selectedFromAccount?.currency ?? DEFAULT_CURRENCY;
+  const toCurrency = selectedToAccount?.currency ?? DEFAULT_CURRENCY;
+  const isCrossCurrency = !!fromAccountId && !!toAccountId && fromCurrency !== toCurrency;
+
+  // Rate label: always "1 [foreign] = X NPR" for NPR pairs; "1 from = X to" for foreign pairs
+  const foreignCurrency = fromCurrency !== DEFAULT_CURRENCY ? fromCurrency : toCurrency;
+  const rateLabel =
+    fromCurrency === DEFAULT_CURRENCY || toCurrency === DEFAULT_CURRENCY
+      ? `1 ${foreignCurrency} = {rate} ${DEFAULT_CURRENCY}`
+      : `1 ${fromCurrency} = {rate} ${toCurrency}`;
+
+  const previewToAmount = useMemo(() => {
+    if (!isCrossCurrency) return null;
+    const amt = parseFloat(watchedAmount || '0');
+    const rate = parseFloat(watchedExchangeRate || '0');
+    return computeRawToAmount(amt, rate, fromCurrency);
+  }, [isCrossCurrency, watchedAmount, watchedExchangeRate, fromCurrency]);
 
   const statementQuery = useGetCreditCardStatements({
     accountId: isCreditCard ? toAccountId ?? undefined : undefined,
     status: id ? undefined : 'unpaid'
   });
 
-  const statementOptions = (statementQuery.data ?? []).map(statement => ({
-    value: statement.id,
-    label: `Statement ${format(new Date(statement.statementDate), 'MMM dd')} · Due ${format(
-      new Date(statement.dueDate),
-      'MMM dd'
-    )} · ${formatCurrency(statement.paymentDueAmount)}`
-  }));
+  const statementOptions = useMemo(
+    () =>
+      (statementQuery.data ?? []).map(statement => ({
+        value: statement.id,
+        label: `Statement ${format(new Date(statement.statementDate), 'MMM dd')} · Due ${format(
+          new Date(statement.dueDate),
+          'MMM dd'
+        )} · ${formatCurrency(statement.paymentDueAmount)}`
+      })),
+    [statementQuery.data]
+  );
 
   const requiresStatementSelection =
     !id && isCreditCard && statementOptions.length > 0 && !form.watch('creditCardStatementId');
@@ -74,6 +118,17 @@ export const TransferForm = ({ id, onSubmit, onDelete, disabled, defaultValues, 
   const handleSubmit = (values: FormValues) => {
     const amountInMiliUnits = convertAmountToMiliUnits(parseFloat(values.amount));
     const transferChargeInMiliUnits = convertAmountToMiliUnits(parseFloat(values.transferCharge));
+
+    const toAmountInMiliUnits = (() => {
+      if (!isCrossCurrency || !values.exchangeRate) return null;
+      const rawToAmount = computeRawToAmount(
+        parseFloat(values.amount),
+        parseFloat(values.exchangeRate),
+        fromCurrency
+      );
+      return rawToAmount !== null ? Math.round(convertAmountToMiliUnits(rawToAmount)) : null;
+    })();
+
     onSubmit({
       ...values,
       fromAccountId: values.fromAccountId || null,
@@ -81,7 +136,8 @@ export const TransferForm = ({ id, onSubmit, onDelete, disabled, defaultValues, 
       creditCardStatementId: values.creditCardStatementId ? values.creditCardStatementId : null,
       amount: amountInMiliUnits,
       date: new Date(values.date),
-      transferCharge: transferChargeInMiliUnits
+      transferCharge: transferChargeInMiliUnits,
+      toAmount: toAmountInMiliUnits
     });
   };
 
@@ -180,13 +236,56 @@ export const TransferForm = ({ id, onSubmit, onDelete, disabled, defaultValues, 
           control={form.control}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Amount</FormLabel>
+              <FormLabel>{isCrossCurrency ? `Amount Sent (${fromCurrency})` : 'Amount'}</FormLabel>
               <FormControl>
-                <AmountInput {...field} disabled={disabled} placeholder={'0.00'} allowNegativeValue={false} />
+                <AmountInput {...field} disabled={disabled} placeholder='0.00' allowNegativeValue={false} currency={fromCurrency} />
               </FormControl>
             </FormItem>
           )}
         />
+        {isCrossCurrency && (
+          <>
+            <FormField
+              name='exchangeRate'
+              control={form.control}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Exchange Rate (1 {foreignCurrency} ={' '}
+                    {fromCurrency === DEFAULT_CURRENCY || toCurrency === DEFAULT_CURRENCY ? DEFAULT_CURRENCY : toCurrency})
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      value={field.value ?? ''}
+                      type='number'
+                      step='any'
+                      min='0'
+                      disabled={disabled}
+                      placeholder={`e.g. ${foreignCurrency === 'USD' ? '135' : '1.00'}`}
+                    />
+                  </FormControl>
+                  {watchedExchangeRate && parseFloat(watchedExchangeRate) > 0 && (
+                    <p className='text-xs text-muted-foreground'>
+                      {rateLabel.replace('{rate}', watchedExchangeRate)}
+                    </p>
+                  )}
+                </FormItem>
+              )}
+            />
+            <FormItem>
+              <FormLabel>Amount to Receive ({toCurrency})</FormLabel>
+              <AmountInput
+                value={previewToAmount !== null ? previewToAmount.toString() : ''}
+                onChange={() => {}}
+                disabled
+                placeholder='Calculated from exchange rate'
+                allowNegativeValue={false}
+                currency={toCurrency}
+              />
+            </FormItem>
+          </>
+        )}
         <FormField
           name='transferCharge'
           control={form.control}
@@ -194,7 +293,7 @@ export const TransferForm = ({ id, onSubmit, onDelete, disabled, defaultValues, 
             <FormItem>
               <FormLabel>Extra Charges (Transfer fees / Interest Amount)</FormLabel>
               <FormControl>
-                <AmountInput {...field} disabled={disabled} placeholder={'0.00'} />
+                <AmountInput {...field} disabled={disabled} placeholder='0.00' currency={fromCurrency} />
               </FormControl>
             </FormItem>
           )}

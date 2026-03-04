@@ -46,7 +46,8 @@ const app = new Hono()
           amount: transactions.amount,
           accountId: transactions.accountId,
           categoryId: transactions.categoryId,
-          account: sql<string>`CASE WHEN ${accounts.isClosed} THEN CONCAT(${accounts.name}, ' (closed account)') ELSE ${accounts.name} END`
+          account: sql<string>`CASE WHEN ${accounts.isClosed} THEN CONCAT(${accounts.name}, ' (closed account)') ELSE ${accounts.name} END`,
+          accountCurrency: accounts.currency
         })
         .from(transactions)
         .innerJoin(accounts, eq(transactions.accountId, accounts.id))

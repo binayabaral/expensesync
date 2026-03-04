@@ -6,15 +6,18 @@ import { zodResolver } from '@hookform/resolvers/zod';
 
 import { Select } from '@/components/Select';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AmountInput } from '@/components/AmountInput';
-import { convertAmountToMiliUnits } from '@/lib/utils';
+import { DEFAULT_CURRENCY, convertAmountToMiliUnits } from '@/lib/utils';
+import { SUPPORTED_CURRENCIES } from '@/db/schema';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 
 const formSchema = z.object({
   name: z.string(),
+  currency: z.enum([...SUPPORTED_CURRENCIES]),
   isHidden: z.boolean(),
   startingBalance: z.string(),
   accountType: z.enum(['CASH', 'BANK', 'CREDIT_CARD', 'LOAN', 'OTHER']),
@@ -33,6 +36,7 @@ const formSchema = z.object({
 
 const apiSchema = z.object({
   name: z.string(),
+  currency: z.enum([...SUPPORTED_CURRENCIES]),
   isHidden: z.boolean(),
   startingBalance: z.number(),
   accountType: z.enum(['CASH', 'BANK', 'CREDIT_CARD', 'LOAN', 'OTHER']),
@@ -65,6 +69,8 @@ export const AccountForm = ({ id, onSubmit, onDelete, disabled, defaultValues }:
     defaultValues: defaultValues
   });
 
+  const watchedCurrency = form.watch('currency') ?? DEFAULT_CURRENCY;
+
   const handleSubmit = (values: FormValues) => {
     const amountInMiliUnits = convertAmountToMiliUnits(parseFloat(values.startingBalance));
     const isCreditCard = values.accountType === 'CREDIT_CARD';
@@ -96,6 +102,7 @@ export const AccountForm = ({ id, onSubmit, onDelete, disabled, defaultValues }:
 
     onSubmit({
       name: values.name,
+      currency: values.currency,
       isHidden: values.isHidden,
       startingBalance: amountInMiliUnits,
       accountType: values.accountType,
@@ -131,6 +138,38 @@ export const AccountForm = ({ id, onSubmit, onDelete, disabled, defaultValues }:
             </FormItem>
           )}
         />
+        <FormField
+          name='currency'
+          control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Currency</FormLabel>
+              <FormControl>
+                {id ? (
+                  <div className='flex items-center h-9 px-3 py-2 border rounded-md bg-muted'>
+                    <Badge variant='secondary' className='font-mono'>{field.value}</Badge>
+                    <span className='ml-2 text-sm text-muted-foreground'>Currency cannot be changed after creation</span>
+                  </div>
+                ) : isMobile() ? (
+                  <NativeSelect value={field.value} onChange={field.onChange} disabled={disabled} className='w-full'>
+                    {SUPPORTED_CURRENCIES.map(c => (
+                      <NativeSelectOption key={c} value={c}>{c}</NativeSelectOption>
+                    ))}
+                  </NativeSelect>
+                ) : (
+                  <Select
+                    value={field.value}
+                    disabled={disabled}
+                    allowCreatingOptions={false}
+                    placeholder='Select currency'
+                    onChangeAction={field.onChange}
+                    options={SUPPORTED_CURRENCIES.map(c => ({ label: c, value: c }))}
+                  />
+                )}
+              </FormControl>
+            </FormItem>
+          )}
+        />
         {!id && (
           <FormField
             name='startingBalance'
@@ -139,7 +178,7 @@ export const AccountForm = ({ id, onSubmit, onDelete, disabled, defaultValues }:
               <FormItem>
                 <FormLabel>Starting Balance</FormLabel>
                 <FormControl>
-                  <AmountInput {...field} disabled={disabled} placeholder={'0.00'} />
+                  <AmountInput {...field} disabled={disabled} placeholder={'0.00'} currency={watchedCurrency} />
                 </FormControl>
               </FormItem>
             )}

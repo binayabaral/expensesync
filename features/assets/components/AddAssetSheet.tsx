@@ -22,7 +22,8 @@ export const AddAssetSheet = () => {
   const createAssetMutation = useCreateAsset();
 
   const accountsQuery = useGetAccounts();
-  const accountOptions = (accountsQuery.data ?? []).filter(account => !account.isClosed).map(account => ({
+  const accounts = accountsQuery.data ?? [];
+  const accountOptions = accounts.filter(account => !account.isClosed).map(account => ({
     label: account.name,
     value: account.id
   }));
@@ -62,7 +63,7 @@ export const AddAssetSheet = () => {
             <Loader2 className='size-4 text-muted-foreground animate-spin' />
           </div>
         ) : (
-          <AssetForm onSubmit={onSubmit} disabled={isPending} defaultValues={defaultValues} accountOptions={accountOptions} />
+          <AssetForm onSubmit={onSubmit} disabled={isPending} defaultValues={defaultValues} accountOptions={accountOptions} accounts={accounts} />
         )}
       </SheetContent>
     </Sheet>

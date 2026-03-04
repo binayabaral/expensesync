@@ -4,7 +4,7 @@ import { InferResponseType } from 'hono';
 import { ColumnDef } from '@tanstack/react-table';
 
 import { client } from '@/lib/hono';
-import { cn, convertAmountFromMiliUnits, convertAmountToMiliUnits, formatCurrency } from '@/lib/utils';
+import { DEFAULT_CURRENCY, cn, convertAmountFromMiliUnits, convertAmountToMiliUnits, formatCurrency } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { AmountInput } from '@/components/AmountInput';
@@ -42,11 +42,12 @@ export const AssetLotsSheet = () => {
   const assetQuery = useGetAsset(assetId);
 
   const accountsQuery = useGetAccounts();
-  const accountOptions =
-    accountsQuery.data?.filter(account => !account.isClosed).map(account => ({
-      label: account.name,
-      value: account.id
-    })) ?? [];
+  const allAccounts = accountsQuery.data ?? [];
+  const accountOptions = allAccounts.filter(account => !account.isClosed).map(account => ({
+    label: account.name,
+    value: account.id
+  }));
+  const editingAccountCurrency = allAccounts.find(a => a.id === accountId)?.currency ?? DEFAULT_CURRENCY;
 
   const editLotMutation = useEditAssetLot(editingId ?? undefined);
   const deleteLotMutation = useDeleteAssetLot(assetId ?? undefined);
@@ -197,7 +198,7 @@ export const AssetLotsSheet = () => {
         </Button>
       ),
       cell: ({ row }) =>
-        row.original.quantity > 0 ? formatCurrency(row.original.assetPrice) : '-' // only for buys
+        row.original.quantity > 0 ? formatCurrency(row.original.assetPrice, false, row.original.accountCurrency ?? DEFAULT_CURRENCY) : '-' // only for buys
     },
     {
       accessorKey: 'sellPrice',
@@ -213,7 +214,7 @@ export const AssetLotsSheet = () => {
       ),
       cell: ({ row }) =>
         row.original.quantity < 0 && row.original.sellPrice != null
-          ? formatCurrency(row.original.sellPrice)
+          ? formatCurrency(row.original.sellPrice, false, row.original.accountCurrency ?? DEFAULT_CURRENCY)
           : '-'
     },
     {
@@ -254,7 +255,7 @@ export const AssetLotsSheet = () => {
               profit > 0 ? 'text-emerald-600 dark:text-emerald-400' : profit < 0 ? 'text-red-600 dark:text-red-400' : ''
             )}
           >
-            {formatCurrency(profit)}
+            {formatCurrency(profit, false, lot.accountCurrency ?? DEFAULT_CURRENCY)}
           </span>
         );
       }
@@ -271,7 +272,7 @@ export const AssetLotsSheet = () => {
           <ArrowUpDown className='ml-2 h-4 w-4' />
         </Button>
       ),
-      cell: ({ row }) => formatCurrency(row.original.extraCharge)
+      cell: ({ row }) => formatCurrency(row.original.extraCharge, false, row.original.accountCurrency ?? DEFAULT_CURRENCY)
     },
     {
       accessorKey: 'totalPaid',
@@ -285,7 +286,7 @@ export const AssetLotsSheet = () => {
           <ArrowUpDown className='ml-2 h-4 w-4' />
         </Button>
       ),
-      cell: ({ row }) => formatCurrency(row.original.totalPaid)
+      cell: ({ row }) => formatCurrency(row.original.totalPaid, false, row.original.accountCurrency ?? DEFAULT_CURRENCY)
     },
     {
       id: 'actions',
@@ -373,6 +374,7 @@ export const AssetLotsSheet = () => {
                 onChange={value => setAssetPrice(value ?? '')}
                 allowNegativeValue={false}
                 placeholder='0.00'
+                currency={editingAccountCurrency}
               />
             </div>
             <div className='space-y-2'>
@@ -382,6 +384,7 @@ export const AssetLotsSheet = () => {
                 onChange={value => setExtraCharge(value ?? '')}
                 allowNegativeValue={false}
                 placeholder='0.00'
+                currency={editingAccountCurrency}
               />
             </div>
             <div className='space-y-2'>
