@@ -128,10 +128,7 @@ const app = new Hono()
           if (loan.loanTenureMonths && loan.loanTenureMonths > 0) {
             return paymentCount / (loan.loanTenureMonths / emiIntervalMonths);
           }
-          if (originalPrincipal > 0) {
-            return amountPaid / originalPrincipal;
-          }
-          // Open-ended: progress = paid / (paid + remaining balance)
+          // Use current balance so top-ups are reflected in progress
           const remaining = Math.abs(currentBalance ?? 0);
           const total = amountPaid + remaining;
           return total > 0 ? amountPaid / total : 0;

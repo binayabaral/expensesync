@@ -32,7 +32,7 @@ export const EmiLoanCard = ({ loan }: Props) => {
   const progressDisplay = Math.min(100, Math.round(progressPercentage * 100));
   const isOpenEnded = !loan.loanTenureMonths && originalPrincipal === 0;
 
-  const remaining = isOpenEnded ? Math.abs(loan.currentBalance ?? 0) : Math.max(0, originalPrincipal - amountPaid);
+  const remaining = Math.abs(loan.currentBalance ?? 0);
 
   const handleClose = async () => {
     const ok = await confirm();
@@ -74,10 +74,7 @@ export const EmiLoanCard = ({ loan }: Props) => {
             <Progress value={progressDisplay} className='h-2' />
             <div className='flex justify-between text-xs text-muted-foreground'>
               <span>Paid: {formatCurrency(amountPaid)}</span>
-              {isOpenEnded
-                ? <span>Remaining: {formatCurrency(remaining)}</span>
-                : <span>Total: {formatCurrency(originalPrincipal)}</span>
-              }
+              <span>Total: {formatCurrency(amountPaid + remaining)}</span>
             </div>
           </div>
 
