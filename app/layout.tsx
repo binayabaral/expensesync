@@ -5,6 +5,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import { Toaster } from '@/components/ui/sonner';
 import QueryProvider from '@/providers/QueryProvider';
 import { SheetProvider } from '@/providers/SheetProvider';
+import { ThemeProvider } from '@/components/ThemeProvider';
 
 import './globals.css';
 
@@ -32,14 +33,16 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang='en'>
-        <body className={`${geistSans.variable} ${geistMono.variable} antialiased !pointer-events-auto`}>
-          <QueryProvider>
-            <SheetProvider>
-              <Toaster position='top-right' />
-              {children}
-            </SheetProvider>
-          </QueryProvider>
+      <html lang='en' suppressHydrationWarning>
+        <body className={`${geistSans.variable} ${geistMono.variable} antialiased pointer-events-auto!`}>
+          <ThemeProvider>
+            <QueryProvider>
+              <SheetProvider>
+                <Toaster position='top-right' />
+                {children}
+              </SheetProvider>
+            </QueryProvider>
+          </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>

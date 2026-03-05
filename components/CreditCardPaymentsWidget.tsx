@@ -20,14 +20,14 @@ export const CreditCardPaymentsWidget = () => {
     });
 
   return (
-    <Card className='border border-slate-200 shadow-none'>
+    <Card className='border border-border shadow-none'>
       <CardHeader>
         <CardTitle className='text-lg font-semibold'>Credit Card Payments</CardTitle>
       </CardHeader>
       <CardContent>
         {isLoading ? (
           <div className='h-32 w-full flex items-center justify-center'>
-            <Loader2 className='size-6 text-slate-300 animate-spin' />
+            <Loader2 className='size-6 text-muted-foreground animate-spin' />
           </div>
         ) : upcoming.length === 0 ? (
           <div className='text-sm text-muted-foreground'>No upcoming credit card payments.</div>
@@ -41,7 +41,7 @@ export const CreditCardPaymentsWidget = () => {
                 }
 
                 return (
-                  <div key={card.id} className='rounded-md border border-slate-200 p-3'>
+                  <div key={card.id} className='rounded-md border border-border p-3'>
                     <div className='flex items-center justify-between'>
                       <div className='font-medium'>{card.name}</div>
                       <div className='text-xs text-muted-foreground'>

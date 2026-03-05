@@ -25,7 +25,7 @@ export const ClosedLoanCard = ({ loan }: Props) => {
   const hasPayments = (loan.paymentHistory?.length ?? 0) > 0;
 
   return (
-    <Card className='border border-slate-200 shadow-none opacity-75'>
+    <Card className='border border-border shadow-none opacity-75'>
       <CardHeader className='pb-0 pt-2 px-4 space-y-0'>
         <div className='flex items-center justify-between'>
           <div className='flex items-center gap-2'>

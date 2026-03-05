@@ -71,7 +71,7 @@ export default function CreditCardsPage() {
     <div className='space-y-4'>
       <CloseStatementSheet />
       <EditStatementSheet />
-      <Card className='border border-slate-200 shadow-none'>
+      <Card className='border border-border shadow-none'>
         <CardHeader className='gap-y-2 lg:flex-row lg:items-center lg:justify-between space-y-0'>
           <CardTitle className='text-lg font-semibold'>Credit Cards</CardTitle>
           {accountOptions.length > 0 && (
@@ -103,7 +103,7 @@ export default function CreditCardsPage() {
         <CardContent>
           {creditCardsQuery.isLoading ? (
             <div className='h-40 w-full flex items-center justify-center'>
-              <Loader2 className='size-6 text-slate-300 animate-spin' />
+              <Loader2 className='size-6 text-muted-foreground animate-spin' />
             </div>
           ) : !selectedCard ? (
             <div className='text-sm text-muted-foreground'>No credit cards configured yet.</div>
@@ -136,14 +136,14 @@ export default function CreditCardsPage() {
           )}
         </CardContent>
       </Card>
-      <Card className='border border-slate-200 shadow-none'>
+      <Card className='border border-border shadow-none'>
         <CardHeader>
           <CardTitle className='text-lg font-semibold'>Statements</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className='h-40 w-full flex items-center justify-center'>
-              <Loader2 className='size-6 text-slate-300 animate-spin' />
+              <Loader2 className='size-6 text-muted-foreground animate-spin' />
             </div>
           ) : (
             <CreditCardStatementsTable

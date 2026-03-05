@@ -67,7 +67,7 @@ interface DataCardProps extends BoxVariants, IconVariants, BaseTextVariants {
 function DataCard({ title, variant, baseText, subtitle, value = 0, isLoading, icon: Icon }: DataCardProps) {
   if (isLoading) {
     return (
-      <Card className='border border-slate-200 shadow-none'>
+      <Card className='border border-border shadow-none'>
         <CardHeader className='flex flex-row items-center justify-between gap-x-4'>
           <div className='space-y-1'>
             <Skeleton className='h-6 w-28' />
@@ -83,7 +83,7 @@ function DataCard({ title, variant, baseText, subtitle, value = 0, isLoading, ic
     );
   }
   return (
-    <Card className='border border-slate-200 shadow-none'>
+    <Card className='border border-border shadow-none'>
       <CardHeader className='flex flex-row items-center justify-between gap-x-4'>
         <div className='space-y-1'>
           <CardTitle className='text-base line-clamp-1'>{title}</CardTitle>

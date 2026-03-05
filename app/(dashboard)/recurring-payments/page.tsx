@@ -22,14 +22,14 @@ function RecurringPayments() {
   if (isLoading) {
     return (
       <div className='max-w-full'>
-        <Card className='border border-slate-200 shadow-none'>
+        <Card className='border border-border shadow-none'>
           <CardHeader className='gap-y-2 lg:flex-row lg:items-center lg:justify-between space-y-0'>
             <Skeleton className='h-6 w-32' />
             <Skeleton className='h-9 w-36' />
           </CardHeader>
           <CardContent>
             <div className='h-80 w-full flex items-center justify-center'>
-              <Loader2 className='size-12 text-slate-300 animate-spin' />
+              <Loader2 className='size-12 text-muted-foreground animate-spin' />
             </div>
           </CardContent>
         </Card>
@@ -39,7 +39,7 @@ function RecurringPayments() {
 
   return (
     <div className='max-w-full'>
-      <Card className='border border-slate-200 shadow-none'>
+      <Card className='border border-border shadow-none'>
         <CardHeader className='gap-y-2 lg:flex-row lg:items-center lg:justify-between space-y-0'>
           <CardTitle className='text-lg font-semibold'>Recurring Payments</CardTitle>
           <Button onClick={() => addRecurringPayment.onOpen()}>

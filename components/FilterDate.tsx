@@ -2,7 +2,8 @@
 
 import qs from 'query-string';
 import { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import isMobile from 'is-mobile';
+import { CalendarIcon, ChevronDown } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
 import { format, startOfMonth } from 'date-fns';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -53,20 +54,21 @@ function FilterDate() {
           disabled={false}
           size='sm'
           variant='outline'
-          className='w-full justify-between lg:w-auto h-9 rounded-md px-3 font-normal shadow-none transition bg-white border border-slate-200 hover:bg-white'
+          className='w-auto h-9 rounded-md px-3 font-normal shadow-none transition bg-background border border-border hover:bg-background'
         >
-          <span>{formatDateRange(paramState)}</span>
-          <ChevronDown className='ml-2 size-4 opacity-50' />
+          <CalendarIcon className='size-4 lg:hidden' />
+          <span className='hidden lg:inline'>{formatDateRange(paramState)}</span>
+          <ChevronDown className='ml-1 size-4 opacity-50 hidden lg:block' />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className='w-full lg:w-auto p-0 shadow-none border border-slate-200' align='start'>
+      <PopoverContent className='w-full lg:w-auto p-0 shadow-none border border-border' align='end'>
         <Calendar
           disabled={false}
           mode='range'
           defaultMonth={date?.from}
           selected={date}
           onSelect={setDate}
-          numberOfMonths={2}
+          numberOfMonths={isMobile() ? 1 : 2}
         />
         <div className='p-4 w-full flex items-center gap-x-2'>
           <PopoverClose asChild>

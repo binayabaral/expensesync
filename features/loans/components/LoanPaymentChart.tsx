@@ -52,7 +52,7 @@ export const LoanPaymentChart = ({ loans }: Props) => {
   const visibleData = firstWithData >= 0 ? chartData.slice(firstWithData) : chartData;
 
   return (
-    <Card className='border border-slate-200 shadow-none'>
+    <Card className='border border-border shadow-none'>
       <CardHeader className='pb-2'>
         <CardTitle className='text-base font-semibold'>Outstanding Balance by Loan</CardTitle>
       </CardHeader>
@@ -94,21 +94,21 @@ export const LoanPaymentChart = ({ loans }: Props) => {
                 if (entries.length === 0) return null;
                 const total = entries.reduce((s, p) => s + (p.value as number), 0);
                 return (
-                  <div className='bg-white border border-slate-200 rounded-lg shadow-sm p-3 text-sm min-w-[180px]'>
-                    <p className='font-semibold text-slate-700 mb-2'>{label}</p>
+                  <div className='bg-background border border-border rounded-lg shadow-sm p-3 text-sm min-w-45'>
+                    <p className='font-semibold text-foreground mb-2'>{label}</p>
                     {entries.map((p, i) => (
                       <div key={i} className='flex justify-between gap-4 py-0.5'>
                         <div className='flex items-center gap-2'>
                           <span className='size-2 rounded-full shrink-0' style={{ backgroundColor: p.color as string }} />
-                          <span className='text-slate-600 truncate max-w-[100px]'>{p.name}</span>
+                          <span className='text-muted-foreground truncate max-w-25'>{p.name}</span>
                         </div>
-                        <span className='font-medium text-slate-800 shrink-0'>{formatCurrency(p.value as number)}</span>
+                        <span className='font-medium text-foreground shrink-0'>{formatCurrency(p.value as number)}</span>
                       </div>
                     ))}
                     {entries.length > 1 && (
-                      <div className='flex justify-between gap-4 pt-2 mt-1 border-t border-slate-100'>
-                        <span className='text-slate-500'>Total</span>
-                        <span className='font-semibold text-slate-800'>{formatCurrency(total)}</span>
+                      <div className='flex justify-between gap-4 pt-2 mt-1 border-t border-border'>
+                        <span className='text-muted-foreground'>Total</span>
+                        <span className='font-semibold text-foreground'>{formatCurrency(total)}</span>
                       </div>
                     )}
                   </div>
@@ -132,10 +132,10 @@ export const LoanPaymentChart = ({ loans }: Props) => {
         {chartLoans.length > 1 && (
           <div className='flex flex-wrap gap-3 mt-3 justify-center'>
             {chartLoans.map((loan, i) => (
-              <div key={loan.id} className='flex items-center gap-2 text-xs text-slate-600'>
+              <div key={loan.id} className='flex items-center gap-2 text-xs text-muted-foreground'>
                 <span className='size-2.5 rounded-full shrink-0' style={{ backgroundColor: COLORS[i % COLORS.length] }} />
                 {loan.name}
-                {loan.isClosed && <span className='text-slate-400'>(closed)</span>}
+                {loan.isClosed && <span className='text-muted-foreground'>(closed)</span>}
               </div>
             ))}
           </div>
@@ -146,12 +146,12 @@ export const LoanPaymentChart = ({ loans }: Props) => {
 };
 
 export const LoanPaymentChartSkeleton = () => (
-  <Card className='border border-slate-200 shadow-none'>
+  <Card className='border border-border shadow-none'>
     <CardHeader className='pb-2'>
       <Skeleton className='h-6 w-56' />
     </CardHeader>
     <CardContent>
-      <Skeleton className='h-[260px] w-full rounded-md' />
+      <Skeleton className='h-65 w-full rounded-md' />
       <div className='flex gap-3 mt-3 justify-center flex-wrap'>
         {[...Array(6)].map((_, i) => (
           <Skeleton key={i} className='h-4 w-24' />

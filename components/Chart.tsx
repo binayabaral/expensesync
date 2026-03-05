@@ -22,14 +22,14 @@ function Chart({ isLoading, data = [] }: Props) {
 
   if (isLoading) {
     return (
-      <Card className='border border-slate-200 shadow-none'>
+      <Card className='border border-border shadow-none'>
         <CardHeader className='flex space-y-2 lg:space-y-0 lg:flex-row lg:items-center justify-between'>
           <Skeleton className='h-6 w-32' />
           <Skeleton className='h-9 w-full lg:w-28' />
         </CardHeader>
         <CardContent>
-          <div className='w-full h-[300px] flex items-center justify-center'>
-            <Loader2 className='h-6 w-6 text-slate-300 animate-spin' />
+          <div className='w-full h-75 flex items-center justify-center'>
+            <Loader2 className='h-6 w-6 text-muted-foreground animate-spin' />
           </div>
         </CardContent>
       </Card>
@@ -37,7 +37,7 @@ function Chart({ isLoading, data = [] }: Props) {
   }
 
   return (
-    <Card className='border border-slate-200 shadow-none'>
+    <Card className='border border-border shadow-none'>
       <CardHeader className='flex space-y-2 lg:space-y-0 lg:flex-row lg:items-center justify-between'>
         <CardTitle className='text-lg font-semibold'>Transactions</CardTitle>
         <Select defaultValue={chartType} onValueChange={setChartType}>
@@ -68,7 +68,7 @@ function Chart({ isLoading, data = [] }: Props) {
       </CardHeader>
       <CardContent>
         {data.length === 0 ? (
-          <div className='flex flex-col gap-y-4 items-center justify-center h-[300px] w-full'>
+          <div className='flex flex-col gap-y-4 items-center justify-center h-75 w-full'>
             <FileSearch className='size-6 text-muted-foreground' />
             <p className='text-muted-foreground text-sm'>No data for this period</p>
           </div>

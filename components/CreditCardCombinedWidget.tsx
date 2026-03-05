@@ -10,7 +10,7 @@ import { useGetCreditCards } from '@/features/credit-cards/api/useGetCreditCards
 
 const getUtilizationTone = (value?: number | null) => {
   if (value === null || value === undefined) {
-    return 'bg-slate-200';
+    return 'bg-muted';
   }
   if (value <= 0.3) {
     return 'bg-emerald-500';
@@ -44,13 +44,13 @@ export const CreditCardCombinedWidget = () => {
 
   if (isLoading) {
     return (
-      <Card className='border border-slate-200 shadow-none'>
+      <Card className='border border-border shadow-none'>
         <CardHeader className='pb-3'>
           <Skeleton className='h-7 w-28' />
         </CardHeader>
         <CardContent>
-          <div className='w-full h-[300px] flex items-center justify-center'>
-            <Loader2 className='h-6 w-6 text-slate-300 animate-spin' />
+          <div className='w-full h-75 flex items-center justify-center'>
+            <Loader2 className='h-6 w-6 text-muted-foreground animate-spin' />
           </div>
         </CardContent>
       </Card>
@@ -58,7 +58,7 @@ export const CreditCardCombinedWidget = () => {
   }
 
   return (
-    <Card className='border border-slate-200 shadow-none'>
+    <Card className='border border-border shadow-none'>
       <CardHeader className='pb-3'>
         <CardTitle className='text-base font-semibold'>Credit Cards</CardTitle>
       </CardHeader>
@@ -74,7 +74,7 @@ export const CreditCardCombinedWidget = () => {
                     const statement = card.nextStatement;
                     if (!statement) return null;
                     return (
-                      <div key={card.id} className='flex items-center justify-between rounded border border-slate-200 px-3 py-2 text-xs'>
+                      <div key={card.id} className='flex items-center justify-between rounded border border-border px-3 py-2 text-xs'>
                         <div>
                           <span className='font-medium'>{card.name}</span>
                           <span className='text-muted-foreground ml-2'>Due {format(new Date(statement.dueDate), 'MMM dd')}</span>
@@ -92,7 +92,7 @@ export const CreditCardCombinedWidget = () => {
               )}
             </div>
 
-            <div className='border-t border-slate-100 pt-3'>
+            <div className='border-t border-border pt-3'>
               <div className='text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2'>Utilization</div>
               {data.length === 0 ? (
                 <div className='text-xs text-muted-foreground'>No credit cards available.</div>
@@ -105,7 +105,7 @@ export const CreditCardCombinedWidget = () => {
                         {overallUtilization !== null ? `${Math.round(overallUtilization * 100)}%` : 'N/A'}
                       </span>
                     </div>
-                    <div className='h-1.5 w-full rounded-full bg-slate-100'>
+                    <div className='h-1.5 w-full rounded-full bg-muted'>
                       <div
                         className={cn('h-1.5 rounded-full transition-all', getUtilizationTone(overallUtilization))}
                         style={{ width: overallUtilization ? `${Math.min(overallUtilization * 100, 100)}%` : '0%' }}
@@ -121,7 +121,7 @@ export const CreditCardCombinedWidget = () => {
                           <span className='ml-1.5'>· Owed {formatCurrency(card.currentOwed)}</span>
                         </span>
                       </div>
-                      <div className='h-1.5 w-full rounded-full bg-slate-100'>
+                      <div className='h-1.5 w-full rounded-full bg-muted'>
                         <div
                           className={cn('h-1.5 rounded-full transition-all', getUtilizationTone(card.utilization))}
                           style={{ width: card.utilization ? `${Math.min(card.utilization * 100, 100)}%` : '0%' }}

@@ -43,7 +43,7 @@ function FilterAccount() {
 
   return (
     <Select value={accountId} onValueChange={onAccountChange} disabled={isLoadingAccounts || isLoadingSummary}>
-      <SelectTrigger className='w-full lg:w-auto h-9 rounded-md px-3 font-normal shadow-none outline-none transition bg-white border border-slate-200'>
+      <SelectTrigger className='w-full lg:w-auto h-9 rounded-md px-3 font-normal shadow-none outline-none transition bg-background border border-border'>
         <SelectValue placeholder='Account' />
       </SelectTrigger>
       <SelectContent>

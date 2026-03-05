@@ -4,6 +4,7 @@ import { AppSidebar } from '@/components/AppSidebar';
 import { Separator } from '@/components/ui/separator';
 import Filters from '@/components/Filters';
 import HeaderWelcome from '@/components/HeaderWelcome';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,13 +21,14 @@ async function DashboardLayout({ children }: Props) {
     <SidebarProvider defaultOpen={defaultOpen}>
       <AppSidebar />
       <SidebarInset className='overflow-x-hidden'>
-        <div className='sticky top-0 z-10 flex h-16 items-center gap-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4'>
+        <div className='sticky top-0 z-10 flex h-16 items-center gap-2 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 px-4'>
           <SidebarTrigger className='-ml-1 shrink-0' />
           <Separator orientation='vertical' className='h-6 shrink-0' />
           <div className='hidden lg:block flex-1 min-w-0'>
             <HeaderWelcome />
           </div>
-          <div className='flex-1 lg:flex-none'>
+          <div className='flex items-center gap-2 ml-auto'>
+            <ThemeToggle />
             <Filters />
           </div>
         </div>

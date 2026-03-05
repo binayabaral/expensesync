@@ -9,7 +9,7 @@ export const CategorySpendingChartTooltip = ({ active, payload }: any) => {
   const value = payload[0].value;
 
   return (
-    <div className='rounded-sm bg-white shadow-sm border overflow-hidden'>
+    <div className='rounded-sm bg-popover text-popover-foreground shadow-sm border overflow-hidden'>
       <div className='text-sm py-2 px-3 bg-muted text-muted-foreground'>{name}</div>
       <Separator />
       <div className='py-2 px-3 space-y-1'>

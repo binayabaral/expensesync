@@ -31,13 +31,13 @@ function Accounts() {
   if (accountsQuery.isLoading) {
     return (
       <div className='max-w-full'>
-        <Card className='border border-slate-200 shadow-none'>
+        <Card className='border border-border shadow-none'>
           <CardHeader>
             <Skeleton className='h-8 w-48' />
           </CardHeader>
           <CardContent>
             <div className='h-80 w-full flex items-center justify-center'>
-              <Loader2 className='size-12 text-slate-300 animate-spin' />
+              <Loader2 className='size-12 text-muted-foreground animate-spin' />
             </div>
           </CardContent>
         </Card>
@@ -47,7 +47,7 @@ function Accounts() {
 
   return (
     <div className='max-w-full'>
-      <Card className='border border-slate-200 shadow-none'>
+      <Card className='border border-border shadow-none'>
         <CardHeader className='gap-y-2 lg:flex-row lg:items-center lg:justify-between space-y-0'>
           <CardTitle className='text-lg font-semibold'>Accounts</CardTitle>
           <div className='flex items-center gap-4'>
@@ -74,7 +74,7 @@ function Accounts() {
         </CardContent>
       </Card>
       {foreignAccounts.length > 0 && (
-        <Card className='border border-slate-200 shadow-none mt-4'>
+        <Card className='border border-border shadow-none mt-4'>
           <CardHeader className='gap-y-2 lg:flex-row lg:items-center lg:justify-between space-y-0'>
             <div>
               <CardTitle className='text-lg font-semibold'>Foreign Currency Accounts</CardTitle>

@@ -20,7 +20,7 @@ function Header() {
     <header>
       <div
         className={cn(
-          'bg-white shadow-sm',
+          'bg-background shadow-sm',
           enableMobileNav ? 'fixed bottom-0 left-0 right-0 z-50 border-t' : 'py-3 md:py-4'
         )}
       >

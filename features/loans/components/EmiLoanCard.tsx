@@ -45,7 +45,7 @@ export const EmiLoanCard = ({ loan }: Props) => {
   return (
     <>
       <ConfirmDialog />
-      <Card className='border border-slate-200 shadow-none'>
+      <Card className='border border-border shadow-none'>
         <CardHeader className='pb-0 pt-2 px-4 space-y-0'>
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-2'>
@@ -134,7 +134,7 @@ export const EmiLoanCard = ({ loan }: Props) => {
 };
 
 export const EmiLoanCardSkeleton = () => (
-  <Card className='border border-slate-200 shadow-none'>
+  <Card className='border border-border shadow-none'>
     <CardHeader className='pb-0 pt-2 px-4 space-y-0'>
       <div className='flex items-center gap-2'>
         <Skeleton className='h-4 w-40' />

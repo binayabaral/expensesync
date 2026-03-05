@@ -8,7 +8,7 @@ import { useGetCreditCards } from '@/features/credit-cards/api/useGetCreditCards
 
 const getUtilizationTone = (value?: number | null) => {
   if (value === null || value === undefined) {
-    return 'bg-slate-200';
+    return 'bg-muted';
   }
 
   if (value <= 0.3) {
@@ -37,14 +37,14 @@ export const CreditCardUtilizationWidget = () => {
   const overallUtilization = totals.limit > 0 ? totals.owed / totals.limit : null;
 
   return (
-    <Card className='border border-slate-200 shadow-none'>
+    <Card className='border border-border shadow-none'>
       <CardHeader>
         <CardTitle className='text-lg font-semibold'>Credit Utilization</CardTitle>
       </CardHeader>
       <CardContent>
         {isLoading ? (
           <div className='h-32 w-full flex items-center justify-center'>
-            <Loader2 className='size-6 text-slate-300 animate-spin' />
+            <Loader2 className='size-6 text-muted-foreground animate-spin' />
           </div>
         ) : data.length === 0 ? (
           <div className='text-sm text-muted-foreground'>No credit cards available.</div>
@@ -57,7 +57,7 @@ export const CreditCardUtilizationWidget = () => {
                   {overallUtilization !== null ? `${Math.round(overallUtilization * 100)}%` : 'N/A'}
                 </span>
               </div>
-              <div className='mt-2 h-2 w-full rounded-full bg-slate-100'>
+              <div className='mt-2 h-2 w-full rounded-full bg-muted'>
                 <div
                   className={cn('h-2 rounded-full transition-all', getUtilizationTone(overallUtilization))}
                   style={{ width: overallUtilization ? `${Math.min(overallUtilization * 100, 100)}%` : '0%' }}
@@ -72,7 +72,7 @@ export const CreditCardUtilizationWidget = () => {
                     {card.utilization !== null ? `${Math.round(card.utilization * 100)}%` : 'N/A'}
                   </span>
                 </div>
-                <div className='h-2 w-full rounded-full bg-slate-100'>
+                <div className='h-2 w-full rounded-full bg-muted'>
                   <div
                     className={cn('h-2 rounded-full transition-all', getUtilizationTone(card.utilization))}
                     style={{ width: card.utilization ? `${Math.min(card.utilization * 100, 100)}%` : '0%' }}
