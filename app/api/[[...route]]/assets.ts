@@ -7,6 +7,7 @@ import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 
 import { db } from '@/db/drizzle';
 import { accounts, assets, assetLots, assetPrices, insertAssetSchema, transactions } from '@/db/schema';
+import { recalculateAssetAggregates } from '../utils/common';
 
 const app = new Hono()
   .get('/', async c => {
@@ -304,31 +305,9 @@ const app = new Hono()
         })
         .returning();
 
-      // Recalculate aggregates for the asset from all its lots
-      const [aggregates] = await db
-        .select({
-          totalQuantity: sql<number>`COALESCE(SUM(${assetLots.quantity}), 0)`,
-          totalPaid: sql<number>`COALESCE(SUM(${assetLots.totalPaid}), 0)`,
-          totalExtraCharge: sql<number>`COALESCE(SUM(${assetLots.extraCharge}), 0)`,
-          totalBaseCost: sql<number>`COALESCE(SUM(${assetLots.assetPrice} * ${assetLots.quantity}), 0)`
-        })
-        .from(assetLots)
-        .where(eq(assetLots.assetId, asset.id));
+      await recalculateAssetAggregates(asset.id, values.date);
 
-      const avgPricePerUnit =
-        aggregates.totalQuantity > 0 ? Math.round(aggregates.totalBaseCost / aggregates.totalQuantity) : 0;
-
-      const [updatedAsset] = await db
-        .update(assets)
-        .set({
-          quantity: aggregates.totalQuantity,
-          totalPaid: aggregates.totalPaid,
-          extraCharge: aggregates.totalExtraCharge,
-          assetPrice: avgPricePerUnit,
-          updatedAt: values.date
-        })
-        .where(eq(assets.id, asset.id))
-        .returning();
+      const [updatedAsset] = await db.select().from(assets).where(eq(assets.id, asset.id));
 
       return c.json({ data: { ...updatedAsset, lastLotId: insertedLot.id } });
     }
@@ -416,35 +395,7 @@ const app = new Hono()
           .where(eq(transactions.id, existingLot.buyTransactionId));
       }
 
-      // Recalculate aggregates for the asset from all its lots
-      const [aggregates] = await db
-        .select({
-          totalQuantity: sql<number>`COALESCE(SUM(${assetLots.quantity}), 0)`,
-          totalPaid: sql<number>`COALESCE(SUM(${assetLots.totalPaid}), 0)`,
-          totalExtraCharge: sql<number>`COALESCE(SUM(${assetLots.extraCharge}), 0)`,
-          totalBaseCost: sql<number>`COALESCE(SUM(${assetLots.assetPrice} * ${assetLots.quantity}), 0)`
-        })
-        .from(assetLots)
-        .where(eq(assetLots.assetId, existingLot.assetId));
-
-      // If no quantity remains, remove the parent asset record entirely
-      if (!aggregates || aggregates.totalQuantity === 0) {
-        await db.delete(assets).where(eq(assets.id, existingLot.assetId));
-      } else {
-        const avgPricePerUnit =
-          aggregates.totalQuantity > 0 ? Math.round(aggregates.totalBaseCost / aggregates.totalQuantity) : 0;
-
-        await db
-          .update(assets)
-          .set({
-            quantity: aggregates.totalQuantity,
-            totalPaid: aggregates.totalPaid,
-            extraCharge: aggregates.totalExtraCharge,
-            assetPrice: avgPricePerUnit,
-            updatedAt: new Date()
-          })
-          .where(eq(assets.id, existingLot.assetId));
-      }
+      await recalculateAssetAggregates(existingLot.assetId);
 
       return c.json({ data: updatedLot });
     }
@@ -501,35 +452,7 @@ const app = new Hono()
         await db.delete(transactions).where(eq(transactions.id, existingLot.sellProfitTransactionId));
       }
 
-      // Recalculate aggregates for the asset from remaining lots
-      const [aggregates] = await db
-        .select({
-          totalQuantity: sql<number>`COALESCE(SUM(${assetLots.quantity}), 0)`,
-          totalPaid: sql<number>`COALESCE(SUM(${assetLots.totalPaid}), 0)`,
-          totalExtraCharge: sql<number>`COALESCE(SUM(${assetLots.extraCharge}), 0)`,
-          totalBaseCost: sql<number>`COALESCE(SUM(${assetLots.assetPrice} * ${assetLots.quantity}), 0)`
-        })
-        .from(assetLots)
-        .where(eq(assetLots.assetId, existingLot.assetId));
-
-      // If no quantity remains, remove the parent asset record entirely
-      if (!aggregates || aggregates.totalQuantity === 0) {
-        await db.delete(assets).where(eq(assets.id, existingLot.assetId));
-      } else {
-        const avgPricePerUnit =
-          aggregates.totalQuantity > 0 ? Math.round(aggregates.totalBaseCost / aggregates.totalQuantity) : 0;
-
-        await db
-          .update(assets)
-          .set({
-            quantity: aggregates.totalQuantity,
-            totalPaid: aggregates.totalPaid,
-            extraCharge: aggregates.totalExtraCharge,
-            assetPrice: avgPricePerUnit,
-            updatedAt: new Date()
-          })
-          .where(eq(assets.id, existingLot.assetId));
-      }
+      await recalculateAssetAggregates(existingLot.assetId);
 
       return c.json({ data: deletedLot });
     }
@@ -649,37 +572,28 @@ const app = new Hono()
         sellProfitTransactionId: profitTransactionId
       });
 
-      // Recalculate aggregates for the asset from all its lots (buys and sells)
-      const [aggregates] = await db
-        .select({
-          totalQuantity: sql<number>`COALESCE(SUM(${assetLots.quantity}), 0)`,
-          totalPaid: sql<number>`COALESCE(SUM(${assetLots.totalPaid}), 0)`,
-          totalExtraCharge: sql<number>`COALESCE(SUM(${assetLots.extraCharge}), 0)`,
-          totalBaseCost: sql<number>`COALESCE(SUM(${assetLots.assetPrice} * ${assetLots.quantity}), 0)`
-        })
+      // Determine if fully sold before recalculating aggregates
+      const [remainingQty] = await db
+        .select({ total: sql<number>`COALESCE(SUM(${assetLots.quantity}), 0)` })
         .from(assetLots)
         .where(eq(assetLots.assetId, asset.id));
 
-      const avgPricePerUnit =
-        aggregates.totalQuantity > 0 ? Math.round(aggregates.totalBaseCost / aggregates.totalQuantity) : 0;
+      const fullySold = (remainingQty?.total ?? 0) === 0;
 
-      const fullySold = aggregates.totalQuantity === 0;
-
-      const [updatedAsset] = await db
+      // Stamp sell metadata before shared recalculation so it's not overwritten
+      await db
         .update(assets)
         .set({
-          quantity: aggregates.totalQuantity,
-          totalPaid: aggregates.totalPaid,
-          extraCharge: aggregates.totalExtraCharge,
-          assetPrice: avgPricePerUnit,
           isSold: fullySold,
           soldAt: fullySold ? values.date : null,
           sellAmount: fullySold ? values.amount : null,
-          sellTransactionId: profitTransactionId ?? principalReturnTransactionId,
-          updatedAt: values.date
+          sellTransactionId: profitTransactionId ?? principalReturnTransactionId
         })
-        .where(eq(assets.id, id))
-        .returning();
+        .where(eq(assets.id, id));
+
+      await recalculateAssetAggregates(asset.id, values.date);
+
+      const [updatedAsset] = await db.select().from(assets).where(eq(assets.id, id));
 
       return c.json({ data: updatedAsset });
     }

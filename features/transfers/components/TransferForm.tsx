@@ -1,12 +1,10 @@
 import { z } from 'zod';
-import isMobile from 'is-mobile';
 import { Trash } from 'lucide-react';
 import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 
-import { Select } from '@/components/Select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,7 +12,7 @@ import { AmountInput } from '@/components/AmountInput';
 import { insertTransferSchema } from '@/db/schema';
 import { DEFAULT_CURRENCY, convertAmountToMiliUnits, formatCurrency } from '@/lib/utils';
 import { DateTimePicker } from '@/components/ui-extended/Datepicker';
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { ResponsiveSelect } from '@/components/ResponsiveSelect';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { useGetCreditCardStatements } from '@/features/credit-cards/api/useGetCreditCardStatements';
 
@@ -143,12 +141,6 @@ export const TransferForm = ({ id, onSubmit, onDelete, disabled, defaultValues, 
     });
   };
 
-  const handleDelete = () => {
-    onDelete?.();
-  };
-
-  const isMobileDevice = isMobile();
-
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className='space-y-4 pt-4'>
@@ -170,30 +162,13 @@ export const TransferForm = ({ id, onSubmit, onDelete, disabled, defaultValues, 
             <FormItem>
               <FormLabel>Sender Account</FormLabel>
               <FormControl>
-                {isMobileDevice ? (
-                  <NativeSelect
-                    value={field.value ?? ''}
-                    onChange={field.onChange}
-                    disabled={disabled}
-                    className='w-full'
-                  >
-                    <NativeSelectOption value=''>Select Account</NativeSelectOption>
-                    {accountOptions.map(option => (
-                      <NativeSelectOption key={option.value} value={option.value}>
-                        {option.label}
-                      </NativeSelectOption>
-                    ))}
-                  </NativeSelect>
-                ) : (
-                  <Select
-                    value={field.value ?? ''}
-                    disabled={disabled}
-                    options={accountOptions}
-                    allowCreatingOptions={false}
-                    placeholder='Select Account'
-                    onChangeAction={field.onChange}
-                  />
-                )}
+                <ResponsiveSelect
+                  value={field.value ?? ''}
+                  options={accountOptions}
+                  placeholder='Select Account'
+                  disabled={disabled}
+                  onChangeAction={field.onChange}
+                />
               </FormControl>
             </FormItem>
           )}
@@ -205,30 +180,13 @@ export const TransferForm = ({ id, onSubmit, onDelete, disabled, defaultValues, 
             <FormItem>
               <FormLabel>Receiver Account</FormLabel>
               <FormControl>
-                {isMobileDevice ? (
-                  <NativeSelect
-                    value={field.value ?? ''}
-                    onChange={field.onChange}
-                    disabled={disabled}
-                    className='w-full'
-                  >
-                    <NativeSelectOption value=''>Select Account</NativeSelectOption>
-                    {accountOptions.map(option => (
-                      <NativeSelectOption key={option.value} value={option.value}>
-                        {option.label}
-                      </NativeSelectOption>
-                    ))}
-                  </NativeSelect>
-                ) : (
-                  <Select
-                    value={field.value ?? ''}
-                    disabled={disabled}
-                    options={accountOptions}
-                    allowCreatingOptions={false}
-                    placeholder='Select Account'
-                    onChangeAction={field.onChange}
-                  />
-                )}
+                <ResponsiveSelect
+                  value={field.value ?? ''}
+                  options={accountOptions}
+                  placeholder='Select Account'
+                  disabled={disabled}
+                  onChangeAction={field.onChange}
+                />
               </FormControl>
             </FormItem>
           )}
@@ -320,30 +278,13 @@ export const TransferForm = ({ id, onSubmit, onDelete, disabled, defaultValues, 
               <FormItem>
                 <FormLabel>Apply Payment To</FormLabel>
                 <FormControl>
-                  {isMobileDevice ? (
-                    <NativeSelect
-                      value={field.value ?? ''}
-                      onChange={field.onChange}
-                      disabled={disabled}
-                      className='w-full'
-                    >
-                      <NativeSelectOption value=''>Select Statement</NativeSelectOption>
-                      {statementOptions.map(option => (
-                        <NativeSelectOption key={option.value} value={option.value}>
-                          {option.label}
-                        </NativeSelectOption>
-                      ))}
-                    </NativeSelect>
-                  ) : (
-                    <Select
-                      value={field.value ?? ''}
-                      disabled={disabled}
-                      options={statementOptions}
-                      allowCreatingOptions={false}
-                      placeholder='Select Statement'
-                      onChangeAction={field.onChange}
-                    />
-                  )}
+                  <ResponsiveSelect
+                    value={field.value ?? ''}
+                    options={statementOptions}
+                    placeholder='Select Statement'
+                    disabled={disabled}
+                    onChangeAction={field.onChange}
+                  />
                 </FormControl>
               </FormItem>
             )}
@@ -359,7 +300,7 @@ export const TransferForm = ({ id, onSubmit, onDelete, disabled, defaultValues, 
           {id ? 'Save Changes' : 'Create Transfer'}
         </Button>
         {!!id && (
-          <Button type='button' disabled={disabled} onClick={handleDelete} className='w-full' variant='outline'>
+          <Button type='button' disabled={disabled} onClick={onDelete} className='w-full' variant='outline'>
             <Trash className='size-4 mr-2' />
             Delete Transfer
           </Button>

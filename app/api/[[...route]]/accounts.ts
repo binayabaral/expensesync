@@ -4,13 +4,33 @@ import { endOfDay, parse } from 'date-fns';
 import { getAuth } from '@hono/clerk-auth';
 import { createId } from '@paralleldrive/cuid2';
 import { zValidator } from '@hono/zod-validator';
-import { and, asc, eq, inArray, or } from 'drizzle-orm';
+import { and, asc, eq } from 'drizzle-orm';
 
 import { db } from '@/db/drizzle';
 import { DEFAULT_CURRENCY } from '@/lib/utils';
-import { SUPPORTED_CURRENCIES, accounts, insertAccountSchema, recurringPayments, transactions } from '@/db/schema';
+import { SUPPORTED_CURRENCIES, accounts, insertAccountSchema, transactions } from '@/db/schema';
 
-import { fetchAccountBalance } from '../utils/common';
+import { closeAccountsAndDeactivateRecurring, fetchAccountBalance } from '../utils/common';
+
+const ACCOUNT_SELECT_FIELDS = {
+  id: accounts.id,
+  name: accounts.name,
+  isHidden: accounts.isHidden,
+  accountType: accounts.accountType,
+  creditLimit: accounts.creditLimit,
+  apr: accounts.apr,
+  statementCloseDay: accounts.statementCloseDay,
+  statementCloseIsEom: accounts.statementCloseIsEom,
+  paymentDueDay: accounts.paymentDueDay,
+  paymentDueDays: accounts.paymentDueDays,
+  minimumPaymentPercentage: accounts.minimumPaymentPercentage,
+  loanSubType: accounts.loanSubType,
+  loanTenureMonths: accounts.loanTenureMonths,
+  emiIntervalMonths: accounts.emiIntervalMonths,
+  isClosed: accounts.isClosed,
+  closedAt: accounts.closedAt,
+  currency: accounts.currency
+} as const;
 
 const app = new Hono()
   .get(
@@ -30,25 +50,7 @@ const app = new Hono()
       }
 
       const data = await db
-        .select({
-          id: accounts.id,
-          name: accounts.name,
-          isHidden: accounts.isHidden,
-          accountType: accounts.accountType,
-          creditLimit: accounts.creditLimit,
-          apr: accounts.apr,
-          statementCloseDay: accounts.statementCloseDay,
-          statementCloseIsEom: accounts.statementCloseIsEom,
-          paymentDueDay: accounts.paymentDueDay,
-          paymentDueDays: accounts.paymentDueDays,
-          minimumPaymentPercentage: accounts.minimumPaymentPercentage,
-          loanSubType: accounts.loanSubType,
-          loanTenureMonths: accounts.loanTenureMonths,
-          emiIntervalMonths: accounts.emiIntervalMonths,
-          isClosed: accounts.isClosed,
-          closedAt: accounts.closedAt,
-          currency: accounts.currency
-        })
+        .select(ACCOUNT_SELECT_FIELDS)
         .from(accounts)
         .where(and(eq(accounts.userId, auth.userId), to ? undefined : eq(accounts.isDeleted, false)))
         .orderBy(asc(accounts.isHidden));
@@ -60,24 +62,20 @@ const app = new Hono()
       const result = await Promise.all(
         data.map(async item => {
           const [{ balance }] = await fetchAccountBalance(auth.userId, endDate, item.id, true);
-
-          return {
-            ...item,
-            balance
-          };
+          return { ...item, balance };
         })
       );
 
-    const sortedByAccountNameAndIsHidden = result.sort((a, b) => {
-      if (a.isHidden !== b.isHidden) {
-        return a.isHidden === false ? -1 : 1;
-      }
+      const sorted = result.sort((a, b) => {
+        if (a.isHidden !== b.isHidden) {
+          return a.isHidden === false ? -1 : 1;
+        }
+        return a.name.toLowerCase().localeCompare(b.name.toLocaleLowerCase());
+      });
 
-      return a.name.toLowerCase().localeCompare(b.name.toLocaleUpperCase());
-    });
-
-    return c.json({ data: sortedByAccountNameAndIsHidden });
-  })
+      return c.json({ data: sorted });
+    }
+  )
   .get(
     '/:id',
     zValidator(
@@ -99,25 +97,7 @@ const app = new Hono()
       }
 
       const [data] = await db
-        .select({
-          id: accounts.id,
-          name: accounts.name,
-          isHidden: accounts.isHidden,
-          accountType: accounts.accountType,
-          creditLimit: accounts.creditLimit,
-          apr: accounts.apr,
-          statementCloseDay: accounts.statementCloseDay,
-          statementCloseIsEom: accounts.statementCloseIsEom,
-          paymentDueDay: accounts.paymentDueDay,
-          paymentDueDays: accounts.paymentDueDays,
-          minimumPaymentPercentage: accounts.minimumPaymentPercentage,
-          loanSubType: accounts.loanSubType,
-          loanTenureMonths: accounts.loanTenureMonths,
-          emiIntervalMonths: accounts.emiIntervalMonths,
-          isClosed: accounts.isClosed,
-          closedAt: accounts.closedAt,
-          currency: accounts.currency
-        })
+        .select(ACCOUNT_SELECT_FIELDS)
         .from(accounts)
         .where(and(eq(accounts.userId, auth.userId), eq(accounts.id, id), eq(accounts.isDeleted, false)));
 
@@ -169,14 +149,15 @@ const app = new Hono()
     ),
     async c => {
       const auth = getAuth(c);
-      const values = c.req.valid('json');
 
       if (!auth?.userId) {
         return c.json({ error: 'Unauthorized' }, 401);
       }
 
+      const values = c.req.valid('json');
       const isCreditCard = values.accountType === 'CREDIT_CARD';
       const isLoan = values.accountType === 'LOAN';
+      const isEmiLoan = isLoan && values.loanSubType === 'EMI';
 
       const [insertedData] = await db
         .insert(accounts)
@@ -186,16 +167,16 @@ const app = new Hono()
           name: values.name,
           isHidden: values.isHidden,
           accountType: values.accountType,
-          creditLimit: isCreditCard ? values.creditLimit ?? null : null,
-          apr: isCreditCard ? values.apr ?? null : isLoan && values.loanSubType === 'EMI' ? values.apr ?? null : null,
-          statementCloseDay: isCreditCard ? values.statementCloseDay ?? null : null,
-          statementCloseIsEom: isCreditCard ? values.statementCloseIsEom ?? false : false,
-          paymentDueDay: isCreditCard ? values.paymentDueDay ?? null : isLoan && values.loanSubType === 'EMI' ? values.paymentDueDay ?? null : null,
-          paymentDueDays: isCreditCard ? values.paymentDueDays ?? null : null,
-          minimumPaymentPercentage: isCreditCard ? values.minimumPaymentPercentage ?? 2 : 2,
-          loanSubType: isLoan ? values.loanSubType ?? null : null,
-          loanTenureMonths: isLoan && values.loanSubType === 'EMI' ? values.loanTenureMonths ?? null : null,
-          emiIntervalMonths: isLoan && values.loanSubType === 'EMI' ? values.emiIntervalMonths ?? 1 : 1,
+          creditLimit: isCreditCard ? (values.creditLimit ?? null) : null,
+          apr: isCreditCard ? (values.apr ?? null) : isEmiLoan ? (values.apr ?? null) : null,
+          statementCloseDay: isCreditCard ? (values.statementCloseDay ?? null) : null,
+          statementCloseIsEom: isCreditCard ? (values.statementCloseIsEom ?? false) : false,
+          paymentDueDay: isCreditCard ? (values.paymentDueDay ?? null) : isEmiLoan ? (values.paymentDueDay ?? null) : null,
+          paymentDueDays: isCreditCard ? (values.paymentDueDays ?? null) : null,
+          minimumPaymentPercentage: isCreditCard ? (values.minimumPaymentPercentage ?? 2) : 2,
+          loanSubType: isLoan ? (values.loanSubType ?? null) : null,
+          loanTenureMonths: isEmiLoan ? (values.loanTenureMonths ?? null) : null,
+          emiIntervalMonths: isEmiLoan ? (values.emiIntervalMonths ?? 1) : 1,
           currency: values.currency ?? DEFAULT_CURRENCY
         })
         .returning();
@@ -228,28 +209,9 @@ const app = new Hono()
         return c.json({ error: 'Unauthorized' }, 401);
       }
 
-      const today = new Date().toISOString().split('T')[0];
-      
-      const [updatedAccount] = await db
-        .update(accounts)
-        .set({ isClosed: true, closedAt: today })
-        .where(and(eq(accounts.userId, auth.userId), inArray(accounts.id, values.ids)))
-        .returning({ id: accounts.id });
+      const closedAccounts = await closeAccountsAndDeactivateRecurring(auth.userId, values.ids);
 
-      // Deactivate linked recurring payment if any
-      const [linkedRecurringPayment] = await db
-        .select({ id: recurringPayments.id })
-        .from(recurringPayments)
-        .where(and(eq(recurringPayments.userId, auth.userId), or(inArray(recurringPayments.accountId, values.ids), inArray(recurringPayments.toAccountId, values.ids))));
-
-      if (linkedRecurringPayment) {
-        await db
-          .update(recurringPayments)
-          .set({ isActive: false })
-          .where(eq(recurringPayments.id, linkedRecurringPayment.id));
-      }
-
-      return c.json({ updatedAccount });
+      return c.json({ data: closedAccounts });
     }
   )
   .patch(
@@ -333,20 +295,20 @@ const app = new Hono()
         apr: isCreditCard ? values.apr : isEmi ? values.apr : values.accountType ? null : values.apr,
         statementCloseDay: isCreditCard ? values.statementCloseDay : values.accountType ? null : values.statementCloseDay,
         statementCloseIsEom: isCreditCard
-          ? values.statementCloseIsEom ?? false
+          ? (values.statementCloseIsEom ?? false)
           : values.accountType
           ? false
           : values.statementCloseIsEom,
         paymentDueDay: isCreditCard ? values.paymentDueDay : isEmi ? values.paymentDueDay : values.accountType ? null : values.paymentDueDay,
         paymentDueDays: isCreditCard ? values.paymentDueDays : values.accountType ? null : values.paymentDueDays,
         minimumPaymentPercentage: isCreditCard
-          ? values.minimumPaymentPercentage ?? 2
+          ? (values.minimumPaymentPercentage ?? 2)
           : values.accountType
           ? 2
           : values.minimumPaymentPercentage,
-        loanSubType: isLoan ? values.loanSubType ?? null : values.accountType ? null : values.loanSubType,
-        loanTenureMonths: isEmi ? values.loanTenureMonths ?? null : isLoan ? null : values.accountType ? null : values.loanTenureMonths,
-        emiIntervalMonths: isEmi ? values.emiIntervalMonths ?? 1 : 1
+        loanSubType: isLoan ? (values.loanSubType ?? null) : values.accountType ? null : values.loanSubType,
+        loanTenureMonths: isEmi ? (values.loanTenureMonths ?? null) : isLoan ? null : values.accountType ? null : values.loanTenureMonths,
+        emiIntervalMonths: isEmi ? (values.emiIntervalMonths ?? 1) : 1
       };
 
       const [data] = await db
@@ -382,32 +344,13 @@ const app = new Hono()
         return c.json({ error: 'Id is required' }, 400);
       }
 
-      const today = new Date().toISOString().split('T')[0];
-      
-      const [updatedAccount] = await db
-        .update(accounts)
-        .set({ isClosed: true, closedAt: today })
-        .where(and(eq(accounts.userId, auth.userId), eq(accounts.id, id)))
-        .returning({ id: accounts.id });
+      const [closed] = await closeAccountsAndDeactivateRecurring(auth.userId, [id]);
 
-      // Deactivate linked recurring payment if any
-      const [linkedRecurringPayment] = await db
-        .select({ id: recurringPayments.id })
-        .from(recurringPayments)
-        .where(and(eq(recurringPayments.userId, auth.userId), or(eq(recurringPayments.accountId, id), eq(recurringPayments.toAccountId, id))));
-
-      if (linkedRecurringPayment) {
-        await db
-          .update(recurringPayments)
-          .set({ isActive: false })
-          .where(eq(recurringPayments.id, linkedRecurringPayment.id));
-      }
-
-      if (!updatedAccount) {
+      if (!closed) {
         return c.json({ error: 'Not found' }, 404);
       }
 
-      return c.json({ data: updatedAccount });
+      return c.json({ data: closed });
     }
   );
 

@@ -2,13 +2,12 @@
 
 import { format } from 'date-fns';
 import { InferResponseType } from 'hono';
-import { ArrowUpDown } from 'lucide-react';
 import { ColumnDef } from '@tanstack/react-table';
 
 import { client } from '@/lib/hono';
-import { Button } from '@/components/ui/button';
 import { DEFAULT_CURRENCY, cn, formatCurrency } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
+import { SortableHeader } from '@/components/SortableHeader';
 
 import { Actions } from './Actions';
 
@@ -36,54 +35,22 @@ export const columns: ColumnDef<ResponseType>[] = [
   },
   {
     accessorKey: 'date',
-    header: ({ column }) => {
-      return (
-        <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-          Date
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
+    header: ({ column }) => <SortableHeader column={column} label='Date' />,
     cell: ({ row }) => <span>{format(row.getValue('date') as Date, 'dd MMMM, yyyy hh:mm a')}</span>
   },
   {
     accessorKey: 'fromAccount',
-    header: ({ column }) => {
-      return (
-        <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-          Sender Account
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      return <span>{row.original.fromAccount}</span>;
-    }
+    header: ({ column }) => <SortableHeader column={column} label='Sender Account' />,
+    cell: ({ row }) => <span>{row.original.fromAccount}</span>
   },
   {
     accessorKey: 'toAccount',
-    header: ({ column }) => {
-      return (
-        <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-          Receiver Account
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      return <span>{row.original.toAccount}</span>;
-    }
+    header: ({ column }) => <SortableHeader column={column} label='Receiver Account' />,
+    cell: ({ row }) => <span>{row.original.toAccount}</span>
   },
   {
     accessorKey: 'amount',
-    header: ({ column }) => {
-      return (
-        <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-          Amount
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
+    header: ({ column }) => <SortableHeader column={column} label='Amount' />,
     cell: ({ row }) => {
       const amount = parseFloat(row.getValue('amount'));
       const fromCurrency = row.original.fromAccountCurrency ?? DEFAULT_CURRENCY;
@@ -107,14 +74,7 @@ export const columns: ColumnDef<ResponseType>[] = [
   },
   {
     accessorKey: 'transferCharge',
-    header: ({ column }) => {
-      return (
-        <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-          Extra Charges
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
+    header: ({ column }) => <SortableHeader column={column} label='Extra Charges' />,
     cell: ({ row }) => {
       const charge = parseFloat(row.getValue('transferCharge'));
       const fromCurrency = row.original.fromAccountCurrency ?? DEFAULT_CURRENCY;
@@ -133,17 +93,8 @@ export const columns: ColumnDef<ResponseType>[] = [
   },
   {
     accessorKey: 'notes',
-    header: ({ column }) => {
-      return (
-        <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-          Notes
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      return <span>{row.original.notes}</span>;
-    }
+    header: ({ column }) => <SortableHeader column={column} label='Notes' />,
+    cell: ({ row }) => <span>{row.original.notes}</span>
   },
   {
     id: 'actions',

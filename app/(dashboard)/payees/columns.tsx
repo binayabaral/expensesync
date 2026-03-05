@@ -1,13 +1,12 @@
 'use client';
 
 import { InferResponseType } from 'hono';
-import { ArrowUpDown } from 'lucide-react';
 import { ColumnDef } from '@tanstack/react-table';
 
 import { client } from '@/lib/hono';
-import { Button } from '@/components/ui/button';
 import { cn, formatCurrency } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
+import { SortableHeader } from '@/components/SortableHeader';
 
 import { useSearchParams } from 'next/navigation';
 import { endOfDay, format, parse, startOfDay, startOfMonth, subMonths } from 'date-fns';
@@ -49,12 +48,7 @@ export const getBaseColumns = (startDate: Date, endDate: Date): ColumnDef<Respon
   },
   {
     accessorKey: 'payee',
-    header: ({ column }) => (
-      <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-        Payee
-        <ArrowUpDown className='ml-2 h-4 w-4' />
-      </Button>
-    ),
+    header: ({ column }) => <SortableHeader column={column} label='Payee' />,
     cell: ({ row }) => (
       <span
         className={cn(row.original.amount < (row.original.prevAmounts?.[0] ?? 0) ? 'text-destructive' : 'text-primary')}
@@ -66,12 +60,7 @@ export const getBaseColumns = (startDate: Date, endDate: Date): ColumnDef<Respon
   },
   {
     accessorKey: 'amount',
-    header: ({ column }) => (
-      <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-        {formatDateRange(startDate, endDate)}
-        <ArrowUpDown className='ml-2 h-4 w-4' />
-      </Button>
-    ),
+    header: ({ column }) => <SortableHeader column={column} label={formatDateRange(startDate, endDate)} />,
     cell: ({ row }) => (
       <span
         className={cn(
@@ -175,12 +164,7 @@ export const BuildColumns = (payees: ResponseType[]) => {
 
     return {
       accessorKey: `prevAmounts.${i}`,
-      header: ({ column }) => (
-        <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-          {formatDateRange(periodStart, periodEnd)}
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      ),
+      header: ({ column }) => <SortableHeader column={column} label={formatDateRange(periodStart, periodEnd)} />,
       cell: ({ row }) => {
         const value = row.original.prevAmounts?.[i] ?? 0;
         const prevValue = row.original.prevAmounts?.[i + 1] ?? 0;

@@ -8,7 +8,9 @@ import { and, count, eq, inArray, sql, sum } from 'drizzle-orm';
 import { db } from '@/db/drizzle';
 import { accounts, recurringPayments, transactions } from '@/db/schema';
 
-import { fetchAccountBalance } from '../utils/common';
+import { closeAccountsAndDeactivateRecurring, fetchAccountBalance } from '../utils/common';
+
+const TRANSFER_TYPES = ['PEER_TRANSFER', 'SELF_TRANSFER'] as ('PEER_TRANSFER' | 'SELF_TRANSFER')[];
 
 const app = new Hono()
   .get('/', async c => {
@@ -36,138 +38,153 @@ const app = new Hono()
       .from(accounts)
       .where(and(eq(accounts.userId, auth.userId), eq(accounts.accountType, 'LOAN'), eq(accounts.isDeleted, false)));
 
+    if (loanAccounts.length === 0) {
+      return c.json({ data: [] });
+    }
+
     const today = endOfDay(new Date());
+    const loanIds = loanAccounts.map(l => l.id);
 
-    const result = await Promise.all(
-      loanAccounts.map(async loan => {
-        const [{ balance: currentBalance }] = await fetchAccountBalance(auth.userId!, today, loan.id, true);
+    // Batch all per-loan queries to avoid N+1
+    const [
+      balances,
+      allTransferTxns,
+      allInitialBalanceTxns,
+      allPaymentAggs,
+      allLinkedPayments
+    ] = await Promise.all([
+      // Balance per loan
+      Promise.all(loanIds.map(id => fetchAccountBalance(auth.userId, today, id, true))),
 
-        // Payment history: all positive transfer transactions credited to this loan account
-        const paymentHistory = await db
-          .select({
-            id: transactions.id,
-            date: transactions.date,
-            amount: transactions.amount,
-            notes: transactions.notes
-          })
-          .from(transactions)
-          .where(
-            and(
-              eq(transactions.accountId, loan.id),
-              sql`${transactions.amount} > 0`,
-              inArray(transactions.type, ['PEER_TRANSFER', 'SELF_TRANSFER'])
-            )
+      // All transfer transactions (payments + borrowings) for all loans
+      db
+        .select({
+          id: transactions.id,
+          accountId: transactions.accountId,
+          date: transactions.date,
+          amount: transactions.amount,
+          notes: transactions.notes,
+          type: transactions.type
+        })
+        .from(transactions)
+        .where(and(inArray(transactions.accountId, loanIds), inArray(transactions.type, TRANSFER_TYPES)))
+        .orderBy(sql`${transactions.date} DESC`),
+
+      // Initial balance transactions for EMI loans
+      db
+        .select({ accountId: transactions.accountId, amount: transactions.amount, date: transactions.date })
+        .from(transactions)
+        .where(and(inArray(transactions.accountId, loanIds), eq(transactions.type, 'INITIAL_BALANCE'))),
+
+      // Payment aggregates (sum + count) for EMI loans
+      db
+        .select({
+          accountId: transactions.accountId,
+          amountPaid: sum(transactions.amount).mapWith(Number),
+          paymentCount: count(transactions.id)
+        })
+        .from(transactions)
+        .where(
+          and(
+            inArray(transactions.accountId, loanIds),
+            sql`${transactions.amount} > 0`,
+            inArray(transactions.type, TRANSFER_TYPES)
           )
-          .orderBy(sql`${transactions.date} DESC`);
+        )
+        .groupBy(transactions.accountId),
 
-        // Borrowing history: negative transfer transactions (new disbursements / top-ups)
-        const borrowingHistory = await db
-          .select({
-            id: transactions.id,
-            date: transactions.date,
-            amount: transactions.amount,
-            notes: transactions.notes
-          })
-          .from(transactions)
-          .where(
-            and(
-              eq(transactions.accountId, loan.id),
-              sql`${transactions.amount} < 0`,
-              inArray(transactions.type, ['PEER_TRANSFER', 'SELF_TRANSFER'])
-            )
-          )
-          .orderBy(sql`${transactions.date} DESC`);
+      // Linked recurring payments for all loans
+      db
+        .select({
+          id: recurringPayments.id,
+          name: recurringPayments.name,
+          amount: recurringPayments.amount,
+          transferCharge: recurringPayments.transferCharge,
+          cadence: recurringPayments.cadence,
+          dayOfMonth: recurringPayments.dayOfMonth,
+          month: recurringPayments.month,
+          intervalMonths: recurringPayments.intervalMonths,
+          isActive: recurringPayments.isActive,
+          toAccountId: recurringPayments.toAccountId
+        })
+        .from(recurringPayments)
+        .where(and(eq(recurringPayments.userId, auth.userId), inArray(recurringPayments.toAccountId, loanIds)))
+    ]);
 
-        if (loan.loanSubType !== 'EMI') {
-          const allTxDates = [...paymentHistory, ...borrowingHistory].map(t => new Date(t.date).getTime());
-          const loanStartDate = allTxDates.length > 0 ? new Date(Math.min(...allTxDates)) : null;
-          return {
-            ...loan,
-            currentBalance: currentBalance ?? 0,
-            originalPrincipal: null,
-            amountPaid: null,
-            paymentCount: null,
-            totalPayments: null,
-            progressPercentage: null,
-            linkedRecurringPayment: null,
-            loanStartDate,
-            paymentHistory,
-            borrowingHistory
-          };
-        }
+    // Index batched results by accountId for O(1) lookup
+    const balanceByLoanId = Object.fromEntries(loanIds.map((id, i) => [id, balances[i][0]?.balance ?? 0]));
 
-        // EMI-specific: derive originalPrincipal from INITIAL_BALANCE transaction
-        const [initialBalanceTx] = await db
-          .select({ amount: transactions.amount, date: transactions.date })
-          .from(transactions)
-          .where(and(eq(transactions.accountId, loan.id), eq(transactions.type, 'INITIAL_BALANCE')));
+    const paymentsByLoanId = allTransferTxns.filter(t => t.amount > 0).reduce<Record<string, typeof allTransferTxns>>(
+      (acc, t) => { (acc[t.accountId] ??= []).push(t); return acc; }, {}
+    );
+    const borrowingsByLoanId = allTransferTxns.filter(t => t.amount < 0).reduce<Record<string, typeof allTransferTxns>>(
+      (acc, t) => { (acc[t.accountId] ??= []).push(t); return acc; }, {}
+    );
+    const initialBalanceByLoanId = Object.fromEntries(allInitialBalanceTxns.map(t => [t.accountId, t]));
+    const paymentAggByLoanId = Object.fromEntries(allPaymentAggs.map(a => [a.accountId, a]));
+    const linkedPaymentByLoanId = Object.fromEntries(
+      allLinkedPayments.map(p => [p.toAccountId!, p])
+    );
 
-        const originalPrincipal = initialBalanceTx ? Math.abs(initialBalanceTx.amount) : 0;
+    const result = loanAccounts.map(loan => {
+      const currentBalance = balanceByLoanId[loan.id] ?? 0;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const paymentHistory = (paymentsByLoanId[loan.id] ?? []).map(({ type: _type, accountId: _acc, ...rest }) => rest);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const borrowingHistory = (borrowingsByLoanId[loan.id] ?? []).map(({ type: _type, accountId: _acc, ...rest }) => rest);
 
-        // amountPaid and paymentCount from positive transfer transactions
-        const [paymentAgg] = await db
-          .select({
-            amountPaid: sum(transactions.amount).mapWith(Number),
-            paymentCount: count(transactions.id)
-          })
-          .from(transactions)
-          .where(
-            and(
-              eq(transactions.accountId, loan.id),
-              sql`${transactions.amount} > 0`,
-              inArray(transactions.type, ['PEER_TRANSFER', 'SELF_TRANSFER'])
-            )
-          );
-
-        const amountPaid = paymentAgg?.amountPaid ?? 0;
-        const paymentCount = paymentAgg?.paymentCount ?? 0;
-
-        // Use count-based progress when loanTenureMonths is set (most accurate for fixed-term loans)
-        // Falls back to amount-based when tenure is unknown
-        const emiIntervalMonths = loan.emiIntervalMonths ?? 1;
-        const progressPercentage = (() => {
-          if (loan.loanTenureMonths && loan.loanTenureMonths > 0) {
-            return paymentCount / (loan.loanTenureMonths / emiIntervalMonths);
-          }
-          // Use current balance so top-ups are reflected in progress
-          const remaining = Math.abs(currentBalance ?? 0);
-          const total = amountPaid + remaining;
-          return total > 0 ? amountPaid / total : 0;
-        })();
-
-        // Linked recurring payment: first where toAccountId = loan.id
-        const [linkedRecurringPayment] = await db
-          .select({
-            id: recurringPayments.id,
-            name: recurringPayments.name,
-            amount: recurringPayments.amount,
-            transferCharge: recurringPayments.transferCharge,
-            cadence: recurringPayments.cadence,
-            dayOfMonth: recurringPayments.dayOfMonth,
-            month: recurringPayments.month,
-            intervalMonths: recurringPayments.intervalMonths,
-            isActive: recurringPayments.isActive
-          })
-          .from(recurringPayments)
-          .where(and(eq(recurringPayments.userId, auth.userId!), eq(recurringPayments.toAccountId, loan.id)));
-
-        const totalPayments = loan.loanTenureMonths ? Math.round(loan.loanTenureMonths / emiIntervalMonths) : null;
-
+      if (loan.loanSubType !== 'EMI') {
+        const allTxDates = [...paymentHistory, ...borrowingHistory].map(t => new Date(t.date).getTime());
+        const loanStartDate = allTxDates.length > 0 ? new Date(Math.min(...allTxDates)) : null;
         return {
           ...loan,
-          currentBalance: currentBalance ?? 0,
-          originalPrincipal,
-          amountPaid,
-          paymentCount,
-          totalPayments,
-          progressPercentage,
-          linkedRecurringPayment: linkedRecurringPayment ?? null,
-          loanStartDate: initialBalanceTx?.date ?? null,
+          currentBalance,
+          originalPrincipal: null,
+          amountPaid: null,
+          paymentCount: null,
+          totalPayments: null,
+          progressPercentage: null,
+          linkedRecurringPayment: null,
+          loanStartDate,
           paymentHistory,
           borrowingHistory
         };
-      })
-    );
+      }
+
+      const initialBalanceTx = initialBalanceByLoanId[loan.id];
+      const originalPrincipal = initialBalanceTx ? Math.abs(initialBalanceTx.amount) : 0;
+
+      const paymentAgg = paymentAggByLoanId[loan.id];
+      const amountPaid = paymentAgg?.amountPaid ?? 0;
+      const paymentCount = paymentAgg?.paymentCount ?? 0;
+
+      const emiIntervalMonths = loan.emiIntervalMonths ?? 1;
+      const progressPercentage = (() => {
+        if (loan.loanTenureMonths && loan.loanTenureMonths > 0) {
+          return paymentCount / (loan.loanTenureMonths / emiIntervalMonths);
+        }
+        const remaining = Math.abs(currentBalance);
+        const total = amountPaid + remaining;
+        return total > 0 ? amountPaid / total : 0;
+      })();
+
+      const linkedRecurringPayment = linkedPaymentByLoanId[loan.id] ?? null;
+      const totalPayments = loan.loanTenureMonths ? Math.round(loan.loanTenureMonths / emiIntervalMonths) : null;
+
+      return {
+        ...loan,
+        currentBalance,
+        originalPrincipal,
+        amountPaid,
+        paymentCount,
+        totalPayments,
+        progressPercentage,
+        linkedRecurringPayment,
+        loanStartDate: initialBalanceTx?.date ?? null,
+        paymentHistory,
+        borrowingHistory
+      };
+    });
 
     return c.json({ data: result });
   })
@@ -195,28 +212,9 @@ const app = new Hono()
         return c.json({ error: 'Only loan accounts can be closed' }, 400);
       }
 
-      const today = new Date().toISOString().split('T')[0];
+      const [closed] = await closeAccountsAndDeactivateRecurring(auth.userId, [id]);
 
-      const [updatedAccount] = await db
-        .update(accounts)
-        .set({ isClosed: true, closedAt: today })
-        .where(and(eq(accounts.userId, auth.userId), eq(accounts.id, id)))
-        .returning();
-
-      // Deactivate linked recurring payment if any
-      const [linkedRecurringPayment] = await db
-        .select({ id: recurringPayments.id })
-        .from(recurringPayments)
-        .where(and(eq(recurringPayments.userId, auth.userId), eq(recurringPayments.toAccountId, id)));
-
-      if (linkedRecurringPayment) {
-        await db
-          .update(recurringPayments)
-          .set({ isActive: false })
-          .where(eq(recurringPayments.id, linkedRecurringPayment.id));
-      }
-
-      return c.json({ data: updatedAccount });
+      return c.json({ data: closed });
     }
   );
 

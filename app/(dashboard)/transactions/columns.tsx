@@ -3,12 +3,12 @@
 import { format } from 'date-fns';
 import { InferResponseType } from 'hono';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, TriangleAlert } from 'lucide-react';
+import { TriangleAlert } from 'lucide-react';
 
 import { client } from '@/lib/hono';
-import { Button } from '@/components/ui/button';
 import { DEFAULT_CURRENCY, cn, formatCurrency } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
+import { SortableHeader } from '@/components/SortableHeader';
 
 import { Actions } from './Actions';
 
@@ -36,26 +36,12 @@ export const columns: ColumnDef<ResponseType>[] = [
   },
   {
     accessorKey: 'date',
-    header: ({ column }) => {
-      return (
-        <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-          Date
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
+    header: ({ column }) => <SortableHeader column={column} label='Date' />,
     cell: ({ row }) => <span>{format(row.getValue('date') as Date, 'dd MMMM, yyyy hh:mm a')}</span>
   },
   {
     accessorKey: 'category',
-    header: ({ column }) => {
-      return (
-        <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-          Category
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
+    header: ({ column }) => <SortableHeader column={column} label='Category' />,
     cell: ({ row }) => (
       <div>
         {row.original.type !== 'USER_CREATED' ? (
@@ -73,25 +59,11 @@ export const columns: ColumnDef<ResponseType>[] = [
   },
   {
     accessorKey: 'payee',
-    header: ({ column }) => {
-      return (
-        <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-          Payee
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    }
+    header: ({ column }) => <SortableHeader column={column} label='Payee' />
   },
   {
     accessorKey: 'amount',
-    header: ({ column }) => {
-      return (
-        <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-          Amount
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
+    header: ({ column }) => <SortableHeader column={column} label='Amount' />,
     cell: ({ row }) => {
       const amount = parseFloat(row.getValue('amount'));
       const currency = row.original.accountCurrency ?? DEFAULT_CURRENCY;
@@ -105,31 +77,13 @@ export const columns: ColumnDef<ResponseType>[] = [
   },
   {
     accessorKey: 'account',
-    header: ({ column }) => {
-      return (
-        <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-          Account
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      return <span>{row.original.account}</span>;
-    }
+    header: ({ column }) => <SortableHeader column={column} label='Account' />,
+    cell: ({ row }) => <span>{row.original.account}</span>
   },
   {
     accessorKey: 'notes',
-    header: ({ column }) => {
-      return (
-        <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-          Notes
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      return <span>{row.original.notes}</span>;
-    }
+    header: ({ column }) => <SortableHeader column={column} label='Notes' />,
+    cell: ({ row }) => <span>{row.original.notes}</span>
   },
   {
     id: 'actions',

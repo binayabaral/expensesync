@@ -1,18 +1,16 @@
 import { z } from 'zod';
-import isMobile from 'is-mobile';
 import { Trash } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import { Select } from '@/components/Select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { insertTransactionSchema } from '@/db/schema';
 import { DEFAULT_CURRENCY, convertAmountToMiliUnits } from '@/lib/utils';
 import { AmountInput } from '@/components/AmountInput';
+import { ResponsiveSelect } from '@/components/ResponsiveSelect';
 import { DateTimePicker } from '@/components/ui-extended/Datepicker';
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 
 const formSchema = z.object({
@@ -68,12 +66,6 @@ export const TransactionForm = ({
     onSubmit({ ...values, amount: amountInMiliUnits, date: new Date(values.date) });
   };
 
-  const handleDelete = () => {
-    onDelete?.();
-  };
-
-  const isMobileDevice = isMobile();
-
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className='space-y-4 pt-4'>
@@ -95,25 +87,13 @@ export const TransactionForm = ({
             <FormItem>
               <FormLabel>Account</FormLabel>
               <FormControl>
-                {isMobileDevice ? (
-                  <NativeSelect value={field.value} onChange={field.onChange} disabled={disabled} className='w-full'>
-                    <NativeSelectOption value=''>Select Account</NativeSelectOption>
-                    {accountOptions.map(option => (
-                      <NativeSelectOption key={option.value} value={option.value}>
-                        {option.label}
-                      </NativeSelectOption>
-                    ))}
-                  </NativeSelect>
-                ) : (
-                  <Select
-                    value={field.value}
-                    disabled={disabled}
-                    options={accountOptions}
-                    allowCreatingOptions={false}
-                    placeholder='Select Account'
-                    onChangeAction={field.onChange}
-                  />
-                )}
+                <ResponsiveSelect
+                  value={field.value}
+                  options={accountOptions}
+                  placeholder='Select Account'
+                  disabled={disabled}
+                  onChangeAction={field.onChange}
+                />
               </FormControl>
             </FormItem>
           )}
@@ -125,31 +105,15 @@ export const TransactionForm = ({
             <FormItem>
               <FormLabel>Category</FormLabel>
               <FormControl>
-                {isMobileDevice ? (
-                  <NativeSelect
-                    value={field.value ?? ''}
-                    onChange={field.onChange}
-                    disabled={disabled}
-                    className='w-full'
-                  >
-                    <NativeSelectOption value=''>Select Category</NativeSelectOption>
-                    {categoryOptions.map(option => (
-                      <NativeSelectOption key={option.value} value={option.value}>
-                        {option.label}
-                      </NativeSelectOption>
-                    ))}
-                  </NativeSelect>
-                ) : (
-                  <Select
-                    value={field.value ?? ''}
-                    disabled={disabled}
-                    options={categoryOptions}
-                    allowCreatingOptions={false}
-                    onCreate={onCreateCategory}
-                    placeholder='Select Category'
-                    onChangeAction={field.onChange}
-                  />
-                )}
+                <ResponsiveSelect
+                  value={field.value ?? ''}
+                  options={categoryOptions}
+                  placeholder='Select Category'
+                  disabled={disabled}
+                  allowCreatingOptions
+                  onCreate={onCreateCategory}
+                  onChangeAction={field.onChange}
+                />
               </FormControl>
             </FormItem>
           )}
@@ -194,7 +158,7 @@ export const TransactionForm = ({
           {id ? 'Save Changes' : 'Create Transaction'}
         </Button>
         {!!id && (
-          <Button type='button' disabled={disabled} onClick={handleDelete} className='w-full' variant='outline'>
+          <Button type='button' disabled={disabled} onClick={onDelete} className='w-full' variant='outline'>
             <Trash className='size-4 mr-2' />
             Delete Transaction
           </Button>

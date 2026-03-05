@@ -2,17 +2,25 @@
 
 import { client } from '@/lib/hono';
 import { InferResponseType } from 'hono';
-import { ArrowUpDown } from 'lucide-react';
 import { ColumnDef } from '@tanstack/react-table';
 
 import { DEFAULT_CURRENCY, cn, formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { SortableHeader } from '@/components/SortableHeader';
 
 import { Actions } from './Actions';
 
 export type ResponseType = InferResponseType<typeof client.api.accounts.$get, 200>['data'][0];
+
+const formatAccountType = (accountType: string | null): string => {
+  if (!accountType) return 'Cash';
+  return accountType
+    .toLowerCase()
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
 
 export const columns: ColumnDef<ResponseType>[] = [
   {
@@ -36,14 +44,7 @@ export const columns: ColumnDef<ResponseType>[] = [
   },
   {
     accessorKey: 'name',
-    header: ({ column }) => {
-      return (
-        <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-          Name
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
+    header: ({ column }) => <SortableHeader column={column} label='Name' />,
     cell: ({ row }) => (
       <span className='flex items-center gap-2'>
         <span
@@ -74,14 +75,7 @@ export const columns: ColumnDef<ResponseType>[] = [
   },
   {
     accessorKey: 'balance',
-    header: ({ column }) => {
-      return (
-        <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-          Available Balance
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
+    header: ({ column }) => <SortableHeader column={column} label='Available Balance' />,
     cell: ({ row }) => (
       <span
         className={cn(
@@ -99,21 +93,10 @@ export const columns: ColumnDef<ResponseType>[] = [
   },
   {
     accessorKey: 'accountType',
-    header: ({ column }) => (
-      <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-        Type
-        <ArrowUpDown className='ml-2 h-4 w-4' />
-      </Button>
-    ),
+    header: ({ column }) => <SortableHeader column={column} label='Type' />,
     cell: ({ row }) => (
       <span className='whitespace-nowrap text-muted-foreground'>
-        {row.original.accountType
-          ? row.original.accountType
-              .toLowerCase()
-              .split('_')
-              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-              .join(' ')
-          : 'Cash'}
+        {formatAccountType(row.original.accountType)}
       </span>
     )
   },

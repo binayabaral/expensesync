@@ -3,11 +3,10 @@
 import { format } from 'date-fns';
 import { InferResponseType } from 'hono';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown } from 'lucide-react';
 
 import { client } from '@/lib/hono';
-import { Button } from '@/components/ui/button';
 import { DEFAULT_CURRENCY, cn, formatCurrency, formatRemainingTime } from '@/lib/utils';
+import { SortableHeader } from '@/components/SortableHeader';
 
 import { Actions } from './Actions';
 
@@ -19,30 +18,15 @@ export type ResponseType = InferResponseType<
 export const columns: ColumnDef<ResponseType>[] = [
   {
     accessorKey: 'name',
-    header: ({ column }) => (
-      <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-        Name
-        <ArrowUpDown className='ml-2 h-4 w-4' />
-      </Button>
-    )
+    header: ({ column }) => <SortableHeader column={column} label='Name' />
   },
   {
     accessorKey: 'type',
-    header: ({ column }) => (
-      <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-        Type
-        <ArrowUpDown className='ml-2 h-4 w-4' />
-      </Button>
-    )
+    header: ({ column }) => <SortableHeader column={column} label='Type' />
   },
   {
     accessorKey: 'cadence',
-    header: ({ column }) => (
-      <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-        Cadence
-        <ArrowUpDown className='ml-2 h-4 w-4' />
-      </Button>
-    ),
+    header: ({ column }) => <SortableHeader column={column} label='Cadence' />,
     cell: ({ row }) => {
       const cadence = row.original.cadence;
       const interval = row.original.intervalMonths ?? 1;
@@ -54,12 +38,7 @@ export const columns: ColumnDef<ResponseType>[] = [
   },
   {
     accessorKey: 'nextDueDate',
-    header: ({ column }) => (
-      <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-        Next Due
-        <ArrowUpDown className='ml-2 h-4 w-4' />
-      </Button>
-    ),
+    header: ({ column }) => <SortableHeader column={column} label='Next Due' />,
     cell: ({ row }) => {
       const value = row.original.nextDueDate ? new Date(row.original.nextDueDate) : null;
       return value ? <span>{format(value, 'dd MMM, yyyy')}</span> : <span>N/A</span>;
@@ -67,33 +46,27 @@ export const columns: ColumnDef<ResponseType>[] = [
   },
   {
     accessorKey: 'daysRemaining',
-    header: ({ column }) => (
-      <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-        Days Left
-        <ArrowUpDown className='ml-2 h-4 w-4' />
-      </Button>
-    ),
+    header: ({ column }) => <SortableHeader column={column} label='Days Left' />,
     cell: ({ row }) => {
       const days = row.original.daysRemaining ?? 0;
       const isYearly = row.original.cadence === 'YEARLY';
       const warningThreshold = isYearly ? 30 : 10;
       const dueDate = row.original.nextDueDate ? new Date(row.original.nextDueDate) : null;
 
-      return <span className={cn({
-        'text-destructive': days < 0,
-        'text-yellow-500': days >= 0 && days <= warningThreshold,
-        'text-primary': days > warningThreshold
-      })}>{formatRemainingTime(days, dueDate)}</span>;
+      return (
+        <span className={cn({
+          'text-destructive': days < 0,
+          'text-yellow-500': days >= 0 && days <= warningThreshold,
+          'text-primary': days > warningThreshold
+        })}>
+          {formatRemainingTime(days, dueDate)}
+        </span>
+      );
     }
   },
   {
     accessorKey: 'amount',
-    header: ({ column }) => (
-      <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-        Amount
-        <ArrowUpDown className='ml-2 h-4 w-4' />
-      </Button>
-    ),
+    header: ({ column }) => <SortableHeader column={column} label='Amount' />,
     cell: ({ row }) => {
       const amount = row.original.amount ?? 0;
       const currency = row.original.accountCurrency ?? DEFAULT_CURRENCY;
@@ -113,7 +86,6 @@ export const columns: ColumnDef<ResponseType>[] = [
           </span>
         );
       }
-
       return <span>{row.original.account || 'N/A'}</span>;
     }
   },

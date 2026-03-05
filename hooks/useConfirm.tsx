@@ -10,6 +10,35 @@ import {
   DialogDescription
 } from '@/components/ui/dialog';
 
+type ConfirmDialogProps = {
+  open: boolean;
+  title: string;
+  message: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+};
+
+// Defined outside the hook so React sees a stable component type across renders.
+// Defining it inside would cause unmount/remount on every parent re-render.
+function ConfirmationDialog({ open, title, message, onConfirm, onCancel }: ConfirmDialogProps) {
+  return (
+    <Dialog open={open}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{message}</DialogDescription>
+        </DialogHeader>
+        <DialogFooter className='pt-2'>
+          <Button onClick={onCancel} variant='outline'>
+            Cancel
+          </Button>
+          <Button onClick={onConfirm}>Confirm</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export const useConfirm = (title: string, message: string): [() => JSX.Element, () => Promise<unknown>] => {
   const [promise, setPromise] = useState<{ resolve: (value: boolean) => void } | null>(null);
 
@@ -18,9 +47,7 @@ export const useConfirm = (title: string, message: string): [() => JSX.Element, 
       setPromise({ resolve });
     });
 
-  const handleClose = () => {
-    setPromise(null);
-  };
+  const handleClose = () => setPromise(null);
 
   const handleConfirm = () => {
     promise?.resolve(true);
@@ -32,22 +59,15 @@ export const useConfirm = (title: string, message: string): [() => JSX.Element, 
     handleClose();
   };
 
-  const ConfirmationDialog = () => (
-    <Dialog open={promise !== null}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{message}</DialogDescription>
-        </DialogHeader>
-        <DialogFooter className='pt-2'>
-          <Button onClick={handleCancel} variant='outline'>
-            Cancel
-          </Button>
-          <Button onClick={handleConfirm}>Confirm</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+  const ConfirmDialog = () => (
+    <ConfirmationDialog
+      open={promise !== null}
+      title={title}
+      message={message}
+      onConfirm={handleConfirm}
+      onCancel={handleCancel}
+    />
   );
 
-  return [ConfirmationDialog, confirm];
+  return [ConfirmDialog, confirm];
 };

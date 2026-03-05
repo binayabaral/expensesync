@@ -1,17 +1,16 @@
 'use client';
 
 import { InferResponseType } from 'hono';
-import { ArrowUpDown } from 'lucide-react';
 import { ColumnDef } from '@tanstack/react-table';
-
-import { client } from '@/lib/hono';
-import { Button } from '@/components/ui/button';
-import { cn, formatCurrency } from '@/lib/utils';
-import { Checkbox } from '@/components/ui/checkbox';
-
-import { Actions } from './Actions';
 import { useSearchParams } from 'next/navigation';
 import { endOfDay, format, parse, startOfDay, startOfMonth, subMonths } from 'date-fns';
+
+import { client } from '@/lib/hono';
+import { cn, formatCurrency } from '@/lib/utils';
+import { Checkbox } from '@/components/ui/checkbox';
+import { SortableHeader } from '@/components/SortableHeader';
+
+import { Actions } from './Actions';
 
 export type ResponseType = InferResponseType<(typeof client.api.categories)['with-expenses']['$get'], 200>['data'][0];
 
@@ -50,16 +49,9 @@ export const getBaseColumns = (startDate: Date, endDate: Date): ColumnDef<Respon
   },
   {
     accessorKey: 'name',
-    header: ({ column }) => (
-      <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-        Name
-        <ArrowUpDown className='ml-2 h-4 w-4' />
-      </Button>
-    ),
+    header: ({ column }) => <SortableHeader column={column} label='Name' />,
     cell: ({ row }) => (
-      <span
-        className={cn(row.original.amount < (row.original.prevAmounts?.[0] ?? 0) ? 'text-destructive' : 'text-primary')}
-      >
+      <span className={cn(row.original.amount < (row.original.prevAmounts?.[0] ?? 0) ? 'text-destructive' : 'text-primary')}>
         {row.original.name}
       </span>
     ),
@@ -67,19 +59,9 @@ export const getBaseColumns = (startDate: Date, endDate: Date): ColumnDef<Respon
   },
   {
     accessorKey: 'amount',
-    header: ({ column }) => (
-      <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-        {formatDateRange(startDate, endDate)}
-        <ArrowUpDown className='ml-2 h-4 w-4' />
-      </Button>
-    ),
+    header: ({ column }) => <SortableHeader column={column} label={formatDateRange(startDate, endDate)} />,
     cell: ({ row }) => (
-      <span
-        className={cn(
-          'whitespace-nowrap',
-          row.original.amount < (row.original.prevAmounts?.[0] ?? 0) ? 'text-destructive' : 'text-primary'
-        )}
-      >
+      <span className={cn('whitespace-nowrap', row.original.amount < (row.original.prevAmounts?.[0] ?? 0) ? 'text-destructive' : 'text-primary')}>
         {formatCurrency(row.original.amount)}
       </span>
     ),
@@ -91,61 +73,34 @@ export const getBaseColumns = (startDate: Date, endDate: Date): ColumnDef<Respon
           } else {
             acc.expense += row.original.amount;
           }
-
           return acc;
         },
         { income: 0, expense: 0 }
       );
-      const prevTotal =
-        table.getPreFilteredRowModel().rows.reduce(
-          (acc, row) => {
-            const prevAmount = row.original.prevAmounts?.[0] ?? 0;
-            if (prevAmount >= 0) {
-              acc.income += prevAmount;
-            } else {
-              acc.expense += prevAmount;
-            }
-
-            return acc;
-          },
-          { income: 0, expense: 0 }
-        ) || total;
+      const prevTotal = table.getPreFilteredRowModel().rows.reduce(
+        (acc, row) => {
+          const prevAmount = row.original.prevAmounts?.[0] ?? 0;
+          if (prevAmount >= 0) {
+            acc.income += prevAmount;
+          } else {
+            acc.expense += prevAmount;
+          }
+          return acc;
+        },
+        { income: 0, expense: 0 }
+      ) || total;
 
       return (
         <>
-          <div
-            className={cn(
-              total.income === prevTotal.income
-                ? 'text-muted-foreground'
-                : total.income < prevTotal.income
-                ? 'text-destructive'
-                : 'text-primary'
-            )}
-          >
+          <div className={cn(total.income === prevTotal.income ? 'text-muted-foreground' : total.income < prevTotal.income ? 'text-destructive' : 'text-primary')}>
             <span className='mr-1 inline-block min-w-8'>Inc:</span>
             <span className='inline-block'>{formatCurrency(total.income)}</span>
           </div>
-          <div
-            className={cn(
-              total.expense === prevTotal.expense
-                ? 'text-muted-foreground'
-                : total.expense < prevTotal.expense
-                ? 'text-destructive'
-                : 'text-primary'
-            )}
-          >
+          <div className={cn(total.expense === prevTotal.expense ? 'text-muted-foreground' : total.expense < prevTotal.expense ? 'text-destructive' : 'text-primary')}>
             <span className='mr-1 inline-block min-w-8'>Exp:</span>
             <span className='inline-block'>{formatCurrency(total.expense)}</span>
           </div>
-          <div
-            className={cn(
-              total.income + total.expense === prevTotal.income + prevTotal.expense
-                ? 'text-muted-foreground'
-                : total.income + total.expense < prevTotal.income + prevTotal.expense
-                ? 'text-destructive'
-                : 'text-primary'
-            )}
-          >
+          <div className={cn(total.income + total.expense === prevTotal.income + prevTotal.expense ? 'text-muted-foreground' : total.income + total.expense < prevTotal.income + prevTotal.expense ? 'text-destructive' : 'text-primary')}>
             <span className='mr-1 inline-block min-w-8'>Net:</span>
             <span className='inline-block'>{formatCurrency(total.income + total.expense)}</span>
           </div>
@@ -172,21 +127,13 @@ export const BuildColumns = (data: ResponseType[]): ColumnDef<ResponseType>[] =>
   const prevColumns: ColumnDef<ResponseType>[] = Array.from({ length: maxPeriods }).map((_, i) => ({
     id: `prev-${i}`,
     header: ({ column }) => (
-      <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-        {formatDateRange(subMonths(startDate, i + 1), subMonths(endDate, i + 1))}
-        <ArrowUpDown className='ml-2 h-4 w-4' />
-      </Button>
+      <SortableHeader column={column} label={formatDateRange(subMonths(startDate, i + 1), subMonths(endDate, i + 1))} />
     ),
     cell: ({ row }) => {
       const value = row.original.prevAmounts?.[i] ?? 0;
       const prevValue = row.original.prevAmounts?.[i + 1] ?? value;
       return (
-        <span
-          className={cn(
-            'whitespace-nowrap',
-            value < prevValue ? 'text-destructive' : value === prevValue ? 'text-muted-foreground' : 'text-primary'
-          )}
-        >
+        <span className={cn('whitespace-nowrap', value < prevValue ? 'text-destructive' : value === prevValue ? 'text-muted-foreground' : 'text-primary')}>
           {value != null ? formatCurrency(value) : '-'}
         </span>
       );
@@ -195,66 +142,31 @@ export const BuildColumns = (data: ResponseType[]): ColumnDef<ResponseType>[] =>
       const total = table.getFilteredRowModel().rows.reduce(
         (acc, row) => {
           const val = row.original.prevAmounts?.[i] ?? 0;
-          if (val >= 0) {
-            acc.income += val;
-          } else {
-            acc.expense += val;
-          }
-
+          if (val >= 0) { acc.income += val; } else { acc.expense += val; }
           return acc;
         },
         { income: 0, expense: 0 }
       );
-      const prevTotal =
-        table.getPreFilteredRowModel().rows.reduce(
-          (acc, row) => {
-            const prevVal = row.original.prevAmounts?.[i + 1] ?? row.original.prevAmounts?.[i] ?? 0;
-            if (prevVal >= 0) {
-              acc.income += prevVal;
-            } else {
-              acc.expense += prevVal;
-            }
-
-            return acc;
-          },
-          { income: 0, expense: 0 }
-        ) || total;
+      const prevTotal = table.getPreFilteredRowModel().rows.reduce(
+        (acc, row) => {
+          const prevVal = row.original.prevAmounts?.[i + 1] ?? row.original.prevAmounts?.[i] ?? 0;
+          if (prevVal >= 0) { acc.income += prevVal; } else { acc.expense += prevVal; }
+          return acc;
+        },
+        { income: 0, expense: 0 }
+      ) || total;
 
       return (
         <>
-          <div
-            className={cn(
-              total.income === prevTotal.income
-                ? 'text-muted-foreground'
-                : total.income < prevTotal.income
-                ? 'text-destructive'
-                : 'text-primary'
-            )}
-          >
+          <div className={cn(total.income === prevTotal.income ? 'text-muted-foreground' : total.income < prevTotal.income ? 'text-destructive' : 'text-primary')}>
             <span className='mr-1 inline-block min-w-8'>Inc:</span>
             <span className='inline-block'>{formatCurrency(total.income)}</span>
           </div>
-          <div
-            className={cn(
-              total.expense === prevTotal.expense
-                ? 'text-muted-foreground'
-                : total.expense < prevTotal.expense
-                ? 'text-destructive'
-                : 'text-primary'
-            )}
-          >
+          <div className={cn(total.expense === prevTotal.expense ? 'text-muted-foreground' : total.expense < prevTotal.expense ? 'text-destructive' : 'text-primary')}>
             <span className='mr-1 inline-block min-w-8'>Exp:</span>
             <span className='inline-block'>{formatCurrency(total.expense)}</span>
           </div>
-          <div
-            className={cn(
-              total.income + total.expense === prevTotal.income + prevTotal.expense
-                ? 'text-muted-foreground'
-                : total.income + total.expense < prevTotal.income + prevTotal.expense
-                ? 'text-destructive'
-                : 'text-primary'
-            )}
-          >
+          <div className={cn(total.income + total.expense === prevTotal.income + prevTotal.expense ? 'text-muted-foreground' : total.income + total.expense < prevTotal.income + prevTotal.expense ? 'text-destructive' : 'text-primary')}>
             <span className='mr-1 inline-block min-w-8'>Net:</span>
             <span className='inline-block'>{formatCurrency(total.income + total.expense)}</span>
           </div>
