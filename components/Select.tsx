@@ -41,7 +41,7 @@ export const Select = ({
       onChange={onSelect}
       isDisabled={disabled}
       value={formattedValue}
-      className='text-sm h-10'
+      className='text-sm shadow-sm rounded-md'
       placeholder={placeholder}
       onCreateOption={handleCreate}
       isValidNewOption={() => allowCreatingOptions}
@@ -49,11 +49,11 @@ export const Select = ({
         control: (base, state) => ({
           ...base,
           boxShadow: 'none',
-          borderColor: state.isFocused ? 'hsl(var(--ring))' : 'hsl(var(--input))',
+          borderColor: state.isFocused ? 'var(--ring)' : 'var(--input)',
           '&:hover': {
-            borderColor: state.isFocused ? 'hsl(var(--ring))' : 'hsl(var(--input))'
+            borderColor: state.isFocused ? 'var(--ring)' : 'var(--input)'
           }
-        })
+        }),
       }}
     />
   );

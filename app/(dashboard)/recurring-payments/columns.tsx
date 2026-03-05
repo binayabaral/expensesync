@@ -74,8 +74,8 @@ export const columns: ColumnDef<ResponseType>[] = [
     }
   },
   {
-    id: 'account',
-    header: 'Account',
+    accessorKey: 'account',
+    header: ({ column }) => <SortableHeader column={column} label='Account' />,
     cell: ({ row }) => {
       if (row.original.type === 'TRANSFER') {
         const from = row.original.account || 'N/A';
@@ -90,8 +90,8 @@ export const columns: ColumnDef<ResponseType>[] = [
     }
   },
   {
-    id: 'category',
-    header: 'Category',
+    accessorKey: 'category',
+    header: ({ column }) => <SortableHeader column={column} label='Category' />,
     cell: ({ row }) => {
       if (row.original.type !== 'TRANSACTION') {
         return <span>N/A</span>;

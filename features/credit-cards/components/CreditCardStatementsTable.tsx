@@ -1,7 +1,10 @@
+import { useMemo } from 'react';
 import { format } from 'date-fns';
+import { ColumnDef } from '@tanstack/react-table';
 
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { DataTable } from '@/components/DataTable';
+import { SortableHeader } from '@/components/SortableHeader';
 import { formatCurrency } from '@/lib/utils';
 
 type Statement = {
@@ -24,53 +27,58 @@ type Props = {
 };
 
 export const CreditCardStatementsTable = ({ statements, onOverride }: Props) => {
-  return (
-    <div className='rounded-md border'>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Statement Date</TableHead>
-            <TableHead>Due Date</TableHead>
-            <TableHead>Statement Balance</TableHead>
-            <TableHead>Payment Due</TableHead>
-            <TableHead>Minimum</TableHead>
-            <TableHead>Paid</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className='text-right'>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {statements.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={8} className='h-24 text-center'>
-                No statements yet.
-              </TableCell>
-            </TableRow>
-          ) : (
-            statements.map(statement => (
-              <TableRow key={statement.id}>
-                <TableCell>{format(new Date(statement.statementDate), 'MMM dd, yyyy')}</TableCell>
-                <TableCell>{format(new Date(statement.dueDate), 'MMM dd, yyyy')}</TableCell>
-                <TableCell>{formatCurrency(statement.statementBalance)}</TableCell>
-                <TableCell>
-                  {formatCurrency(statement.paymentDueAmount)}
-                  {statement.isPaymentDueOverridden ? ' (override)' : ''}
-                </TableCell>
-                <TableCell>{formatCurrency(statement.minimumPayment)}</TableCell>
-                <TableCell>{formatCurrency(statement.paidAmount)}</TableCell>
-                <TableCell>{statement.isPaid ? 'Paid' : 'Open'}</TableCell>
-                <TableCell className='text-right'>
-                  {!statement.isPaid && (
-                    <Button variant='outline' size='sm' onClick={() => onOverride(statement)}>
-                      Override
-                    </Button>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
-    </div>
+  const columns = useMemo<ColumnDef<Statement>[]>(
+    () => [
+      {
+        accessorKey: 'statementDate',
+        header: ({ column }) => <SortableHeader column={column} label='Statement Date' />,
+        cell: ({ row }) => format(new Date(row.original.statementDate), 'MMM dd, yyyy')
+      },
+      {
+        accessorKey: 'dueDate',
+        header: ({ column }) => <SortableHeader column={column} label='Due Date' />,
+        cell: ({ row }) => format(new Date(row.original.dueDate), 'MMM dd, yyyy')
+      },
+      {
+        accessorKey: 'statementBalance',
+        header: ({ column }) => <SortableHeader column={column} label='Statement Balance' />,
+        cell: ({ row }) => formatCurrency(row.original.statementBalance)
+      },
+      {
+        accessorKey: 'paymentDueAmount',
+        header: ({ column }) => <SortableHeader column={column} label='Payment Due' />,
+        cell: ({ row }) =>
+          `${formatCurrency(row.original.paymentDueAmount)}${row.original.isPaymentDueOverridden ? ' (override)' : ''}`
+      },
+      {
+        accessorKey: 'minimumPayment',
+        header: ({ column }) => <SortableHeader column={column} label='Minimum' />,
+        cell: ({ row }) => formatCurrency(row.original.minimumPayment)
+      },
+      {
+        accessorKey: 'paidAmount',
+        header: ({ column }) => <SortableHeader column={column} label='Paid' />,
+        cell: ({ row }) => formatCurrency(row.original.paidAmount)
+      },
+      {
+        accessorKey: 'isPaid',
+        header: ({ column }) => <SortableHeader column={column} label='Status' />,
+        cell: ({ row }) => (row.original.isPaid ? 'Paid' : 'Open')
+      },
+      {
+        id: 'actions',
+        cell: ({ row }) =>
+          !row.original.isPaid ? (
+            <div className='text-right'>
+              <Button variant='outline' size='sm' onClick={() => onOverride(row.original)}>
+                Override
+              </Button>
+            </div>
+          ) : null
+      }
+    ],
+    [onOverride]
   );
+
+  return <DataTable columns={columns} data={statements} onDeleteAction={() => {}} />;
 };
