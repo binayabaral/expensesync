@@ -92,7 +92,9 @@ export const TransferForm = ({ id, onSubmit, onDelete, disabled, defaultValues, 
     if (!isCrossCurrency) return null;
     const amt = parseFloat(watchedAmount || '0');
     const rate = parseFloat(watchedExchangeRate || '0');
-    return computeRawToAmount(amt, rate, fromCurrency);
+    const raw = computeRawToAmount(amt, rate, fromCurrency);
+    // Round to 10 decimal places to eliminate floating-point noise (e.g. 7302.5 / 146.05 = 49.9999... → 50)
+    return raw !== null ? parseFloat(raw.toFixed(10)) : null;
   }, [isCrossCurrency, watchedAmount, watchedExchangeRate, fromCurrency]);
 
   const statementQuery = useGetCreditCardStatements({
