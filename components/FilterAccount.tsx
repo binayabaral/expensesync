@@ -1,6 +1,7 @@
 'use client';
 
 import qs from 'query-string';
+import isMobile from 'is-mobile';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -40,6 +41,24 @@ function FilterAccount() {
 
     router.push(url);
   };
+
+  if (isMobile()) {
+    return (
+      <select
+        value={accountId}
+        onChange={e => onAccountChange(e.target.value)}
+        disabled={isLoadingAccounts || isLoadingSummary}
+        className='w-full h-9 rounded-md px-3 font-normal bg-background border border-border text-sm text-foreground disabled:opacity-50'
+      >
+        <option value='all'>All Accounts</option>
+        {accounts?.filter(account => !account.isClosed)?.map(account => (
+          <option key={account.id} value={account.id}>
+            {account.name}
+          </option>
+        ))}
+      </select>
+    );
+  }
 
   return (
     <Select value={accountId} onValueChange={onAccountChange} disabled={isLoadingAccounts || isLoadingSummary}>
