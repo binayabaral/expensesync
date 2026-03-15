@@ -46,6 +46,7 @@ const app = new Hono()
           amount: transactions.amount,
           accountId: transactions.accountId,
           categoryId: transactions.categoryId,
+          isBillSplit: transactions.isBillSplit,
           account: sql<string>`CASE WHEN ${accounts.isClosed} THEN CONCAT(${accounts.name}, ' (closed account)') ELSE ${accounts.name} END`,
           accountCurrency: accounts.currency
         })

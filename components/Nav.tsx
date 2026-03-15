@@ -6,6 +6,7 @@ import { Loader2, ChevronDown } from 'lucide-react';
 import { useState, Fragment } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { ClerkLoaded, ClerkLoading, UserButton, useUser } from '@clerk/nextjs';
+import { shadcn } from '@clerk/themes';
 import { FaLayerGroup, FaReceipt, FaWallet, FaTags, FaRightLeft, FaCirclePlus, FaHeart, FaCoins, FaUsers, FaChartLine, FaArrowRightArrowLeft, FaCreditCard } from 'react-icons/fa6';
 
 import { cn } from '@/lib/utils';
@@ -92,6 +93,7 @@ function Nav() {
         <div className='flex flex-col items-center'>
           <UserButton
             appearance={{
+              baseTheme: shadcn,
               elements: {
                 userButtonAvatarBox: cn(enableMobileNav ? 'size-5' : 'size-7')
               }

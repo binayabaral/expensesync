@@ -15,6 +15,15 @@ import { AddAssetSheet } from '@/features/assets/components/AddAssetSheet';
 import { SellAssetSheet } from '@/features/assets/components/SellAssetSheet';
 import { AddRecurringPaymentSheet } from '@/features/recurring-payments/components/AddRecurringPaymentSheet';
 import { EditRecurringPaymentSheet } from '@/features/recurring-payments/components/EditRecurringPaymentSheet';
+import { AddGroupSheet } from '@/features/bill-split/components/AddGroupSheet';
+import { EditGroupSheet } from '@/features/bill-split/components/EditGroupSheet';
+import { AddExpenseSheet } from '@/features/bill-split/components/AddExpenseSheet';
+import { EditExpenseSheet } from '@/features/bill-split/components/EditExpenseSheet';
+import { RecordShareSheet } from '@/features/bill-split/components/RecordShareSheet';
+import { AddSettlementSheet } from '@/features/bill-split/components/AddSettlementSheet';
+import { EditSettlementSheet } from '@/features/bill-split/components/EditSettlementSheet';
+import { AddContactSheet } from '@/features/bill-split/components/AddContactSheet';
+import { AddMemberSheet } from '@/features/bill-split/components/AddMemberSheet';
 
 export const SheetProvider = ({ children }: { children: React.ReactNode }) => {
   const isMounted = useMountedState();
@@ -44,6 +53,21 @@ export const SheetProvider = ({ children }: { children: React.ReactNode }) => {
         <AddAssetSheet />
       </Suspense>
       <SellAssetSheet />
+      <AddGroupSheet />
+      <EditGroupSheet />
+      <Suspense>
+        <AddExpenseSheet />
+      </Suspense>
+      <Suspense>
+        <EditExpenseSheet />
+      </Suspense>
+      <Suspense>
+        <RecordShareSheet />
+      </Suspense>
+      <AddSettlementSheet />
+      <EditSettlementSheet />
+      <AddContactSheet />
+      <AddMemberSheet />
       {children}
     </>
   );

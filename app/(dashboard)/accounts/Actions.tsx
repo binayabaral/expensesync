@@ -15,9 +15,10 @@ import {
 
 type Props = {
   id: string;
+  isHidden?: boolean;
 };
 
-export const Actions = ({ id }: Props) => {
+export const Actions = ({ id, isHidden }: Props) => {
   const [ConfirmDialog, confirm] = useConfirm('Are you sure?', 'You are about to delete this account.');
   const deleteMutation = useDeleteAccount(id);
   const { onOpen } = useOpenEditAccountSheet();
@@ -29,6 +30,8 @@ export const Actions = ({ id }: Props) => {
       deleteMutation.mutate();
     }
   };
+
+  if (isHidden) return <div className='size-8' />;
 
   return (
     <>

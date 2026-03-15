@@ -1,5 +1,6 @@
 import { Loader2 } from 'lucide-react';
 import { SignUp, ClerkLoaded, ClerkLoading } from '@clerk/nextjs';
+import { shadcn } from '@clerk/themes';
 
 export default function Page() {
   return (
@@ -11,7 +12,7 @@ export default function Page() {
         </div>
         <div className='flex items-center justify-center mt-8'>
           <ClerkLoaded>
-            <SignUp path='/sign-up' />
+            <SignUp path='/sign-up' appearance={{ baseTheme: shadcn }} />
           </ClerkLoaded>
           <ClerkLoading>
             <Loader2 className='animate-spin text-muted-foreground' />

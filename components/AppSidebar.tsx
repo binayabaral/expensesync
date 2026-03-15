@@ -15,7 +15,8 @@ import {
   FaMoneyBillTransfer,
   FaArrowsRotate,
   FaCreditCard,
-  FaFileInvoiceDollar
+  FaFileInvoiceDollar,
+  FaScaleBalanced
 } from 'react-icons/fa6';
 
 import {
@@ -31,6 +32,7 @@ import {
   SidebarFooter
 } from '@/components/ui/sidebar';
 import { ClerkLoaded, ClerkLoading, UserButton, useUser } from '@clerk/nextjs';
+import { shadcn } from '@clerk/themes';
 import { Loader2 } from 'lucide-react';
 
 export function AppSidebar() {
@@ -61,6 +63,11 @@ export function AppSidebar() {
       title: 'Recurring',
       url: '/recurring-payments',
       icon: FaArrowsRotate
+    },
+    {
+      title: 'Bill Split',
+      url: '/bill-split',
+      icon: FaScaleBalanced
     }
   ];
 
@@ -221,6 +228,7 @@ export function AppSidebar() {
                 <div className='shrink-0'>
                   <UserButton
                     appearance={{
+                      baseTheme: shadcn,
                       elements: {
                         userButtonAvatarBox: 'h-9 w-9'
                       }

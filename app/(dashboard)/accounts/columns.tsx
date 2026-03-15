@@ -37,6 +37,7 @@ export const columns: ColumnDef<ResponseType>[] = [
         checked={row.getIsSelected()}
         onCheckedChange={value => row.toggleSelected(!!value)}
         aria-label='Select row'
+        disabled={!!row.original.isHidden}
       />
     ),
     enableSorting: false,
@@ -102,6 +103,6 @@ export const columns: ColumnDef<ResponseType>[] = [
   },
   {
     id: 'actions',
-    cell: ({ row }) => <Actions id={row.original.id} />
+    cell: ({ row }) => <Actions id={row.original.id} isHidden={row.original.isHidden} />
   }
 ];

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { relations } from 'drizzle-orm';
 import { createInsertSchema } from 'drizzle-zod';
-import { integer, pgTable, text, timestamp, pgEnum, boolean, bigint, doublePrecision, date } from 'drizzle-orm/pg-core';
+import { integer, pgTable, text, timestamp, pgEnum, boolean, bigint, doublePrecision, date, index, uniqueIndex } from 'drizzle-orm/pg-core';
 
 export const TransactionTypeEnum = pgEnum('transaction_type', [
   'USER_CREATED',
@@ -19,7 +19,8 @@ export const AssetTypeEnum = pgEnum('asset_type', ['GOLD_22K', 'GOLD_24K', 'SILV
 
 export const RecurringPaymentTypeEnum = pgEnum('recurring_payment_type', ['TRANSACTION', 'TRANSFER']);
 export const RecurringCadenceEnum = pgEnum('recurring_cadence', ['DAILY', 'MONTHLY', 'YEARLY']);
-export const AccountTypeEnum = pgEnum('account_type', ['CASH', 'BANK', 'CREDIT_CARD', 'LOAN', 'OTHER']);
+export const AccountTypeEnum = pgEnum('account_type', ['CASH', 'BANK', 'CREDIT_CARD', 'LOAN', 'OTHER', 'BILL_SPLIT']);
+export const SplitTypeEnum = pgEnum('split_type', ['EQUAL', 'EXACT', 'PERCENTAGE', 'SHARES']);
 export const LoanSubTypeEnum = pgEnum('loan_sub_type', ['EMI', 'PEER']);
 export const SUPPORTED_CURRENCIES = [
   'NPR', 'USD', 'EUR', 'GBP', 'CHF', 'AUD', 'CAD', 'SGD', 'JPY',
@@ -73,6 +74,7 @@ export const transactions = pgTable('transactions', {
     .notNull(),
   categoryId: text('category_id').references(() => categories.id, { onDelete: 'set null' }),
   type: TransactionTypeEnum('type').default('USER_CREATED').notNull(),
+  isBillSplit: boolean('is_bill_split').notNull().default(false),
   transferId: text('transfer_id').references(() => transfers.id, { onDelete: 'cascade' })
 });
 
@@ -262,6 +264,190 @@ export const assetPrices = pgTable('asset_prices', {
   // Live price per unit in mili-units (to stay consistent with amounts elsewhere)
   price: bigint('price', { mode: 'number' }).notNull(),
   fetchedAt: timestamp('fetched_at', { mode: 'date' }).defaultNow().notNull()
+});
+
+// ─── Bill Split ───────────────────────────────────────────────────────────────
+
+export const users = pgTable('users', {
+  id: text('id').primaryKey(), // = Clerk userId
+  email: text('email').unique().notNull(),
+  name: text('name').notNull(),
+  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull()
+});
+
+export const splitContacts = pgTable('split_contacts', {
+  id: text('id').primaryKey(),
+  createdByUserId: text('created_by_user_id')
+    .references(() => users.id, { onDelete: 'cascade' })
+    .notNull(),
+  linkedUserId: text('linked_user_id').references(() => users.id, { onDelete: 'set null' }),
+  email: text('email'),
+  name: text('name').notNull(),
+  virtualAccountId: text('virtual_account_id').references(() => accounts.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull()
+}, (t) => [
+  index('idx_sc_created_by').on(t.createdByUserId),
+  index('idx_sc_linked_user').on(t.linkedUserId)
+]);
+
+export const splitGroups = pgTable('split_groups', {
+  id: text('id').primaryKey(),
+  createdByUserId: text('created_by_user_id')
+    .references(() => users.id, { onDelete: 'cascade' })
+    .notNull(),
+  name: text('name').notNull(),
+  description: text('description'),
+  currency: CurrencyEnum('currency').notNull().default('NPR'),
+  isArchived: boolean('is_archived').notNull().default(false),
+  simplifyDebts: boolean('simplify_debts').notNull().default(true),
+  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull()
+});
+
+export const splitGroupMembers = pgTable('split_group_members', {
+  id: text('id').primaryKey(),
+  groupId: text('group_id')
+    .references(() => splitGroups.id, { onDelete: 'cascade' })
+    .notNull(),
+  contactId: text('contact_id')
+    .references(() => splitContacts.id, { onDelete: 'cascade' })
+    .notNull(),
+  userId: text('user_id').references(() => users.id, { onDelete: 'set null' }),
+  virtualAccountId: text('virtual_account_id').references(() => accounts.id, { onDelete: 'set null' }),
+  addedAt: timestamp('added_at', { mode: 'date' }).defaultNow().notNull()
+}, (t) => [
+  index('idx_sgm_group_user').on(t.groupId, t.userId),
+  index('idx_sgm_user_id').on(t.userId),
+  uniqueIndex('uq_sgm_group_contact').on(t.groupId, t.contactId)
+]);
+
+export const splitExpenses = pgTable('split_expenses', {
+  id: text('id').primaryKey(),
+  createdByUserId: text('created_by_user_id')
+    .references(() => users.id, { onDelete: 'cascade' })
+    .notNull(),
+  groupId: text('group_id').references(() => splitGroups.id, { onDelete: 'cascade' }),
+  description: text('description').notNull(),
+  totalAmount: bigint('total_amount', { mode: 'number' }).notNull(),
+  currency: CurrencyEnum('currency').notNull().default('NPR'),
+  date: timestamp('date', { mode: 'date' }).notNull(),
+  paidByContactId: text('paid_by_contact_id').references(() => splitContacts.id, { onDelete: 'set null' }),
+  paidByUser: boolean('paid_by_user').notNull().default(false),
+  categoryId: text('category_id').references(() => categories.id, { onDelete: 'set null' }),
+  splitType: SplitTypeEnum('split_type').notNull(),
+  notes: text('notes'),
+  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull()
+}, (t) => [
+  index('idx_se_group_id').on(t.groupId),
+  index('idx_se_created_by').on(t.createdByUserId)
+]);
+
+export const splitExpenseShares = pgTable('split_expense_shares', {
+  id: text('id').primaryKey(),
+  expenseId: text('expense_id')
+    .references(() => splitExpenses.id, { onDelete: 'cascade' })
+    .notNull(),
+  contactId: text('contact_id').references(() => splitContacts.id, { onDelete: 'set null' }),
+  isUser: boolean('is_user').notNull().default(false),
+  shareAmount: bigint('share_amount', { mode: 'number' }).notNull(),
+  splitValue: doublePrecision('split_value').notNull(),
+  transactionId: text('transaction_id').references(() => transactions.id, { onDelete: 'set null' }),
+  receivableTransactionId: text('receivable_transaction_id').references(() => transactions.id, { onDelete: 'set null' })
+}, (t) => [
+  index('idx_ses_expense_id').on(t.expenseId),
+  index('idx_ses_contact_id').on(t.contactId)
+]);
+
+export const splitSettlements = pgTable('split_settlements', {
+  id: text('id').primaryKey(),
+  createdByUserId: text('created_by_user_id')
+    .references(() => users.id, { onDelete: 'cascade' })
+    .notNull(),
+  groupId: text('group_id').references(() => splitGroups.id, { onDelete: 'set null' }),
+  fromIsUser: boolean('from_is_user').notNull().default(false),
+  fromContactId: text('from_contact_id').references(() => splitContacts.id, { onDelete: 'set null' }),
+  toIsUser: boolean('to_is_user').notNull().default(false),
+  toContactId: text('to_contact_id').references(() => splitContacts.id, { onDelete: 'set null' }),
+  amount: bigint('amount', { mode: 'number' }).notNull(),
+  currency: CurrencyEnum('currency').notNull().default('NPR'),
+  date: timestamp('date', { mode: 'date' }).notNull(),
+  transactionId: text('transaction_id').references(() => transactions.id, { onDelete: 'set null' }),
+  transferId: text('transfer_id').references(() => transfers.id, { onDelete: 'set null' }),
+  settleGroupsBatchId: text('settle_groups_batch_id'),
+  notes: text('notes'),
+  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull()
+}, (t) => [
+  index('idx_ss_group_id').on(t.groupId),
+  index('idx_ss_created_by').on(t.createdByUserId),
+  index('idx_ss_from_contact').on(t.fromContactId),
+  index('idx_ss_to_contact').on(t.toContactId),
+  index('idx_ss_batch_id').on(t.settleGroupsBatchId)
+]);
+
+// Relations
+export const usersRelations = relations(users, ({ many }) => ({
+  createdContacts: many(splitContacts, { relationName: 'createdContacts' }),
+  linkedContacts: many(splitContacts, { relationName: 'linkedContacts' }),
+  createdGroups: many(splitGroups),
+  groupMemberships: many(splitGroupMembers),
+  createdExpenses: many(splitExpenses),
+  createdSettlements: many(splitSettlements)
+}));
+
+export const splitContactsRelations = relations(splitContacts, ({ one, many }) => ({
+  createdBy: one(users, { fields: [splitContacts.createdByUserId], references: [users.id], relationName: 'createdContacts' }),
+  linkedUser: one(users, { fields: [splitContacts.linkedUserId], references: [users.id], relationName: 'linkedContacts' }),
+  virtualAccount: one(accounts, { fields: [splitContacts.virtualAccountId], references: [accounts.id] }),
+  groupMemberships: many(splitGroupMembers),
+  expenseShares: many(splitExpenseShares)
+}));
+
+export const splitGroupsRelations = relations(splitGroups, ({ one, many }) => ({
+  createdBy: one(users, { fields: [splitGroups.createdByUserId], references: [users.id] }),
+  members: many(splitGroupMembers),
+  expenses: many(splitExpenses),
+  settlements: many(splitSettlements)
+}));
+
+export const splitGroupMembersRelations = relations(splitGroupMembers, ({ one }) => ({
+  group: one(splitGroups, { fields: [splitGroupMembers.groupId], references: [splitGroups.id] }),
+  contact: one(splitContacts, { fields: [splitGroupMembers.contactId], references: [splitContacts.id] }),
+  user: one(users, { fields: [splitGroupMembers.userId], references: [users.id] }),
+  virtualAccount: one(accounts, { fields: [splitGroupMembers.virtualAccountId], references: [accounts.id] })
+}));
+
+export const splitExpensesRelations = relations(splitExpenses, ({ one, many }) => ({
+  createdBy: one(users, { fields: [splitExpenses.createdByUserId], references: [users.id] }),
+  group: one(splitGroups, { fields: [splitExpenses.groupId], references: [splitGroups.id] }),
+  paidByContact: one(splitContacts, { fields: [splitExpenses.paidByContactId], references: [splitContacts.id] }),
+  category: one(categories, { fields: [splitExpenses.categoryId], references: [categories.id] }),
+  shares: many(splitExpenseShares)
+}));
+
+export const splitExpenseSharesRelations = relations(splitExpenseShares, ({ one }) => ({
+  expense: one(splitExpenses, { fields: [splitExpenseShares.expenseId], references: [splitExpenses.id] }),
+  contact: one(splitContacts, { fields: [splitExpenseShares.contactId], references: [splitContacts.id] }),
+  transaction: one(transactions, { fields: [splitExpenseShares.transactionId], references: [transactions.id] })
+}));
+
+export const splitSettlementsRelations = relations(splitSettlements, ({ one }) => ({
+  createdBy: one(users, { fields: [splitSettlements.createdByUserId], references: [users.id] }),
+  group: one(splitGroups, { fields: [splitSettlements.groupId], references: [splitGroups.id] }),
+  fromContact: one(splitContacts, { fields: [splitSettlements.fromContactId], references: [splitContacts.id] }),
+  toContact: one(splitContacts, { fields: [splitSettlements.toContactId], references: [splitContacts.id] }),
+  transaction: one(transactions, { fields: [splitSettlements.transactionId], references: [transactions.id] }),
+  transfer: one(transfers, { fields: [splitSettlements.transferId], references: [transfers.id] })
+}));
+
+export const insertSplitContactSchema = createInsertSchema(splitContacts);
+export const insertSplitGroupSchema = createInsertSchema(splitGroups);
+export const insertSplitExpenseSchema = createInsertSchema(splitExpenses).extend({
+  date: z.coerce.date(),
+  createdAt: z.coerce.date().optional()
+});
+export const insertSplitExpenseShareSchema = createInsertSchema(splitExpenseShares);
+export const insertSplitSettlementSchema = createInsertSchema(splitSettlements).extend({
+  date: z.coerce.date(),
+  createdAt: z.coerce.date().optional()
 });
 
 export const insertAccountSchema = createInsertSchema(accounts);

@@ -1,0 +1,1 @@
+ALTER TABLE "split_settlements" ADD COLUMN "settle_groups_batch_id" text;

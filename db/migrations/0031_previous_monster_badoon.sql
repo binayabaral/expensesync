@@ -1,0 +1,1 @@
+ALTER TABLE "transactions" ADD COLUMN "is_bill_split" boolean DEFAULT false NOT NULL;

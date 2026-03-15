@@ -14,6 +14,12 @@ import recurringPaymentsRoute from './recurring-payments';
 import creditCardsRoute from './credit-cards';
 import creditCardStatementsRoute from './credit-card-statements';
 import loansRoute from './loans';
+import splitEnrollmentRoute from './split-enrollment';
+import splitContactsRoute from './split-contacts';
+import splitGroupsRoute from './split-groups';
+import splitExpensesRoute from './split-expenses';
+import splitSettlementsRoute from './split-settlements';
+import splitBalancesRoute from './split-balances';
 
 export const runtime = 'edge';
 
@@ -33,7 +39,13 @@ const routes = app
   .route('/recurring-payments', recurringPaymentsRoute)
   .route('/credit-cards', creditCardsRoute)
   .route('/credit-card-statements', creditCardStatementsRoute)
-  .route('/loans', loansRoute);
+  .route('/loans', loansRoute)
+  .route('/split-enrollment', splitEnrollmentRoute)
+  .route('/split-contacts', splitContactsRoute)
+  .route('/split-groups', splitGroupsRoute)
+  .route('/split-expenses', splitExpensesRoute)
+  .route('/split-settlements', splitSettlementsRoute)
+  .route('/split-balances', splitBalancesRoute);
 
 export const GET = handle(app);
 export const POST = handle(app);

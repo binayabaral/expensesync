@@ -23,7 +23,7 @@ function Accounts() {
   const deleteAccounts = useBulkDeleteAccount();
 
   const allAccounts = accountsQuery.data || [];
-  const visibleAccounts = showClosed ? allAccounts : allAccounts.filter(a => !a.isClosed);
+  const visibleAccounts = showClosed ? allAccounts : allAccounts.filter(a => !a.isClosed && !a.isHidden);
   const nprAccounts = visibleAccounts.filter(a => (a.currency ?? DEFAULT_CURRENCY) === DEFAULT_CURRENCY);
   const foreignAccounts = visibleAccounts.filter(a => (a.currency ?? DEFAULT_CURRENCY) !== DEFAULT_CURRENCY);
   const isDisabled = accountsQuery.isLoading || deleteAccounts.isPending;

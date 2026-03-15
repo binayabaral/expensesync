@@ -1,0 +1,2 @@
+ALTER TABLE "split_expense_shares" ADD COLUMN "receivable_transaction_id" text;--> statement-breakpoint
+ALTER TABLE "split_expense_shares" ADD CONSTRAINT "split_expense_shares_receivable_transaction_id_transactions_id_fk" FOREIGN KEY ("receivable_transaction_id") REFERENCES "public"."transactions"("id") ON DELETE set null ON UPDATE no action;

@@ -128,9 +128,7 @@ const app = new Hono()
 
     const result = loanAccounts.map(loan => {
       const currentBalance = balanceByLoanId[loan.id] ?? 0;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const paymentHistory = (paymentsByLoanId[loan.id] ?? []).map(({ type: _type, accountId: _acc, ...rest }) => rest);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const borrowingHistory = (borrowingsByLoanId[loan.id] ?? []).map(({ type: _type, accountId: _acc, ...rest }) => rest);
 
       if (loan.loanSubType !== 'EMI') {

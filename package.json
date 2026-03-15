@@ -14,6 +14,7 @@
   "dependencies": {
     "@clerk/backend": "^1.21.2",
     "@clerk/nextjs": "^6.9.2",
+    "@clerk/themes": "^2.4.57",
     "@hono/clerk-auth": "^2.0.0",
     "@hono/zod-validator": "^0.4.2",
     "@hookform/resolvers": "^3.9.1",
@@ -30,6 +31,7 @@
     "@radix-ui/react-separator": "^1.1.1",
     "@radix-ui/react-slot": "^1.1.1",
     "@radix-ui/react-switch": "^1.2.6",
+    "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.1.6",
     "@tanstack/react-query": "^5.62.8",
     "@tanstack/react-table": "^8.20.6",

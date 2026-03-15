@@ -46,11 +46,19 @@ export const Select = ({
       onCreateOption={handleCreate}
       isValidNewOption={() => allowCreatingOptions}
       styles={{
+        container: (base, state) => ({
+          ...base,
+          cursor: state.isDisabled ? 'not-allowed' : 'default',
+          pointerEvents: 'all'
+        }),
         control: (base, state) => ({
           ...base,
-          backgroundColor: 'var(--background)',
+          backgroundColor: state.isDisabled ? 'var(--muted)' : 'var(--background)',
           color: 'var(--foreground)',
           boxShadow: 'none',
+          opacity: state.isDisabled ? 0.5 : 1,
+          cursor: state.isDisabled ? 'not-allowed' : 'default',
+          pointerEvents: state.isDisabled ? 'none' : 'all',
           borderColor: state.isFocused ? 'var(--ring)' : 'var(--input)',
           '&:hover': {
             borderColor: state.isFocused ? 'var(--ring)' : 'var(--input)'
