@@ -469,7 +469,6 @@ const app = new Hono()
       // The UPDATE uses WHERE transactionId IS NULL as a race-condition guard.
       // If another concurrent request already recorded this share, we clean up the
       // inserted transactions manually (orphan cleanup) and return 400.
-      let result: { transactionId: string; receivableTransactionId: string | null };
       let transactionId: string;
       let receivableTransactionId: string | null = null;
 
@@ -547,9 +546,7 @@ const app = new Hono()
         return c.json({ error: 'Share already recorded' }, 400);
       }
 
-      result = { transactionId, receivableTransactionId };
-
-      return c.json({ data: result });
+      return c.json({ data: { transactionId, receivableTransactionId } });
     }
   )
 
