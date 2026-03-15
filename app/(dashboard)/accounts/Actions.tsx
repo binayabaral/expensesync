@@ -15,10 +15,10 @@ import {
 
 type Props = {
   id: string;
-  isHidden?: boolean;
+  isBillSplitAccount?: boolean;
 };
 
-export const Actions = ({ id, isHidden }: Props) => {
+export const Actions = ({ id, isBillSplitAccount }: Props) => {
   const [ConfirmDialog, confirm] = useConfirm('Are you sure?', 'You are about to delete this account.');
   const deleteMutation = useDeleteAccount(id);
   const { onOpen } = useOpenEditAccountSheet();
@@ -31,7 +31,7 @@ export const Actions = ({ id, isHidden }: Props) => {
     }
   };
 
-  if (isHidden) return <div className='size-8' />;
+  if (isBillSplitAccount) return <div className='size-8' />;
 
   return (
     <>
