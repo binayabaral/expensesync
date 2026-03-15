@@ -232,6 +232,13 @@
       "when": 1773494502053,
       "tag": "0032_flowery_wolf_cub",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1773547353623,
+      "tag": "0033_black_kylun",
+      "breakpoints": true
     }
   ]
 }

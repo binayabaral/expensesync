@@ -24,6 +24,7 @@ export const useCreateSettlement = () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
       queryClient.invalidateQueries({ queryKey: ['summary'] });
+      queryClient.invalidateQueries({ queryKey: ['transfers'] });
     },
     onError: () => {
       toast.error('Failed to record settlement');

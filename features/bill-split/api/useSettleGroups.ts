@@ -23,6 +23,9 @@ export const useSettleGroups = () => {
       queryClient.invalidateQueries({ queryKey: ['split-balances'] });
       queryClient.invalidateQueries({ queryKey: ['split-group-balances'] });
       queryClient.invalidateQueries({ queryKey: ['split-groups'] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['summary'] });
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to settle groups');

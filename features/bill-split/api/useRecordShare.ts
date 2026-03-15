@@ -34,6 +34,7 @@ export const useRecordShare = () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
       queryClient.invalidateQueries({ queryKey: ['summary'] });
+      queryClient.invalidateQueries({ queryKey: ['transfers'] });
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to record share');

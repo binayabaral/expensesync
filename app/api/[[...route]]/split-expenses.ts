@@ -13,7 +13,8 @@ import {
   splitExpenses,
   splitGroupMembers,
   splitGroups,
-  transactions
+  transactions,
+  transfers
 } from '@/db/schema';
 import { batchResolveUserNames, ensureEnrolled } from '@/lib/split-db';
 import { notifyExpenseCreated } from '@/lib/split-notifications';
@@ -468,13 +469,14 @@ const app = new Hono()
       // Insert transactions then update the share row.
       // The UPDATE uses WHERE transactionId IS NULL as a race-condition guard.
       // If another concurrent request already recorded this share, we clean up the
-      // inserted transactions manually (orphan cleanup) and return 400.
+      // inserted transactions/transfers manually (orphan cleanup) and return 400.
       let transactionId: string;
       let receivableTransactionId: string | null = null;
+      let outgoingTransferId: string | null = null;
 
       if (expense.paidByUser && actualAccountId) {
-        // User paid the full bill — create two transactions:
-        // 1. USER_CREATED on the real account: user's own expense share
+        // User paid the full bill.
+        // tx1: USER_CREATED on real account for the user's own share only
         const [expenseTx] = await db
           .insert(transactions)
           .values({
@@ -491,9 +493,40 @@ const app = new Hono()
           .returning();
         transactionId = expenseTx.id;
 
-        // 2. PEER_TRANSFER on the virtual account: receivable from others
+        // For others' portion: create a transfer from real account → virtual account
+        // tx2 (-othersAmount on real) deducts the money actually lent to others
+        // tx3 (+othersAmount on virtual) records the receivable
         const othersAmount = expense.totalAmount - share.shareAmount;
         if (othersAmount > 0) {
+          const [outgoingTransfer] = await db
+            .insert(transfers)
+            .values({
+              id: createId(),
+              userId: auth.userId,
+              amount: othersAmount,
+              date: txDate,
+              fromAccountId: actualAccountId,
+              toAccountId: virtualAccountId,
+              transferCharge: 0,
+              notes: receivableNotes
+            })
+            .returning();
+          outgoingTransferId = outgoingTransfer.id;
+
+          // tx2: outgoing from real account (deducts the lent amount)
+          await db.insert(transactions).values({
+            id: createId(),
+            amount: -othersAmount,
+            payee: 'Bill split transfer',
+            notes: receivableNotes,
+            date: txDate,
+            accountId: actualAccountId,
+            transferId: outgoingTransfer.id,
+            type: 'SELF_TRANSFER',
+            isBillSplit: true
+          });
+
+          // tx3: receivable on virtual account
           const [receivableTx] = await db
             .insert(transactions)
             .values({
@@ -503,7 +536,7 @@ const app = new Hono()
               notes: receivableNotes,
               date: txDate,
               accountId: virtualAccountId,
-              categoryId: null,
+              transferId: outgoingTransfer.id,
               type: 'PEER_TRANSFER',
               isBillSplit: true
             })
@@ -533,20 +566,23 @@ const app = new Hono()
       // recorded this share (WHERE transactionId IS NULL is the race-condition guard)
       const updated = await db
         .update(splitExpenseShares)
-        .set({ transactionId, receivableTransactionId })
+        .set({ transactionId, receivableTransactionId, outgoingTransferId })
         .where(and(eq(splitExpenseShares.id, shareId), isNull(splitExpenseShares.transactionId)))
         .returning();
 
       if (updated.length === 0) {
-        // Another concurrent request won — clean up the orphaned transactions we just inserted
-        const orphanIds = [transactionId, receivableTransactionId].filter((id): id is string => !!id);
-        if (orphanIds.length > 0) {
-          await db.delete(transactions).where(inArray(transactions.id, orphanIds));
+        // Another concurrent request won — clean up orphaned inserts
+        await db.delete(transactions).where(eq(transactions.id, transactionId));
+        if (outgoingTransferId) {
+          // Deleting the transfer cascades and removes tx2 + tx3
+          await db.delete(transfers).where(eq(transfers.id, outgoingTransferId));
+        } else if (receivableTransactionId) {
+          await db.delete(transactions).where(eq(transactions.id, receivableTransactionId));
         }
         return c.json({ error: 'Share already recorded' }, 400);
       }
 
-      return c.json({ data: { transactionId, receivableTransactionId } });
+      return c.json({ data: { transactionId, receivableTransactionId, outgoingTransferId } });
     }
   )
 
@@ -578,9 +614,20 @@ const app = new Hono()
     }
     if (!isAuthorized) return c.json({ error: 'Access denied' }, 403);
 
-    const txIds = [share.transactionId, share.receivableTransactionId].filter((id): id is string => !!id);
-    await db.delete(transactions).where(inArray(transactions.id, txIds));
-    await db.update(splitExpenseShares).set({ transactionId: null, receivableTransactionId: null }).where(eq(splitExpenseShares.id, shareId));
+    // Delete tx1 (user's expense share)
+    if (share.transactionId) {
+      await db.delete(transactions).where(eq(transactions.id, share.transactionId));
+    }
+    // Delete the outgoing transfer (cascades tx2 + tx3 via FK) for new-style shares,
+    // or delete the receivable transaction directly for old-style shares
+    if (share.outgoingTransferId) {
+      await db.delete(transfers).where(eq(transfers.id, share.outgoingTransferId));
+    } else if (share.receivableTransactionId) {
+      await db.delete(transactions).where(eq(transactions.id, share.receivableTransactionId));
+    }
+    await db.update(splitExpenseShares)
+      .set({ transactionId: null, receivableTransactionId: null, outgoingTransferId: null })
+      .where(eq(splitExpenseShares.id, shareId));
 
     return c.json({ data: { id: shareId } });
   })
@@ -617,10 +664,21 @@ const app = new Hono()
       }
       if (!isAuthorized) return c.json({ error: 'Access denied' }, 403);
 
-      await db.update(transactions).set({ date, categoryId: categoryId ?? null, notes: notes ?? null }).where(eq(transactions.id, share.transactionId));
+      // Update tx1 (user's expense share — supports categoryId)
+      await db.update(transactions)
+        .set({ date, categoryId: categoryId ?? null, notes: notes ?? null })
+        .where(eq(transactions.id, share.transactionId));
 
-      if (share.receivableTransactionId) {
-        await db.update(transactions).set({ date, notes: notes ?? null }).where(eq(transactions.id, share.receivableTransactionId));
+      // Update tx2 + tx3 together via the transfer link (new-style),
+      // or update tx3 directly (old-style shares without outgoingTransferId)
+      if (share.outgoingTransferId) {
+        await db.update(transactions)
+          .set({ date, notes: notes ?? null })
+          .where(eq(transactions.transferId, share.outgoingTransferId));
+      } else if (share.receivableTransactionId) {
+        await db.update(transactions)
+          .set({ date, notes: notes ?? null })
+          .where(eq(transactions.id, share.receivableTransactionId));
       }
 
       return c.json({ data: { id: shareId } });
@@ -721,23 +779,33 @@ const app = new Hono()
     if (!expense) return c.json({ error: 'Expense not found' }, 404);
     if (expense.createdByUserId !== auth.userId) return c.json({ error: 'Only the creator can delete an expense' }, 403);
 
-    // Delete linked transactions in a single batch query
     const shares = await db
       .select({
         transactionId: splitExpenseShares.transactionId,
-        receivableTransactionId: splitExpenseShares.receivableTransactionId
+        receivableTransactionId: splitExpenseShares.receivableTransactionId,
+        outgoingTransferId: splitExpenseShares.outgoingTransferId
       })
       .from(splitExpenseShares)
       .where(eq(splitExpenseShares.expenseId, id));
 
-    const transactionIds = shares
-      .flatMap(s => [s.transactionId, s.receivableTransactionId])
-      .filter((txId): txId is string => !!txId);
-
-    // Delete linked transactions then the expense (cascade removes shares)
-    if (transactionIds.length > 0) {
-      await db.delete(transactions).where(inArray(transactions.id, transactionIds));
+    // Delete outgoing transfers first — Postgres cascade removes tx2 + tx3
+    const transferIds = shares.map(s => s.outgoingTransferId).filter((id): id is string => !!id);
+    if (transferIds.length > 0) {
+      await db.delete(transfers).where(inArray(transfers.id, transferIds));
     }
+
+    // Delete tx1 (user's expense share) and any legacy receivable transactions
+    // (shares without outgoingTransferId still have receivableTransactionId to clean up)
+    const txIds = shares
+      .flatMap(s => [
+        s.transactionId,
+        s.outgoingTransferId ? null : s.receivableTransactionId  // tx3 already gone via cascade
+      ])
+      .filter((txId): txId is string => !!txId);
+    if (txIds.length > 0) {
+      await db.delete(transactions).where(inArray(transactions.id, txIds));
+    }
+
     await db.delete(splitExpenses).where(eq(splitExpenses.id, id));
 
     return c.json({ data: { id } });

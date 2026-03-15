@@ -351,7 +351,8 @@ export const splitExpenseShares = pgTable('split_expense_shares', {
   shareAmount: bigint('share_amount', { mode: 'number' }).notNull(),
   splitValue: doublePrecision('split_value').notNull(),
   transactionId: text('transaction_id').references(() => transactions.id, { onDelete: 'set null' }),
-  receivableTransactionId: text('receivable_transaction_id').references(() => transactions.id, { onDelete: 'set null' })
+  receivableTransactionId: text('receivable_transaction_id').references(() => transactions.id, { onDelete: 'set null' }),
+  outgoingTransferId: text('outgoing_transfer_id').references(() => transfers.id, { onDelete: 'set null' })
 }, (t) => [
   index('idx_ses_expense_id').on(t.expenseId),
   index('idx_ses_contact_id').on(t.contactId)
@@ -426,7 +427,8 @@ export const splitExpensesRelations = relations(splitExpenses, ({ one, many }) =
 export const splitExpenseSharesRelations = relations(splitExpenseShares, ({ one }) => ({
   expense: one(splitExpenses, { fields: [splitExpenseShares.expenseId], references: [splitExpenses.id] }),
   contact: one(splitContacts, { fields: [splitExpenseShares.contactId], references: [splitContacts.id] }),
-  transaction: one(transactions, { fields: [splitExpenseShares.transactionId], references: [transactions.id] })
+  transaction: one(transactions, { fields: [splitExpenseShares.transactionId], references: [transactions.id] }),
+  outgoingTransfer: one(transfers, { fields: [splitExpenseShares.outgoingTransferId], references: [transfers.id] })
 }));
 
 export const splitSettlementsRelations = relations(splitSettlements, ({ one }) => ({

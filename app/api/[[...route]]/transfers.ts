@@ -7,7 +7,7 @@ import { endOfDay, parse, startOfDay, startOfMonth } from 'date-fns';
 import { aliasedTable, eq, gte, lte, and, or, inArray, sql, desc } from 'drizzle-orm';
 
 import { db } from '@/db/drizzle';
-import { accounts, creditCardStatements, insertTransferSchema, transactions, transfers } from '@/db/schema';
+import { accounts, creditCardStatements, insertTransferSchema, splitExpenseShares, transactions, transfers } from '@/db/schema';
 
 const normalizeStatementPayment = async (statementId: string, deltaAmount: number, paidAt?: Date) => {
   const [statement] = await db
@@ -272,11 +272,23 @@ const app = new Hono()
         return c.json({ error: 'Unauthorized' }, 401);
       }
 
+      // Exclude any transfers that are linked to a bill split expense share
+      const billSplitRefs = await db
+        .select({ outgoingTransferId: splitExpenseShares.outgoingTransferId })
+        .from(splitExpenseShares)
+        .where(inArray(splitExpenseShares.outgoingTransferId, values.ids));
+      const billSplitTransferIds = new Set(billSplitRefs.map(r => r.outgoingTransferId));
+      const deletableIds = values.ids.filter(id => !billSplitTransferIds.has(id));
+
+      if (deletableIds.length === 0) {
+        return c.json({ data: [] });
+      }
+
       const transfersToDelete = db.$with('transfers_to_delete').as(
         db
           .select({ id: transfers.id })
           .from(transfers)
-          .where(and(inArray(transfers.id, values.ids), eq(transfers.userId, auth.userId)))
+          .where(and(inArray(transfers.id, deletableIds), eq(transfers.userId, auth.userId)))
       );
 
       const data = await db
@@ -462,6 +474,16 @@ const app = new Hono()
 
       if (!existingTransfer) {
         return c.json({ error: 'Not found' }, 404);
+      }
+
+      const [billSplitRef] = await db
+        .select({ id: splitExpenseShares.id })
+        .from(splitExpenseShares)
+        .where(eq(splitExpenseShares.outgoingTransferId, id))
+        .limit(1);
+
+      if (billSplitRef) {
+        return c.json({ error: 'This transfer is linked to a bill split expense and cannot be deleted directly. Delete the expense instead.' }, 400);
       }
 
       if (existingTransfer.creditCardStatementId) {

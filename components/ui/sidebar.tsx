@@ -81,19 +81,6 @@ const SidebarProvider = React.forwardRef<
     const [_open, _setOpen] = React.useState(defaultOpen)
     const open = openProp ?? _open
     
-    // Read from localStorage after mount to avoid hydration mismatch
-    React.useEffect(() => {
-      if (openProp === undefined && typeof window !== 'undefined') {
-        try {
-          const stored = localStorage.getItem(SIDEBAR_COOKIE_NAME);
-          if (stored !== null) {
-            _setOpen(stored === 'true');
-          }
-        } catch (e) {
-          console.error('Failed to read sidebar state:', e);
-        }
-      }
-    }, [openProp])
     const setOpen = React.useCallback(
       (value: boolean | ((value: boolean) => boolean)) => {
         const openState = typeof value === "function" ? value(open) : value
