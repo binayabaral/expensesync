@@ -159,7 +159,7 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     onClick={() => router.push(item.url)}
-                    isActive={pathname === item.url}
+                    isActive={pathname === item.url || (item.url !== '/' && pathname.startsWith(item.url))}
                     tooltip={item.title}
                   >
                     <item.icon className='h-4 w-4' />
