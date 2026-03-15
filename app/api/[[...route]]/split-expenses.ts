@@ -323,42 +323,38 @@ const app = new Hono()
       return c.json({ error: 'Share amounts do not add up to total amount' }, 400);
     }
 
-    // Insert expense + shares atomically
-    const { expense, insertedShares } = await db.transaction(async (tx) => {
-      const [expense] = await tx
-        .insert(splitExpenses)
-        .values({
+    // Insert expense + shares sequentially
+    const [expense] = await db
+      .insert(splitExpenses)
+      .values({
+        id: createId(),
+        createdByUserId: auth.userId,
+        groupId: groupId ?? null,
+        description,
+        totalAmount,
+        currency,
+        date,
+        paidByContactId: paidByContactId ?? null,
+        paidByUser,
+        categoryId: categoryId ?? null,
+        splitType,
+        notes: notes ?? null
+      })
+      .returning();
+
+    const insertedShares = await db
+      .insert(splitExpenseShares)
+      .values(
+        calculated.map(s => ({
           id: createId(),
-          createdByUserId: auth.userId,
-          groupId: groupId ?? null,
-          description,
-          totalAmount,
-          currency,
-          date,
-          paidByContactId: paidByContactId ?? null,
-          paidByUser,
-          categoryId: categoryId ?? null,
-          splitType,
-          notes: notes ?? null
-        })
-        .returning();
-
-      const insertedShares = await tx
-        .insert(splitExpenseShares)
-        .values(
-          calculated.map(s => ({
-            id: createId(),
-            expenseId: expense.id,
-            contactId: s.contactId ?? null,
-            isUser: s.isUser,
-            shareAmount: s.shareAmount,
-            splitValue: s.splitValue
-          }))
-        )
-        .returning();
-
-      return { expense, insertedShares };
-    });
+          expenseId: expense.id,
+          contactId: s.contactId ?? null,
+          isUser: s.isUser,
+          shareAmount: s.shareAmount,
+          splitValue: s.splitValue
+        }))
+      )
+      .returning();
 
     // Find user's share
     const userShare = insertedShares.find(s => s.isUser);
@@ -469,93 +465,89 @@ const app = new Hono()
       const txDate = expense.date;
       const expensePayee = expense.description;
 
-      // Wrap all writes in a transaction.
-      // The final UPDATE uses WHERE transactionId IS NULL as an atomic guard against
-      // concurrent requests both passing the early check above (race condition fix).
+      // Insert transactions then update the share row.
+      // The UPDATE uses WHERE transactionId IS NULL as a race-condition guard.
+      // If another concurrent request already recorded this share, we clean up the
+      // inserted transactions manually (orphan cleanup) and return 400.
       let result: { transactionId: string; receivableTransactionId: string | null };
-      try {
-        result = await db.transaction(async (tx) => {
-          let transactionId: string;
-          let receivableTransactionId: string | null = null;
+      let transactionId: string;
+      let receivableTransactionId: string | null = null;
 
-          if (expense.paidByUser && actualAccountId) {
-            // User paid the full bill — create two transactions:
-            // 1. USER_CREATED on the real account: user's own expense share
-            const [expenseTx] = await tx
-              .insert(transactions)
-              .values({
-                id: createId(),
-                amount: -share.shareAmount,
-                payee: expensePayee,
-                notes: myShareNotes,
-                date: txDate,
-                accountId: actualAccountId,
-                categoryId: categoryId ?? null,
-                type: 'USER_CREATED',
-                isBillSplit: true
-              })
-              .returning();
-            transactionId = expenseTx.id;
+      if (expense.paidByUser && actualAccountId) {
+        // User paid the full bill — create two transactions:
+        // 1. USER_CREATED on the real account: user's own expense share
+        const [expenseTx] = await db
+          .insert(transactions)
+          .values({
+            id: createId(),
+            amount: -share.shareAmount,
+            payee: expensePayee,
+            notes: myShareNotes,
+            date: txDate,
+            accountId: actualAccountId,
+            categoryId: categoryId ?? null,
+            type: 'USER_CREATED',
+            isBillSplit: true
+          })
+          .returning();
+        transactionId = expenseTx.id;
 
-            // 2. PEER_TRANSFER on the virtual account: receivable from others
-            const othersAmount = expense.totalAmount - share.shareAmount;
-            if (othersAmount > 0) {
-              const [receivableTx] = await tx
-                .insert(transactions)
-                .values({
-                  id: createId(),
-                  amount: othersAmount,
-                  payee: 'Bill split transfer',
-                  notes: receivableNotes,
-                  date: txDate,
-                  accountId: virtualAccountId,
-                  categoryId: null,
-                  type: 'PEER_TRANSFER',
-                  isBillSplit: true
-                })
-                .returning();
-              receivableTransactionId = receivableTx.id;
-            }
-          } else {
-            // Someone else paid — user records their own share on the virtual account
-            const [expenseTx] = await tx
-              .insert(transactions)
-              .values({
-                id: createId(),
-                amount: -share.shareAmount,
-                payee: expensePayee,
-                notes: myShareNotes,
-                date: txDate,
-                accountId: virtualAccountId,
-                categoryId: categoryId ?? null,
-                type: 'USER_CREATED',
-                isBillSplit: true
-              })
-              .returning();
-            transactionId = expenseTx.id;
-          }
-
-          // Atomic link: only succeeds if another concurrent request hasn't already
-          // recorded this share (WHERE transactionId IS NULL is the race-condition guard)
-          const updated = await tx
-            .update(splitExpenseShares)
-            .set({ transactionId, receivableTransactionId })
-            .where(and(eq(splitExpenseShares.id, shareId), isNull(splitExpenseShares.transactionId)))
+        // 2. PEER_TRANSFER on the virtual account: receivable from others
+        const othersAmount = expense.totalAmount - share.shareAmount;
+        if (othersAmount > 0) {
+          const [receivableTx] = await db
+            .insert(transactions)
+            .values({
+              id: createId(),
+              amount: othersAmount,
+              payee: 'Bill split transfer',
+              notes: receivableNotes,
+              date: txDate,
+              accountId: virtualAccountId,
+              categoryId: null,
+              type: 'PEER_TRANSFER',
+              isBillSplit: true
+            })
             .returning();
-
-          if (updated.length === 0) {
-            // Another concurrent request won — roll back this transaction
-            throw new Error('SHARE_ALREADY_RECORDED');
-          }
-
-          return { transactionId, receivableTransactionId };
-        });
-      } catch (e) {
-        if (e instanceof Error && e.message === 'SHARE_ALREADY_RECORDED') {
-          return c.json({ error: 'Share already recorded' }, 400);
+          receivableTransactionId = receivableTx.id;
         }
-        throw e;
+      } else {
+        // Someone else paid — user records their own share on the virtual account
+        const [expenseTx] = await db
+          .insert(transactions)
+          .values({
+            id: createId(),
+            amount: -share.shareAmount,
+            payee: expensePayee,
+            notes: myShareNotes,
+            date: txDate,
+            accountId: virtualAccountId,
+            categoryId: categoryId ?? null,
+            type: 'USER_CREATED',
+            isBillSplit: true
+          })
+          .returning();
+        transactionId = expenseTx.id;
       }
+
+      // Atomic link: only succeeds if another concurrent request hasn't already
+      // recorded this share (WHERE transactionId IS NULL is the race-condition guard)
+      const updated = await db
+        .update(splitExpenseShares)
+        .set({ transactionId, receivableTransactionId })
+        .where(and(eq(splitExpenseShares.id, shareId), isNull(splitExpenseShares.transactionId)))
+        .returning();
+
+      if (updated.length === 0) {
+        // Another concurrent request won — clean up the orphaned transactions we just inserted
+        const orphanIds = [transactionId, receivableTransactionId].filter((id): id is string => !!id);
+        if (orphanIds.length > 0) {
+          await db.delete(transactions).where(inArray(transactions.id, orphanIds));
+        }
+        return c.json({ error: 'Share already recorded' }, 400);
+      }
+
+      result = { transactionId, receivableTransactionId };
 
       return c.json({ data: result });
     }
@@ -693,23 +685,21 @@ const app = new Hono()
 
         const calculatedShares = calculateShares(body.totalAmount, body.splitType ?? 'EQUAL', body.shares);
 
-        // Delete old shares and insert new ones atomically
-        await db.transaction(async (tx) => {
-          await tx.delete(splitExpenseShares).where(eq(splitExpenseShares.expenseId, id));
-          await tx.insert(splitExpenseShares).values(
-            calculatedShares.map(s => ({
-              id: createId(),
-              expenseId: id,
-              contactId: s.contactId ?? null,
-              isUser: s.isUser,
-              shareAmount: s.shareAmount,
-              splitValue: s.splitValue
-            }))
-          );
-          if (Object.keys(metaUpdate).length > 0) {
-            await tx.update(splitExpenses).set(metaUpdate).where(eq(splitExpenses.id, id));
-          }
-        });
+        // Delete old shares and insert new ones sequentially
+        await db.delete(splitExpenseShares).where(eq(splitExpenseShares.expenseId, id));
+        await db.insert(splitExpenseShares).values(
+          calculatedShares.map(s => ({
+            id: createId(),
+            expenseId: id,
+            contactId: s.contactId ?? null,
+            isUser: s.isUser,
+            shareAmount: s.shareAmount,
+            splitValue: s.splitValue
+          }))
+        );
+        if (Object.keys(metaUpdate).length > 0) {
+          await db.update(splitExpenses).set(metaUpdate).where(eq(splitExpenses.id, id));
+        }
 
         return c.json({ data: { id } });
       }
@@ -747,13 +737,11 @@ const app = new Hono()
       .flatMap(s => [s.transactionId, s.receivableTransactionId])
       .filter((txId): txId is string => !!txId);
 
-    // Delete linked transactions then the expense atomically (cascade removes shares)
-    await db.transaction(async (tx) => {
-      if (transactionIds.length > 0) {
-        await tx.delete(transactions).where(inArray(transactions.id, transactionIds));
-      }
-      await tx.delete(splitExpenses).where(eq(splitExpenses.id, id));
-    });
+    // Delete linked transactions then the expense (cascade removes shares)
+    if (transactionIds.length > 0) {
+      await db.delete(transactions).where(inArray(transactions.id, transactionIds));
+    }
+    await db.delete(splitExpenses).where(eq(splitExpenses.id, id));
 
     return c.json({ data: { id } });
   });

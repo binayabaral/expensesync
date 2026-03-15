@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
 import { getAuth } from '@hono/clerk-auth';
+import { createId } from '@paralleldrive/cuid2';
 import { createClerkClient } from '@clerk/backend';
 import { and, eq, inArray, isNull } from 'drizzle-orm';
-import { createId } from '@paralleldrive/cuid2';
 
 import { db } from '@/db/drizzle';
 import { users, splitContacts, splitGroupMembers, splitGroups, accounts } from '@/db/schema';
@@ -34,65 +34,63 @@ const app = new Hono()
       clerkUser.username ||
       email;
 
-    // All DB writes are atomic — user row + contact linking + membership upgrades + reverse contacts
-    const newUser = await db.transaction(async (tx) => {
-      const [newUser] = await tx
-        .insert(users)
-        .values({ id: auth.userId, email, name })
-        .returning();
+    // Insert user
+    const [newUser] = await db
+      .insert(users)
+      .values({ id: auth.userId, email, name })
+      .returning();
 
-      // Resolve pending contacts with this email → link them + update name
-      if (email) {
-        const pendingContacts = await tx
-          .select({ id: splitContacts.id })
-          .from(splitContacts)
+    // Resolve pending contacts with this email → link them + update name
+    if (email) {
+      const pendingContacts = await db
+        .select({ id: splitContacts.id })
+        .from(splitContacts)
+        .where(and(eq(splitContacts.email, email), isNull(splitContacts.linkedUserId)));
+
+      if (pendingContacts.length > 0) {
+        const pendingContactIds = pendingContacts.map(c => c.id);
+
+        // Link all pending contacts in one update
+        await db
+          .update(splitContacts)
+          .set({ linkedUserId: auth.userId, name })
           .where(and(eq(splitContacts.email, email), isNull(splitContacts.linkedUserId)));
 
-        if (pendingContacts.length > 0) {
-          const pendingContactIds = pendingContacts.map(c => c.id);
+        // Batch-fetch all pending group memberships across all linked contacts at once
+        const memberships = await db
+          .select()
+          .from(splitGroupMembers)
+          .where(and(
+            inArray(splitGroupMembers.contactId, pendingContactIds),
+            isNull(splitGroupMembers.userId)
+          ));
 
-          // Link all pending contacts in one update
-          await tx
-            .update(splitContacts)
-            .set({ linkedUserId: auth.userId, name })
-            .where(and(eq(splitContacts.email, email), isNull(splitContacts.linkedUserId)));
-
-          // Batch-fetch all pending group memberships across all linked contacts at once
-          const memberships = await tx
+        if (memberships.length > 0) {
+          // Batch-fetch the groups needed to get name + currency for virtual account creation
+          const groupIds = [...new Set(memberships.map(m => m.groupId))];
+          const groups = await db
             .select()
-            .from(splitGroupMembers)
-            .where(and(
-              inArray(splitGroupMembers.contactId, pendingContactIds),
-              isNull(splitGroupMembers.userId)
-            ));
+            .from(splitGroups)
+            .where(inArray(splitGroups.id, groupIds));
+          const groupMap = new Map(groups.map(g => [g.id, g]));
 
-          if (memberships.length > 0) {
-            // Batch-fetch the groups needed to get name + currency for virtual account creation
-            const groupIds = [...new Set(memberships.map(m => m.groupId))];
-            const groups = await tx
-              .select()
-              .from(splitGroups)
-              .where(inArray(splitGroups.id, groupIds));
-            const groupMap = new Map(groups.map(g => [g.id, g]));
+          // Create a virtual BILL_SPLIT account for each membership and update the record
+          for (const membership of memberships) {
+            const group = groupMap.get(membership.groupId);
+            if (!group) continue;
 
-            // Create a virtual BILL_SPLIT account for each membership and update the record
-            for (const membership of memberships) {
-              const group = groupMap.get(membership.groupId);
-              if (!group) continue;
-
-              const virtualAccount = await createGroupVirtualAccount(auth.userId, group.name, group.currency, tx);
-              await tx
-                .update(splitGroupMembers)
-                .set({ userId: auth.userId, virtualAccountId: virtualAccount.id })
-                .where(eq(splitGroupMembers.id, membership.id));
-            }
+            const virtualAccount = await createGroupVirtualAccount(auth.userId, group.name, group.currency);
+            await db
+              .update(splitGroupMembers)
+              .set({ userId: auth.userId, virtualAccountId: virtualAccount.id })
+              .where(eq(splitGroupMembers.id, membership.id));
           }
         }
       }
 
       // Auto-create reverse contacts: for each user who had added the new user as a contact,
       // create a contact entry in the new user's contact list (if it doesn't exist yet)
-      const contactsPointingToMe = await tx
+      const contactsPointingToMe = await db
         .select({ createdByUserId: splitContacts.createdByUserId })
         .from(splitContacts)
         .where(eq(splitContacts.linkedUserId, auth.userId));
@@ -101,10 +99,10 @@ const app = new Hono()
 
       if (creatorIds.length > 0) {
         const [existingReverse, creators] = await Promise.all([
-          tx.select({ linkedUserId: splitContacts.linkedUserId })
+          db.select({ linkedUserId: splitContacts.linkedUserId })
             .from(splitContacts)
             .where(and(eq(splitContacts.createdByUserId, auth.userId), inArray(splitContacts.linkedUserId, creatorIds))),
-          tx.select({ id: users.id, name: users.name, email: users.email })
+          db.select({ id: users.id, name: users.name, email: users.email })
             .from(users)
             .where(inArray(users.id, creatorIds))
         ]);
@@ -113,7 +111,7 @@ const app = new Hono()
         const creatorsToAdd = creators.filter(c => !alreadyLinked.has(c.id));
 
         for (const creator of creatorsToAdd) {
-          const [reverseVirtualAccount] = await tx
+          const [reverseVirtualAccount] = await db
             .insert(accounts)
             .values({
               id: createId(),
@@ -125,7 +123,7 @@ const app = new Hono()
             })
             .returning();
 
-          await tx.insert(splitContacts).values({
+          await db.insert(splitContacts).values({
             id: createId(),
             createdByUserId: auth.userId,
             linkedUserId: creator.id,
@@ -135,9 +133,7 @@ const app = new Hono()
           });
         }
       }
-
-      return newUser;
-    });
+    }
 
     return c.json({ data: { enrolled: true, user: newUser } });
   });

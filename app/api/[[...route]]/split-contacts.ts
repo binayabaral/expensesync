@@ -46,32 +46,30 @@ const app = new Hono()
           .from(users)
           .where(inArray(users.id, missing));
 
-        // All reverse-contact pairs are created atomically.
+        // All reverse-contact pairs are created sequentially.
         // The `missing` filter above prevents uniqueness conflicts.
-        await db.transaction(async (tx) => {
-          for (const creator of creators) {
-            const [va] = await tx
-              .insert(accounts)
-              .values({
-                id: createId(),
-                name: creator.name,
-                userId: auth.userId,
-                accountType: 'BILL_SPLIT',
-                isHidden: true,
-                currency: 'NPR'
-              })
-              .returning();
-
-            await tx.insert(splitContacts).values({
+        for (const creator of creators) {
+          const [va] = await db
+            .insert(accounts)
+            .values({
               id: createId(),
-              createdByUserId: auth.userId,
-              linkedUserId: creator.id,
-              email: creator.email,
               name: creator.name,
-              virtualAccountId: va.id
-            });
-          }
-        });
+              userId: auth.userId,
+              accountType: 'BILL_SPLIT',
+              isHidden: true,
+              currency: 'NPR'
+            })
+            .returning();
+
+          await db.insert(splitContacts).values({
+            id: createId(),
+            createdByUserId: auth.userId,
+            linkedUserId: creator.id,
+            email: creator.email,
+            name: creator.name,
+            virtualAccountId: va.id
+          });
+        }
       }
     }
 
@@ -156,34 +154,30 @@ const app = new Hono()
         }
       }
 
-      // Create virtual BILL_SPLIT account + contact row atomically
-      const contact = await db.transaction(async (tx) => {
-        const [va] = await tx
-          .insert(accounts)
-          .values({
-            id: createId(),
-            name: resolvedName,
-            userId: auth.userId,
-            accountType: 'BILL_SPLIT',
-            isHidden: true,
-            currency: 'NPR' // default; will be overridden per group
-          })
-          .returning();
+      // Create virtual BILL_SPLIT account + contact row
+      const [va] = await db
+        .insert(accounts)
+        .values({
+          id: createId(),
+          name: resolvedName,
+          userId: auth.userId,
+          accountType: 'BILL_SPLIT',
+          isHidden: true,
+          currency: 'NPR' // default; will be overridden per group
+        })
+        .returning();
 
-        const [c] = await tx
-          .insert(splitContacts)
-          .values({
-            id: createId(),
-            createdByUserId: auth.userId,
-            linkedUserId,
-            email: email ?? null,
-            name: resolvedName,
-            virtualAccountId: va.id
-          })
-          .returning();
-
-        return c;
-      });
+      const [contact] = await db
+        .insert(splitContacts)
+        .values({
+          id: createId(),
+          createdByUserId: auth.userId,
+          linkedUserId,
+          email: email ?? null,
+          name: resolvedName,
+          virtualAccountId: va.id
+        })
+        .returning();
 
       // Auto-create the reverse contact for the enrolled user (B → A) if it doesn't exist
       if (linkedUserId) {
@@ -204,27 +198,25 @@ const app = new Hono()
             .limit(1);
 
           if (creator) {
-            await db.transaction(async (tx) => {
-              const [reverseVirtualAccount] = await tx
-                .insert(accounts)
-                .values({
-                  id: createId(),
-                  name: creator.name,
-                  userId: linkedUserId,
-                  accountType: 'BILL_SPLIT',
-                  isHidden: true,
-                  currency: 'NPR'
-                })
-                .returning();
-
-              await tx.insert(splitContacts).values({
+            const [reverseVirtualAccount] = await db
+              .insert(accounts)
+              .values({
                 id: createId(),
-                createdByUserId: linkedUserId,
-                linkedUserId: auth.userId,
-                email: creator.email,
                 name: creator.name,
-                virtualAccountId: reverseVirtualAccount.id
-              });
+                userId: linkedUserId,
+                accountType: 'BILL_SPLIT',
+                isHidden: true,
+                currency: 'NPR'
+              })
+              .returning();
+
+            await db.insert(splitContacts).values({
+              id: createId(),
+              createdByUserId: linkedUserId,
+              linkedUserId: auth.userId,
+              email: creator.email,
+              name: creator.name,
+              virtualAccountId: reverseVirtualAccount.id
             });
           }
         }

@@ -5,7 +5,7 @@
 import { and, eq, inArray, isNotNull, sql } from 'drizzle-orm';
 import { createId } from '@paralleldrive/cuid2';
 
-import { db, type DbOrTx } from '@/db/drizzle';
+import { db } from '@/db/drizzle';
 import { accounts, splitContacts, splitExpenseShares, splitExpenses, splitGroupMembers, splitSettlements, users, SUPPORTED_CURRENCIES } from '@/db/schema';
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
@@ -152,15 +152,13 @@ export async function hasOutstandingGroupBalance(userId: string, otherUserId: st
 
 // ─── Virtual Accounts ────────────────────────────────────────────────────────
 
-/** Creates a hidden BILL_SPLIT virtual account for the given user.
- *  Pass `dbOrTx` when calling from inside a `db.transaction()` callback. */
+/** Creates a hidden BILL_SPLIT virtual account for the given user. */
 export async function createGroupVirtualAccount(
   userId: string,
   groupName: string,
-  currency: typeof SUPPORTED_CURRENCIES[number],
-  dbOrTx: DbOrTx = db
+  currency: typeof SUPPORTED_CURRENCIES[number]
 ) {
-  const [account] = await dbOrTx
+  const [account] = await db
     .insert(accounts)
     .values({
       id: createId(),

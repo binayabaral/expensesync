@@ -5,7 +5,7 @@ import { createId } from '@paralleldrive/cuid2';
 import { zValidator } from '@hono/zod-validator';
 import { aliasedTable, eq, inArray, or, sql } from 'drizzle-orm';
 
-import { db, type DbOrTx } from '@/db/drizzle';
+import { db } from '@/db/drizzle';
 import { SUPPORTED_CURRENCIES, splitContacts, splitGroupMembers, splitGroups, splitSettlements, transactions, transfers, users } from '@/db/schema';
 import { computeGroupPairNet, ensureEnrolled } from '@/lib/split-db';
 import { notifySettlementRecorded } from '@/lib/split-notifications';
@@ -64,10 +64,9 @@ async function createSettlementTransfer(
   date: Date,
   payee: string,
   systemNote: string,
-  userNotes: string | null,
-  dbOrTx: DbOrTx = db
+  userNotes: string | null
 ): Promise<string> {
-  const [insertedTransfer] = await dbOrTx
+  const [insertedTransfer] = await db
     .insert(transfers)
     .values({
       id: createId(),
@@ -82,7 +81,7 @@ async function createSettlementTransfer(
     .returning();
 
   // Transaction on the user's real account
-  await dbOrTx.insert(transactions).values({
+  await db.insert(transactions).values({
     id: createId(),
     date,
     amount: fromIsUser ? -amount : amount,
@@ -95,7 +94,7 @@ async function createSettlementTransfer(
 
   // Transaction on the virtual BILL_SPLIT account (offsetting side)
   if (virtualAccountId) {
-    await dbOrTx.insert(transactions).values({
+    await db.insert(transactions).values({
       id: createId(),
       date,
       amount: fromIsUser ? amount : -amount,
@@ -243,56 +242,52 @@ const app = new Hono()
           );
           const groupNames = groupNameResults.map(r => r[0]?.name ?? null);
 
-          // All writes (transfer + settlement inserts) are atomic
-          const created = await db.transaction(async (tx) => {
-            let sharedTransferId: string | null = null;
-            if (accountId && distributed.length > 0) {
-              const firstGroupName = groupNames[0];
-              const sysNote = firstGroupName
-                ? `BILL SPLIT: settle with ${contactName} from group ${firstGroupName}`
-                : `BILL SPLIT: settle with ${contactName}`;
-              sharedTransferId = await createSettlementTransfer(
-                auth.userId, fromIsUser, accountId, distributed[0].virtualAccountId,
-                amount, date, contactName, sysNote, notes ?? null, tx
-              );
-            }
+          // All writes (transfer + settlement inserts) sequentially
+          let sharedTransferId: string | null = null;
+          if (accountId && distributed.length > 0) {
+            const firstGroupName = groupNames[0];
+            const sysNote = firstGroupName
+              ? `BILL SPLIT: settle with ${contactName} from group ${firstGroupName}`
+              : `BILL SPLIT: settle with ${contactName}`;
+            sharedTransferId = await createSettlementTransfer(
+              auth.userId, fromIsUser, accountId, distributed[0].virtualAccountId,
+              amount, date, contactName, sysNote, notes ?? null
+            );
+          }
 
-            const results = await Promise.all(distributed.map(async (d, i) => {
-              const grpName = groupNames[i];
-              const sysNote = grpName
-                ? `BILL SPLIT: settle with ${contactName} from group ${grpName}`
-                : `BILL SPLIT: settle with ${contactName}`;
+          const created = await Promise.all(distributed.map(async (d, i) => {
+            const grpName = groupNames[i];
+            const sysNote = grpName
+              ? `BILL SPLIT: settle with ${contactName} from group ${grpName}`
+              : `BILL SPLIT: settle with ${contactName}`;
 
-              // Additional virtual account transaction for groups 2+ (real account handled above)
-              const transferId: string | null = i === 0 ? sharedTransferId : null;
-              if (accountId && i > 0 && d.virtualAccountId) {
-                await tx.insert(transactions).values({
-                  id: createId(), date, amount: fromIsUser ? d.amount : -d.amount,
-                  accountId: d.virtualAccountId, payee: contactName, notes: sysNote, type: 'SELF_TRANSFER'
-                });
-              }
-
-              const [s] = await tx.insert(splitSettlements).values({
-                id: createId(), createdByUserId: auth.userId, groupId: d.groupId,
-                fromIsUser, fromContactId: fromContactId ?? null,
-                toIsUser, toContactId: toContactId ?? null,
-                amount: d.amount, currency, date, transactionId: null, transferId, notes: notes ?? null
-              }).returning();
-              return s;
-            }));
-
-            // If settlement exceeds total group balance, create a standalone record for the remainder
-            if (remaining > 0) {
-              await tx.insert(splitSettlements).values({
-                id: createId(), createdByUserId: auth.userId, groupId: null,
-                fromIsUser, fromContactId: fromContactId ?? null,
-                toIsUser, toContactId: toContactId ?? null,
-                amount: remaining, currency, date, transactionId: null, transferId: null, notes: notes ?? null
+            // Additional virtual account transaction for groups 2+ (real account handled above)
+            const transferId: string | null = i === 0 ? sharedTransferId : null;
+            if (accountId && i > 0 && d.virtualAccountId) {
+              await db.insert(transactions).values({
+                id: createId(), date, amount: fromIsUser ? d.amount : -d.amount,
+                accountId: d.virtualAccountId, payee: contactName, notes: sysNote, type: 'SELF_TRANSFER'
               });
             }
 
-            return results;
-          });
+            const [s] = await db.insert(splitSettlements).values({
+              id: createId(), createdByUserId: auth.userId, groupId: d.groupId,
+              fromIsUser, fromContactId: fromContactId ?? null,
+              toIsUser, toContactId: toContactId ?? null,
+              amount: d.amount, currency, date, transactionId: null, transferId, notes: notes ?? null
+            }).returning();
+            return s;
+          }));
+
+          // If settlement exceeds total group balance, create a standalone record for the remainder
+          if (remaining > 0) {
+            await db.insert(splitSettlements).values({
+              id: createId(), createdByUserId: auth.userId, groupId: null,
+              fromIsUser, fromContactId: fromContactId ?? null,
+              toIsUser, toContactId: toContactId ?? null,
+              amount: remaining, currency, date, transactionId: null, transferId: null, notes: notes ?? null
+            });
+          }
 
           await notifySettlementRecorded({ id: created[0].id, amount }, otherUserId);
           return c.json({ data: created[0] });
@@ -313,34 +308,30 @@ const app = new Hono()
 
       const virtualAccountId = await resolveVirtualAccountId(auth.userId, contactId, groupId);
 
-      // Transfer creation + settlement insert are atomic
-      const settlement = await db.transaction(async (tx) => {
-        let transferId: string | null = null;
-        if (accountId) {
-          transferId = await createSettlementTransfer(auth.userId, fromIsUser, accountId, virtualAccountId, amount, date, contactName, systemNote, notes ?? null, tx);
-        }
+      // Transfer creation + settlement insert sequentially
+      let transferId: string | null = null;
+      if (accountId) {
+        transferId = await createSettlementTransfer(auth.userId, fromIsUser, accountId, virtualAccountId, amount, date, contactName, systemNote, notes ?? null);
+      }
 
-        const [settlement] = await tx
-          .insert(splitSettlements)
-          .values({
-            id: createId(),
-            createdByUserId: auth.userId,
-            groupId,
-            fromIsUser,
-            fromContactId: fromContactId ?? null,
-            toIsUser,
-            toContactId: toContactId ?? null,
-            amount,
-            currency,
-            date,
-            transactionId: null,
-            transferId,
-            notes: notes ?? null
-          })
-          .returning();
-
-        return settlement;
-      });
+      const [settlement] = await db
+        .insert(splitSettlements)
+        .values({
+          id: createId(),
+          createdByUserId: auth.userId,
+          groupId,
+          fromIsUser,
+          fromContactId: fromContactId ?? null,
+          toIsUser,
+          toContactId: toContactId ?? null,
+          amount,
+          currency,
+          date,
+          transactionId: null,
+          transferId,
+          notes: notes ?? null
+        })
+        .returning();
 
       await notifySettlementRecorded({ id: settlement.id, amount }, otherUserId ?? null);
 
@@ -410,53 +401,51 @@ const app = new Hono()
 
       if (settleItems.length === 0) return c.json({ error: 'No outstanding group balances to settle' }, 400);
 
-      // All writes are atomic
-      const created = await db.transaction(async (dbTx) => {
-        const results: (typeof splitSettlements.$inferSelect)[] = [];
+      // All writes sequentially
+      const results: (typeof splitSettlements.$inferSelect)[] = [];
 
-        for (const item of settleItems) {
-          // Create a SELF_TRANSFER transaction on the user's virtual account to zero it out.
-          // net > 0 → account is positive (others owe user) → debit it with -net
-          // net < 0 → account is negative (user owes others) → credit it with +|net|
-          let transactionId: string | null = null;
-          if (item.virtualAccountId) {
-            const [insertedTx] = await dbTx.insert(transactions).values({
-              id: createId(),
-              date,
-              amount: -item.net,
-              accountId: item.virtualAccountId,
-              payee: contactName,
-              notes: `BILL SPLIT: settle-groups with ${contactName} (${item.groupName})`,
-              type: 'SELF_TRANSFER'
-            }).returning();
-            transactionId = insertedTx.id;
-          }
-
-          if (item.net > 0) {
-            // Contact owes current user → contact is paying user
-            const [s] = await dbTx.insert(splitSettlements).values({
-              id: createId(), createdByUserId: auth.userId, groupId: item.groupId,
-              fromIsUser: false, fromContactId: contactId,
-              toIsUser: true, toContactId: null,
-              amount: item.net, currency: item.currency, date,
-              transactionId, transferId: null, settleGroupsBatchId: batchId, notes: null
-            }).returning();
-            results.push(s);
-          } else {
-            // Current user owes contact → user is paying contact
-            const [s] = await dbTx.insert(splitSettlements).values({
-              id: createId(), createdByUserId: auth.userId, groupId: item.groupId,
-              fromIsUser: true, fromContactId: null,
-              toIsUser: false, toContactId: contactId,
-              amount: Math.abs(item.net), currency: item.currency, date,
-              transactionId, transferId: null, settleGroupsBatchId: batchId, notes: null
-            }).returning();
-            results.push(s);
-          }
+      for (const item of settleItems) {
+        // Create a SELF_TRANSFER transaction on the user's virtual account to zero it out.
+        // net > 0 → account is positive (others owe user) → debit it with -net
+        // net < 0 → account is negative (user owes others) → credit it with +|net|
+        let transactionId: string | null = null;
+        if (item.virtualAccountId) {
+          const [insertedTx] = await db.insert(transactions).values({
+            id: createId(),
+            date,
+            amount: -item.net,
+            accountId: item.virtualAccountId,
+            payee: contactName,
+            notes: `BILL SPLIT: settle-groups with ${contactName} (${item.groupName})`,
+            type: 'SELF_TRANSFER'
+          }).returning();
+          transactionId = insertedTx.id;
         }
 
-        return results;
-      });
+        if (item.net > 0) {
+          // Contact owes current user → contact is paying user
+          const [s] = await db.insert(splitSettlements).values({
+            id: createId(), createdByUserId: auth.userId, groupId: item.groupId,
+            fromIsUser: false, fromContactId: contactId,
+            toIsUser: true, toContactId: null,
+            amount: item.net, currency: item.currency, date,
+            transactionId, transferId: null, settleGroupsBatchId: batchId, notes: null
+          }).returning();
+          results.push(s);
+        } else {
+          // Current user owes contact → user is paying contact
+          const [s] = await db.insert(splitSettlements).values({
+            id: createId(), createdByUserId: auth.userId, groupId: item.groupId,
+            fromIsUser: true, fromContactId: null,
+            toIsUser: false, toContactId: contactId,
+            amount: Math.abs(item.net), currency: item.currency, date,
+            transactionId, transferId: null, settleGroupsBatchId: batchId, notes: null
+          }).returning();
+          results.push(s);
+        }
+      }
+
+      const created = results;
 
       await notifySettlementRecorded({ id: created[0].id, amount: created[0].amount }, otherUserId);
       return c.json({ data: created });
@@ -578,24 +567,20 @@ const app = new Hono()
         .from(splitSettlements)
         .where(eq(splitSettlements.settleGroupsBatchId, batchId));
 
-      await db.transaction(async (tx) => {
-        for (const s of batchSettlements) {
-          if (s.transferId) await tx.delete(transfers).where(eq(transfers.id, s.transferId));
-          else if (s.transactionId) await tx.delete(transactions).where(eq(transactions.id, s.transactionId));
-        }
-        await tx.delete(splitSettlements).where(eq(splitSettlements.settleGroupsBatchId, batchId));
-      });
+      for (const s of batchSettlements) {
+        if (s.transferId) await db.delete(transfers).where(eq(transfers.id, s.transferId));
+        else if (s.transactionId) await db.delete(transactions).where(eq(transactions.id, s.transactionId));
+      }
+      await db.delete(splitSettlements).where(eq(splitSettlements.settleGroupsBatchId, batchId));
     } else {
-      await db.transaction(async (tx) => {
-        if (settlement.transferId) {
-          // Deleting the transfer cascades its transactions via transferId FK
-          await tx.delete(transfers).where(eq(transfers.id, settlement.transferId));
-        } else if (settlement.transactionId) {
-          // Legacy: delete old USER_CREATED transaction
-          await tx.delete(transactions).where(eq(transactions.id, settlement.transactionId));
-        }
-        await tx.delete(splitSettlements).where(eq(splitSettlements.id, id));
-      });
+      if (settlement.transferId) {
+        // Deleting the transfer cascades its transactions via transferId FK
+        await db.delete(transfers).where(eq(transfers.id, settlement.transferId));
+      } else if (settlement.transactionId) {
+        // Legacy: delete old USER_CREATED transaction
+        await db.delete(transactions).where(eq(transactions.id, settlement.transactionId));
+      }
+      await db.delete(splitSettlements).where(eq(splitSettlements.id, id));
     }
 
     return c.json({ data: { id } });

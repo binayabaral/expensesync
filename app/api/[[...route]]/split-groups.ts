@@ -203,60 +203,56 @@ const app = new Hono()
         ? await db.select().from(splitContacts).where(inArray(splitContacts.id, memberContactIds))
         : [];
 
-      // All writes (group + virtual accounts + contacts + members) are atomic
-      const group = await db.transaction(async (tx) => {
-        const [group] = await tx
-          .insert(splitGroups)
-          .values({
-            id: createId(),
-            createdByUserId: auth.userId,
-            name,
-            description: description ?? null,
-            currency,
-            simplifyDebts
-          })
-          .returning();
-
-        // Create a virtual account for the creator and a self-contact row
-        const creatorVirtualAccount = await createGroupVirtualAccount(auth.userId, name, currency, tx);
-        const [selfContact] = await tx
-          .insert(splitContacts)
-          .values({
-            id: createId(),
-            createdByUserId: auth.userId,
-            linkedUserId: auth.userId,
-            email: null,
-            name: 'You',
-            virtualAccountId: creatorVirtualAccount.id
-          })
-          .returning();
-
-        await tx.insert(splitGroupMembers).values({
+      // All writes (group + virtual accounts + contacts + members) sequentially
+      const [group] = await db
+        .insert(splitGroups)
+        .values({
           id: createId(),
-          groupId: group.id,
-          contactId: selfContact.id,
-          userId: auth.userId,
+          createdByUserId: auth.userId,
+          name,
+          description: description ?? null,
+          currency,
+          simplifyDebts
+        })
+        .returning();
+
+      // Create a virtual account for the creator and a self-contact row
+      const creatorVirtualAccount = await createGroupVirtualAccount(auth.userId, name, currency);
+      const [selfContact] = await db
+        .insert(splitContacts)
+        .values({
+          id: createId(),
+          createdByUserId: auth.userId,
+          linkedUserId: auth.userId,
+          email: null,
+          name: 'You',
           virtualAccountId: creatorVirtualAccount.id
-        });
+        })
+        .returning();
 
-        for (const contact of memberContacts) {
-          let memberVirtualAccountId: string | null = null;
-          if (contact.linkedUserId) {
-            const va = await createGroupVirtualAccount(contact.linkedUserId, name, currency, tx);
-            memberVirtualAccountId = va.id;
-          }
+      await db.insert(splitGroupMembers).values({
+        id: createId(),
+        groupId: group.id,
+        contactId: selfContact.id,
+        userId: auth.userId,
+        virtualAccountId: creatorVirtualAccount.id
+      });
 
-          await tx.insert(splitGroupMembers).values({
-            id: createId(),
-            groupId: group.id,
-            contactId: contact.id,
-            userId: contact.linkedUserId ?? null,
-            virtualAccountId: memberVirtualAccountId
-          });
+      for (const contact of memberContacts) {
+        let memberVirtualAccountId: string | null = null;
+        if (contact.linkedUserId) {
+          const va = await createGroupVirtualAccount(contact.linkedUserId, name, currency);
+          memberVirtualAccountId = va.id;
         }
 
-        return group;
-      });
+        await db.insert(splitGroupMembers).values({
+          id: createId(),
+          groupId: group.id,
+          contactId: contact.id,
+          userId: contact.linkedUserId ?? null,
+          virtualAccountId: memberVirtualAccountId
+        });
+      }
 
       // Notifications are side-effects — run outside the transaction
       for (const contact of memberContacts) {
@@ -320,31 +316,29 @@ const app = new Hono()
         .from(splitContacts)
         .where(and(inArray(splitContacts.id, contactIds), eq(splitContacts.createdByUserId, auth.userId)));
 
-      // All virtual account + member inserts are atomic
-      const members = await db.transaction(async (tx) => {
-        return Promise.all(
-          contacts.map(async contact => {
-            let memberVirtualAccountId: string | null = null;
-            if (contact.linkedUserId) {
-              const va = await createGroupVirtualAccount(contact.linkedUserId, group.name, group.currency, tx);
-              memberVirtualAccountId = va.id;
-            }
+      // All virtual account + member inserts sequentially
+      const members = await Promise.all(
+        contacts.map(async contact => {
+          let memberVirtualAccountId: string | null = null;
+          if (contact.linkedUserId) {
+            const va = await createGroupVirtualAccount(contact.linkedUserId, group.name, group.currency);
+            memberVirtualAccountId = va.id;
+          }
 
-            const [member] = await tx
-              .insert(splitGroupMembers)
-              .values({
-                id: createId(),
-                groupId,
-                contactId: contact.id,
-                userId: contact.linkedUserId ?? null,
-                virtualAccountId: memberVirtualAccountId
-              })
-              .returning();
+          const [member] = await db
+            .insert(splitGroupMembers)
+            .values({
+              id: createId(),
+              groupId,
+              contactId: contact.id,
+              userId: contact.linkedUserId ?? null,
+              virtualAccountId: memberVirtualAccountId
+            })
+            .returning();
 
-            return member;
-          })
-        );
-      });
+          return member;
+        })
+      );
 
       // Notifications outside the transaction
       for (const contact of contacts) {
