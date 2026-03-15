@@ -66,7 +66,12 @@ export const columns: ColumnDef<ResponseType>[] = [
             Closed
           </Badge>
         )}
-        {row.original.currency && row.original.currency !== DEFAULT_CURRENCY && (
+        {row.original.accountType === 'BILL_SPLIT' && (
+          <Badge variant='outline' className='text-xs text-muted-foreground'>
+            Bill Split
+          </Badge>
+        )}
+        {row.original.currency !== DEFAULT_CURRENCY && (
           <Badge variant='secondary' className='text-xs font-mono'>
             {row.original.currency}
           </Badge>

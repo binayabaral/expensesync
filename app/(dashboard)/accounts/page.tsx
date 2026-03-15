@@ -23,7 +23,7 @@ function Accounts() {
   const deleteAccounts = useBulkDeleteAccount();
 
   const allAccounts = accountsQuery.data || [];
-  const visibleAccounts = showClosed ? allAccounts : allAccounts.filter(a => !a.isClosed && !a.isHidden);
+  const visibleAccounts = showClosed ? allAccounts : allAccounts.filter(a => !a.isClosed && a.accountType !== 'BILL_SPLIT');
   const nprAccounts = visibleAccounts.filter(a => (a.currency ?? DEFAULT_CURRENCY) === DEFAULT_CURRENCY);
   const foreignAccounts = visibleAccounts.filter(a => (a.currency ?? DEFAULT_CURRENCY) !== DEFAULT_CURRENCY);
   const isDisabled = accountsQuery.isLoading || deleteAccounts.isPending;
@@ -53,7 +53,7 @@ function Accounts() {
           <div className='flex items-center gap-4'>
             <label className='flex items-center gap-2 text-sm text-muted-foreground cursor-pointer'>
               <Switch checked={showClosed} onCheckedChange={setShowClosed} />
-              Show closed
+              Show all
             </label>
             <Button onClick={newAccount.onOpen}>
               <Plus className='size-4 mr-2' />
