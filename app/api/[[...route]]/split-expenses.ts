@@ -131,16 +131,9 @@ const app = new Hono()
 
     const { groupId, all } = c.req.valid('query');
 
-    // Find all contactIds linked to the current user (used by multiple branches)
-    const userContactRows = await db
-      .select({ id: splitContacts.id })
-      .from(splitContacts)
-      .where(eq(splitContacts.linkedUserId, auth.userId));
-    const userContactIds = userContactRows.map(r => r.id);
-
     let whereCondition;
     if (groupId) {
-      // Group expenses — user must be creator or member
+      // Group expenses — user must be creator or member (no contact lookup needed)
       const [group] = await db.select().from(splitGroups).where(eq(splitGroups.id, groupId)).limit(1);
       if (!group) return c.json({ error: 'Group not found' }, 404);
       const isCreator = group.createdByUserId === auth.userId;
@@ -152,14 +145,18 @@ const app = new Hono()
       if (!isCreator && !membership) return c.json({ error: 'Access denied' }, 403);
       whereCondition = eq(splitExpenses.groupId, groupId);
     } else if (all === 'true') {
-      // All expenses the user is associated with: creator + group member + participant via contact
-      const memberGroupRows = await db
-        .select({ groupId: splitGroupMembers.groupId })
-        .from(splitGroupMembers)
-        .where(eq(splitGroupMembers.userId, auth.userId));
+      // All expenses — fetch group memberships and contact IDs in parallel
+      const [memberGroupRows, userContactRows] = await Promise.all([
+        db.select({ groupId: splitGroupMembers.groupId })
+          .from(splitGroupMembers)
+          .where(eq(splitGroupMembers.userId, auth.userId)),
+        db.select({ id: splitContacts.id })
+          .from(splitContacts)
+          .where(eq(splitContacts.linkedUserId, auth.userId))
+      ]);
       const memberGroupIds = memberGroupRows.map(r => r.groupId);
+      const userContactIds = userContactRows.map(r => r.id);
 
-      // Expense IDs where user is a participant via a contact row
       const participantExpenseIds: string[] = [];
       if (userContactIds.length > 0) {
         const participantRows = await db
@@ -175,9 +172,14 @@ const app = new Hono()
         participantExpenseIds.length > 0 ? inArray(splitExpenses.id, participantExpenseIds) : undefined
       );
     } else {
-      // Standalone: creator's own expenses + expenses where enrolled user is a participant.
+      // Standalone: creator's own expenses + expenses where enrolled user is a participant
+      const userContactRows = await db
+        .select({ id: splitContacts.id })
+        .from(splitContacts)
+        .where(eq(splitContacts.linkedUserId, auth.userId));
+      const userContactIds = userContactRows.map(r => r.id);
+
       if (userContactIds.length > 0) {
-        // Get expense IDs of standalone expenses the user participates in (but didn't create)
         const participantRows = await db
           .select({ expenseId: splitExpenseShares.expenseId })
           .from(splitExpenseShares)
