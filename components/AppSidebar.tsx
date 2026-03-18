@@ -117,7 +117,7 @@ export function AppSidebar() {
       <SidebarHeader className='h-16 border-b border-sidebar-border flex items-center justify-start px-2'>
         <div className='flex items-center gap-3 w-full'>
           <div className='flex items-center justify-center h-9 w-9 rounded-lg bg-primary text-primary-foreground shrink-0'>
-            <FaMoneyBillTransfer className='h-4 w-4' />
+            <FaMoneyBillTransfer className='h-6 w-6' />
           </div>
           <div className='flex flex-col overflow-hidden group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:w-0 transition-all duration-200'>
             <span className='text-base font-bold whitespace-nowrap'>ExpenseSync</span>
