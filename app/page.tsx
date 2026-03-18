@@ -1,5 +1,49 @@
+import type { Metadata } from 'next';
 import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
+
+export const metadata: Metadata = {
+  title: 'ExpenseSync — Your finances, finally in control',
+  description:
+    'Track expenses, split bills with friends, manage subscriptions, credit cards, loans, and assets. Free personal finance app built for real life.',
+  keywords: [
+    'expense tracker',
+    'personal finance',
+    'bill splitting',
+    'budget app',
+    'net worth tracker',
+    'recurring payments',
+    'money management',
+    'financial health'
+  ],
+  openGraph: {
+    title: 'ExpenseSync — Your finances, finally in control',
+    description:
+      'Track expenses, split bills with friends, manage subscriptions, credit cards, loans, and assets. Free, always.',
+    url: '/',
+    siteName: 'ExpenseSync',
+    type: 'website',
+    locale: 'en_US'
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'ExpenseSync — Your finances, finally in control',
+    description:
+      'Track expenses, split bills with friends, manage subscriptions, credit cards, loans, and assets. Free, always.'
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large'
+    }
+  },
+  alternates: {
+    canonical: '/'
+  }
+};
 import Link from 'next/link';
 import {
   FaMoneyBillTransfer,
