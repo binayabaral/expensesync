@@ -22,7 +22,7 @@ const formSchema = insertRecurringPaymentSchema.omit({
   lastCompletedAt: true
 });
 
-type FormValues = z.input<typeof formSchema>;
+type FormValues = z.infer<typeof formSchema>;
 
 export const AddRecurringPaymentSheet = () => {
   const { isOpen, onClose, initialValues } = useAddRecurringPayment();

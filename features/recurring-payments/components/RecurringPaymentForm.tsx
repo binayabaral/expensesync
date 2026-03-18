@@ -21,10 +21,10 @@ const formSchema = z.object({
   cadence: z.enum(['DAILY', 'MONTHLY', 'YEARLY']),
   amount: z.string(),
   transferCharge: z.string().optional().nullable(),
-  startDate: z.coerce.date(),
-  dayOfMonth: z.coerce.number().int().min(1).max(31).optional().nullable(),
-  month: z.coerce.number().int().min(1).max(12).optional().nullable(),
-  intervalMonths: z.coerce.number().int().min(1).max(24).optional().nullable(),
+  startDate: z.date(),
+  dayOfMonth: z.number().int().min(1).max(31).optional().nullable(),
+  month: z.number().int().min(1).max(12).optional().nullable(),
+  intervalMonths: z.number().int().min(1).max(24).optional().nullable(),
   accountId: z.string().optional().nullable(),
   categoryId: z.string().optional().nullable(),
   toAccountId: z.string().optional().nullable(),
@@ -58,7 +58,7 @@ const typeOptions = [
   { label: 'Transfer', value: 'TRANSFER' }
 ];
 
-export type RecurringPaymentFormValues = z.input<typeof formSchema>;
+export type RecurringPaymentFormValues = z.infer<typeof formSchema>;
 
 export type RecurringPaymentApiValues = Omit<RecurringPaymentFormValues, 'amount' | 'transferCharge'> & {
   amount: number;
@@ -216,7 +216,7 @@ export const RecurringPaymentForm = ({
                     min={1}
                     max={31}
                     value={field.value ?? ''}
-                    onChange={field.onChange}
+                    onChange={e => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
                     disabled={disabled}
                     placeholder='1-31'
                   />
@@ -239,7 +239,7 @@ export const RecurringPaymentForm = ({
                     min={1}
                     max={24}
                     value={field.value ?? 1}
-                    onChange={field.onChange}
+                    onChange={e => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
                     disabled={disabled}
                     placeholder='1'
                   />
@@ -260,7 +260,7 @@ export const RecurringPaymentForm = ({
                   {isMobileDevice ? (
                     <NativeSelect
                       value={field.value?.toString() ?? ''}
-                      onChange={field.onChange}
+                      onChange={e => field.onChange(e.target.value ? Number(e.target.value) : null)}
                       disabled={disabled}
                       className='w-full'
                     >
@@ -278,7 +278,7 @@ export const RecurringPaymentForm = ({
                       options={monthOptions}
                       allowCreatingOptions={false}
                       placeholder='Select month'
-                      onChangeAction={field.onChange}
+                      onChangeAction={v => field.onChange(v ? Number(v) : null)}
                     />
                   )}
                 </FormControl>

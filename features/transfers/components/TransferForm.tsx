@@ -18,7 +18,7 @@ import { useGetCreditCardStatements } from '@/features/credit-cards/api/useGetCr
 
 const formSchema = z.object({
   amount: z.string(),
-  date: z.coerce.date(),
+  date: z.date(),
   transferCharge: z.string(),
   exchangeRate: z.string().optional(),
   notes: z.string().nullable().optional(),
@@ -33,8 +33,8 @@ const apiSchema = insertTransferSchema.omit({
   userId: true
 });
 
-type FormValues = z.input<typeof formSchema>;
-type ApiFormValues = z.input<typeof apiSchema>;
+type FormValues = z.infer<typeof formSchema>;
+type ApiFormValues = z.infer<typeof apiSchema>;
 
 type Props = {
   id?: string;

@@ -18,7 +18,7 @@ const formSchema = insertTransferSchema.omit({
   userId: true
 });
 
-type FormValues = z.input<typeof formSchema>;
+type FormValues = z.infer<typeof formSchema>;
 
 export const EditTransferSheet = () => {
   const { isOpen, onClose, id } = useOpenEditTransferSheet();

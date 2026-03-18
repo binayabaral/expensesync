@@ -15,7 +15,7 @@ const formSchema = insertTransferSchema.omit({
   userId: true
 });
 
-type FormValues = z.input<typeof formSchema>;
+type FormValues = z.infer<typeof formSchema>;
 
 export const AddTransferSheet = () => {
   const { isOpen, onClose, defaultValues: initialValues, recurringPaymentId } = useOpenAddTransferSheet();

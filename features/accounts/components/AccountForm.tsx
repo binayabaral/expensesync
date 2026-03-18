@@ -52,8 +52,8 @@ const apiSchema = z.object({
   emiIntervalMonths: z.number().optional()
 });
 
-type FormValues = z.input<typeof formSchema>;
-type ApiFormValues = z.input<typeof apiSchema>;
+type FormValues = z.infer<typeof formSchema>;
+type ApiFormValues = z.infer<typeof apiSchema>;
 
 type Props = {
   id?: string;

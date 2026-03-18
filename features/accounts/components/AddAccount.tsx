@@ -21,7 +21,7 @@ const formSchema = z.object({
   minimumPaymentPercentage: z.number().optional()
 });
 
-type FormValues = z.input<typeof formSchema>;
+type FormValues = z.infer<typeof formSchema>;
 
 export const AddAccount = () => {
   const { isOpen, onClose } = useAddAccount();

@@ -16,7 +16,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/
 const formSchema = z.object({
   payee: z.string(),
   amount: z.string(),
-  date: z.coerce.date(),
+  date: z.date(),
   accountId: z.string(),
   notes: z.string().nullable().optional(),
   categoryId: z.string().nullable().optional()
@@ -27,8 +27,8 @@ const apiSchema = insertTransactionSchema.omit({
   id: true
 });
 
-type FormValues = z.input<typeof formSchema>;
-type ApiFormValues = z.input<typeof apiSchema>;
+type FormValues = z.infer<typeof formSchema>;
+type ApiFormValues = z.infer<typeof apiSchema>;
 
 type Props = {
   id?: string;

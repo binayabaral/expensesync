@@ -1,5 +1,3 @@
-'use client';
-
 import { z } from 'zod';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
@@ -19,7 +17,7 @@ import type { SettlementGroupMember } from '../hooks/useOpenAddSettlementSheet';
 
 const formSchema = z.object({
   amount: z.string().min(1, 'Amount required'),
-  date: z.coerce.date(),
+  date: z.date(),
   contactId: z.string().min(1, 'Select who to settle with'),
   direction: z.enum(['paying', 'receiving']),
   recordTransaction: z.boolean(),

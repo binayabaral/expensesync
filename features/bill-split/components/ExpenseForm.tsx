@@ -1,5 +1,3 @@
-'use client';
-
 import { z } from 'zod';
 import { useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
@@ -13,7 +11,7 @@ import { AmountInput } from '@/components/AmountInput';
 import { DEFAULT_CURRENCY } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { convertAmountToMiliUnits, formatCurrency } from '@/lib/utils';
+import { convertAmountToMiliUnits } from '@/lib/utils';
 import { DateTimePicker } from '@/components/ui-extended/Datepicker';
 import { ResponsiveSelect } from '@/components/ResponsiveSelect';
 import { useGetAccounts } from '@/features/accounts/api/useGetAccounts';
@@ -33,7 +31,7 @@ const shareSchema = z.object({
 const formSchema = z.object({
   description: z.string().min(1, 'Description required'),
   totalAmount: z.string().min(1, 'Amount required'),
-  date: z.coerce.date(),
+  date: z.date(),
   paidBy: z.string(), // 'user' or contact id
   splitType: z.enum(['EQUAL', 'EXACT', 'PERCENTAGE', 'SHARES']),
   categoryId: z.string().nullable().optional(),
@@ -89,7 +87,7 @@ const SPLIT_TYPES: { value: SplitType; label: string }[] = [
   { value: 'SHARES', label: 'Shares' }
 ];
 
-export function ExpenseForm({ groupId, groupMembers, disabled, initialValues, submitLabel, onSubmit }: Props) {
+export function ExpenseForm({ groupMembers, disabled, initialValues, submitLabel, onSubmit }: Props) {
   const contactsQuery = useGetContacts();
   const contacts = contactsQuery.data ?? [];
   const categoriesQuery = useGetCategories();

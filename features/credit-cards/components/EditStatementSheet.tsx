@@ -16,7 +16,7 @@ const formSchema = z.object({
   paymentDueAmount: z.string()
 });
 
-type FormValues = z.input<typeof formSchema>;
+type FormValues = z.infer<typeof formSchema>;
 
 export const EditStatementSheet = () => {
   const { isOpen, onClose, statement } = useOpenEditStatementSheet();

@@ -18,7 +18,7 @@ const formSchema = insertTransactionSchema.omit({
   id: true
 });
 
-type FormValues = z.input<typeof formSchema>;
+type FormValues = z.infer<typeof formSchema>;
 
 export const AddTransactionSheet = () => {
   const params = useSearchParams();

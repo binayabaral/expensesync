@@ -16,7 +16,7 @@ const formSchema = insertAssetSchema.omit({
   id: true
 });
 
-type FormValues = z.input<typeof formSchema>;
+type FormValues = z.infer<typeof formSchema>;
 
 export const EditAssetSheet = () => {
   const { isOpen, onClose, id } = useOpenEditAssetSheet();

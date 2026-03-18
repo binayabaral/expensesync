@@ -32,7 +32,7 @@ const editAccountSchema = z.object({
   emiIntervalMonths: z.string().optional().nullable()
 });
 
-type FormValues = z.input<typeof editAccountSchema>;
+type FormValues = z.infer<typeof editAccountSchema>;
 
 type Props = {
   id?: string;

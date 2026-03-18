@@ -37,7 +37,7 @@ const formSchema = z.object({
       message: 'Extra charge must be zero or positive'
     }),
   accountId: z.string().min(1, 'Account is required'),
-  date: z.coerce.date(),
+  date: z.date(),
   notes: z.string().optional()
 });
 

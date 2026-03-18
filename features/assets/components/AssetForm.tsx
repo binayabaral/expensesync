@@ -35,7 +35,7 @@ const formSchema = z
     extraCharge: z.string(),
     totalPaid: z.string(),
     accountId: z.string(),
-    date: z.coerce.date()
+    date: z.date()
   })
   .refine(
     values => {
@@ -77,15 +77,15 @@ const formSchema = z
     }
   );
 
-type FormValues = z.input<typeof formSchema>;
-type ApiFormValues = z.input<typeof baseSchema> & { date: Date };
+type FormValues = z.infer<typeof formSchema>;
+type ApiFormValues = z.infer<typeof baseSchema>;
 
 type Props = {
   disabled: boolean;
   defaultValues: FormValues;
   accountOptions: { label: string; value: string }[];
   accounts?: { id: string; currency?: string | null }[];
-  onSubmit: (values: ApiFormValues & { date: Date }) => void;
+  onSubmit: (values: ApiFormValues) => void;
 };
 
 export const AssetForm = ({ disabled, defaultValues, accountOptions, accounts = [], onSubmit }: Props) => {

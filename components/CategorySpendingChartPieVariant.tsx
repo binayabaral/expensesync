@@ -24,6 +24,7 @@ type Props = {
 };
 
 export const CategorySpendingChartPieVariant = ({ data }: Props) => {
+  const total = data.reduce((sum, d) => sum + d.value, 0);
   return (
     <ResponsiveContainer width='100%' height={300}>
       <PieChart>
@@ -41,7 +42,7 @@ export const CategorySpendingChartPieVariant = ({ data }: Props) => {
                     <span className='size-2 rounded-full' style={{ backgroundColor: entry.color }} />
                     <div className='space-x-1'>
                       <span className='text-xs text-muted-foreground'>{entry.value}:</span>
-                      <span className='text-xs'>{formatPercentage(entry.payload.percent * 100)}</span>
+                      <span className='text-xs'>{formatPercentage(total > 0 ? (entry.payload.value / total) * 100 : 0)}</span>
                     </div>
                   </li>
                 ))
