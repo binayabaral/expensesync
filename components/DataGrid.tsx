@@ -2,7 +2,7 @@
 
 import { FaPiggyBank } from 'react-icons/fa';
 import { useSearchParams } from 'next/navigation';
-import { FaArrowTrendUp, FaArrowTrendDown, FaMoneyBillTransfer } from 'react-icons/fa6';
+import { FaArrowTrendUp, FaArrowTrendDown, FaCircleDollarToSlot } from 'react-icons/fa6';
 
 import DataCard from '@/components/DataCard';
 import { formatDateRange, formatPercentage } from '@/lib/utils';
@@ -53,7 +53,7 @@ function DataGrid() {
       <DataCard
         title='Extra Charges'
         isLoading={isLoading}
-        icon={FaMoneyBillTransfer}
+        icon={FaCircleDollarToSlot}
         subtitle={dateRangeLabel}
         value={Math.abs(data?.transferCharges || 0)}
         baseText={formatPercentage(data?.transferChargesChange || 0, { addPrefix: true }, { from, to })}
