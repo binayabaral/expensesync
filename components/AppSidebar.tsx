@@ -43,7 +43,7 @@ export function AppSidebar() {
   const mainItems = [
     {
       title: 'Overview',
-      url: '/',
+      url: '/dashboard',
       icon: FaLayerGroup
     }
   ];
@@ -51,22 +51,22 @@ export function AppSidebar() {
   const transactionItems = [
     {
       title: 'Transactions',
-      url: '/transactions',
+      url: '/dashboard/transactions',
       icon: FaReceipt
     },
     {
       title: 'Transfers',
-      url: '/transfers',
+      url: '/dashboard/transfers',
       icon: FaRightLeft
     },
     {
       title: 'Recurring',
-      url: '/recurring-payments',
+      url: '/dashboard/recurring-payments',
       icon: FaArrowsRotate
     },
     {
       title: 'Bill Split',
-      url: '/bill-split',
+      url: '/dashboard/bill-split',
       icon: FaScaleBalanced
     }
   ];
@@ -74,22 +74,22 @@ export function AppSidebar() {
   const accountItems = [
     {
       title: 'Accounts',
-      url: '/accounts',
+      url: '/dashboard/accounts',
       icon: FaWallet
     },
     {
       title: 'Credit Cards',
-      url: '/credit-cards',
+      url: '/dashboard/credit-cards',
       icon: FaCreditCard
     },
     {
       title: 'Loans',
-      url: '/loans',
+      url: '/dashboard/loans',
       icon: FaFileInvoiceDollar
     },
     {
       title: 'Assets',
-      url: '/assets',
+      url: '/dashboard/assets',
       icon: FaCoins
     }
   ];
@@ -97,23 +97,25 @@ export function AppSidebar() {
   const analyticsItems = [
     {
       title: 'Categories',
-      url: '/categories',
+      url: '/dashboard/categories',
       icon: FaTags
     },
     {
       title: 'Payees',
-      url: '/payees',
+      url: '/dashboard/payees',
       icon: FaUsers
     },
     {
       title: 'Financial Health',
-      url: '/health',
+      url: '/dashboard/health',
       icon: FaHeart
     }
   ];
 
   return (
     <Sidebar collapsible='icon'>
+      {/* Sidebar ambient glow */}
+      <div className='pointer-events-none absolute -top-20 -left-20 h-60 w-60 rounded-full bg-primary/10 blur-[80px]' />
       <SidebarHeader className='h-16 border-b border-sidebar-border flex items-center justify-start px-2'>
         <div className='flex items-center gap-3 w-full'>
           <div className='flex items-center justify-center h-9 w-9 rounded-lg bg-primary text-primary-foreground shrink-0'>

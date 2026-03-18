@@ -4,7 +4,6 @@ import { Geist, Geist_Mono } from 'next/font/google';
 
 import { Toaster } from '@/components/ui/sonner';
 import QueryProvider from '@/providers/QueryProvider';
-import { SheetProvider } from '@/providers/SheetProvider';
 import { ThemeProvider } from '@/components/ThemeProvider';
 
 import './globals.css';
@@ -39,15 +38,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider afterSignInUrl='/dashboard' afterSignUpUrl='/dashboard'>
       <html lang='en' suppressHydrationWarning>
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased pointer-events-auto!`}>
           <ThemeProvider>
             <QueryProvider>
-              <SheetProvider>
-                <Toaster position='top-right' />
-                {children}
-              </SheetProvider>
+              <Toaster position='top-right' />
+              {children}
             </QueryProvider>
           </ThemeProvider>
         </body>

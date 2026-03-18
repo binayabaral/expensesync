@@ -4,21 +4,27 @@ import { shadcn } from '@clerk/themes';
 
 export default function Page() {
   return (
-    <div className='min-h-screen'>
-      <div className='h-full flex-col items-center justify-center'>
-        <div className='text-center space-y-4 pt-[10vh]'>
-          <h1 className='font-bold text-3xl'>Welcome back!</h1>
-          <p className='text-base text-muted-foreground'>Log in or create account to get back to your dashboard</p>
+    <>
+      <ClerkLoaded>
+        <SignUp
+          path='/sign-up'
+          appearance={{
+            baseTheme: shadcn,
+            elements: {
+              rootBox: 'w-full',
+              card: 'w-full shadow-none border-0 bg-transparent',
+              socialButtonsBlockButton: 'border-border/60 bg-background hover:bg-muted transition-colors',
+              formFieldInput: 'bg-background border-border/60',
+              footerActionLink: 'text-primary hover:text-primary/80'
+            }
+          }}
+        />
+      </ClerkLoaded>
+      <ClerkLoading>
+        <div className='flex items-center justify-center py-16'>
+          <Loader2 className='animate-spin text-muted-foreground h-5 w-5' />
         </div>
-        <div className='flex items-center justify-center mt-8'>
-          <ClerkLoaded>
-            <SignUp path='/sign-up' appearance={{ baseTheme: shadcn }} />
-          </ClerkLoaded>
-          <ClerkLoading>
-            <Loader2 className='animate-spin text-muted-foreground' />
-          </ClerkLoading>
-        </div>
-      </div>
-    </div>
+      </ClerkLoading>
+    </>
   );
 }
