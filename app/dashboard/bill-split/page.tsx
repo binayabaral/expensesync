@@ -204,7 +204,7 @@ function BillSplitContent() {
         ) : (
           <div>
             {visibleGroups.map(group => (
-              <Link key={group.id} href={`/bill-split/${group.id}`}>
+              <Link key={group.id} href={`/dashboard/bill-split/${group.id}`}>
                 <div className='flex items-center gap-3 px-3 py-2.5 border-b last:border-b-0 hover:bg-muted/40 transition-colors cursor-pointer'>
                   <div className='h-8 w-8 rounded-md bg-muted flex items-center justify-center shrink-0'>
                     <FaUsers className='h-3.5 w-3.5 text-muted-foreground' />

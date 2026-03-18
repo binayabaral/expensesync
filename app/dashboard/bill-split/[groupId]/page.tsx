@@ -165,7 +165,7 @@ export default function GroupDetailPage({ params }: Props) {
   if (!group) {
     return (
       <div className='max-w-full space-y-4'>
-        <Link href='/bill-split' className='flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground'>
+        <Link href='/dashboard/bill-split' className='flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground'>
           <FaArrowLeft className='h-3 w-3' />
           Back to Bill Split
         </Link>
@@ -189,7 +189,7 @@ export default function GroupDetailPage({ params }: Props) {
     <div className='max-w-full space-y-4'>
       {/* Header */}
       <div className='space-y-3'>
-        <Link href='/bill-split' className='flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground w-fit'>
+        <Link href='/dashboard/bill-split' className='flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground w-fit'>
           <FaArrowLeft className='h-3 w-3' />
           Bill Split
         </Link>
