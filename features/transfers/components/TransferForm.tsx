@@ -13,6 +13,7 @@ import { insertTransferSchema } from '@/db/schema';
 import { DEFAULT_CURRENCY, convertAmountToMiliUnits, formatCurrency } from '@/lib/utils';
 import { DateTimePicker } from '@/components/ui-extended/Datepicker';
 import { ResponsiveSelect } from '@/components/ResponsiveSelect';
+import { Label } from '@/components/ui/label';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { useGetCreditCardStatements } from '@/features/credit-cards/api/useGetCreditCardStatements';
 
@@ -234,7 +235,7 @@ export const TransferForm = ({ id, onSubmit, onDelete, disabled, defaultValues, 
               )}
             />
             <FormItem>
-              <FormLabel>Amount to Receive ({toCurrency})</FormLabel>
+              <Label>Amount to Receive ({toCurrency})</Label>
               <AmountInput
                 value={previewToAmount !== null ? previewToAmount.toString() : ''}
                 onChange={() => {}}

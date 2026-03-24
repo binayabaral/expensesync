@@ -72,7 +72,7 @@ export const columns: ColumnDef<ResponseType>[] = [
           </Badge>
         )}
         {row.original.currency !== DEFAULT_CURRENCY && (
-          <Badge variant='secondary' className='text-xs font-mono'>
+          <Badge variant='secondary' className='text-xs font-mono' title='Foreign currency — not included in NPR summary'>
             {row.original.currency}
           </Badge>
         )}
