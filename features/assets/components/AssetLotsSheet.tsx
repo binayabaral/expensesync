@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowUpDown, Edit, MoreHorizontal, Loader2, Trash } from 'lucide-react';
+import { Edit, MoreHorizontal, Loader2, Trash } from 'lucide-react';
 import { InferResponseType } from 'hono';
 import { ColumnDef } from '@tanstack/react-table';
 
@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { AmountInput } from '@/components/AmountInput';
 import { Select } from '@/components/Select';
+import { SortableHeader } from '@/components/SortableHeader';
 import { DateTimePicker } from '@/components/ui-extended/Datepicker';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
@@ -133,85 +134,31 @@ export const AssetLotsSheet = () => {
   const columns: ColumnDef<LotResponse>[] = [
     {
       accessorKey: 'date',
-      header: ({ column }) => (
-        <Button
-          variant='ghost'
-          className='px-3'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Date
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      ),
+      header: ({ column }) => <SortableHeader column={column} label='Date' />,
       cell: ({ row }) => <span>{new Date(row.original.date).toLocaleString()}</span>
     },
     {
       accessorKey: 'account',
-      header: ({ column }) => (
-        <Button
-          variant='ghost'
-          className='px-3'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Account
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      ),
+      header: ({ column }) => <SortableHeader column={column} label='Account' />,
       cell: ({ row }) => <span>{row.original.account}</span>
     },
     {
       accessorKey: 'quantity',
-      header: ({ column }) => (
-        <Button
-          variant='ghost'
-          className='px-3'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Quantity
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      )
+      header: ({ column }) => <SortableHeader column={column} label='Quantity' />
     },
     {
       accessorKey: 'unit',
-      header: ({ column }) => (
-        <Button
-          variant='ghost'
-          className='px-3'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Unit
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      )
+      header: ({ column }) => <SortableHeader column={column} label='Unit' />
     },
     {
       accessorKey: 'assetPrice',
-      header: ({ column }) => (
-        <Button
-          variant='ghost'
-          className='px-3'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Bought Price / Unit
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      ),
+      header: ({ column }) => <SortableHeader column={column} label='Bought Price / Unit' />,
       cell: ({ row }) =>
-        row.original.quantity > 0 ? formatCurrency(row.original.assetPrice, false, row.original.accountCurrency ?? DEFAULT_CURRENCY) : '-' // only for buys
+        row.original.quantity > 0 ? formatCurrency(row.original.assetPrice, false, row.original.accountCurrency ?? DEFAULT_CURRENCY) : '-'
     },
     {
       accessorKey: 'sellPrice',
-      header: ({ column }) => (
-        <Button
-          variant='ghost'
-          className='px-3'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Sell Price / Unit
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      ),
+      header: ({ column }) => <SortableHeader column={column} label='Sell Price / Unit' />,
       cell: ({ row }) =>
         row.original.quantity < 0 && row.original.sellPrice != null
           ? formatCurrency(row.original.sellPrice, false, row.original.accountCurrency ?? DEFAULT_CURRENCY)
@@ -219,16 +166,7 @@ export const AssetLotsSheet = () => {
     },
     {
       id: 'lotProfitLoss',
-      header: ({ column }) => (
-        <Button
-          variant='ghost'
-          className='px-3'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Profit / Loss
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      ),
+      header: ({ column }) => <SortableHeader column={column} label='Profit / Loss' />,
       accessorFn: row => {
         if (row.quantity >= 0 || row.sellPrice == null) return 0;
         const saleAmount = row.sellPrice * Math.abs(row.quantity);
@@ -262,30 +200,12 @@ export const AssetLotsSheet = () => {
     },
     {
       accessorKey: 'extraCharge',
-      header: ({ column }) => (
-        <Button
-          variant='ghost'
-          className='px-3'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Extra Charges
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      ),
+      header: ({ column }) => <SortableHeader column={column} label='Extra Charges' />,
       cell: ({ row }) => formatCurrency(row.original.extraCharge, false, row.original.accountCurrency ?? DEFAULT_CURRENCY)
     },
     {
       accessorKey: 'totalPaid',
-      header: ({ column }) => (
-        <Button
-          variant='ghost'
-          className='px-3'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Total Paid
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      ),
+      header: ({ column }) => <SortableHeader column={column} label='Total Paid' />,
       cell: ({ row }) => formatCurrency(row.original.totalPaid, false, row.original.accountCurrency ?? DEFAULT_CURRENCY)
     },
     {
@@ -328,13 +248,9 @@ export const AssetLotsSheet = () => {
           <Loader2 className='size-4 text-muted-foreground animate-spin' />
         </div>
       ) : (
-        <DataTable
-          data={lots}
-          columns={columns}
-          disabled={isLoading}
-          hasFooter={false}
-          onDeleteAction={() => undefined}
-        />
+        <div className='h-[30vh] flex flex-col'>
+          <DataTable data={lots} columns={columns} />
+        </div>
       )}
       <Sheet open={isEditSheetOpen} onOpenChange={open => (!open ? cancelEdit() : null)}>
         <SheetContent className='space-y-4' tabIndex={undefined}>

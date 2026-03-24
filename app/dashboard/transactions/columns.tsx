@@ -7,7 +7,6 @@ import { TriangleAlert } from 'lucide-react';
 
 import { client } from '@/lib/hono';
 import { DEFAULT_CURRENCY, cn, formatCurrency } from '@/lib/utils';
-import { Checkbox } from '@/components/ui/checkbox';
 import { SortableHeader } from '@/components/SortableHeader';
 
 import { Actions } from './Actions';
@@ -15,26 +14,6 @@ import { Actions } from './Actions';
 export type ResponseType = InferResponseType<typeof client.api.transactions.$get, 200>['data'][0];
 
 export const columns: ColumnDef<ResponseType>[] = [
-  {
-    id: 'select',
-    header: ({ table }) => (
-      <Checkbox
-        checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')}
-        onCheckedChange={value => table.toggleAllPageRowsSelected(!!value)}
-        aria-label='Select all'
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={value => row.toggleSelected(!!value)}
-        aria-label='Select row'
-        disabled={!!row.original.isBillSplit}
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false
-  },
   {
     accessorKey: 'date',
     header: ({ column }) => <SortableHeader column={column} label='Date' />,

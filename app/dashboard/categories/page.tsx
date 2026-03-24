@@ -8,25 +8,22 @@ import { DataTable } from '@/components/DataTable';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAddCategory } from '@/features/categories/hooks/useAddCategory';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useBulkDeleteCategories } from '@/features/categories/api/useBulkDeleteCategories';
 import { useGetCategoriesWithExpenses } from '@/features/categories/api/useGetCategoriesWithExpenses';
 
 import { BuildColumns } from './columns';
 
 function Categories() {
   const newCategory = useAddCategory();
-  const deleteCategories = useBulkDeleteCategories();
   const categoriesQuery = useGetCategoriesWithExpenses();
 
   const categories = categoriesQuery.data || [];
-  const isDisabled = categoriesQuery.isLoading || deleteCategories.isPending;
 
   const columns = BuildColumns(categories);
 
   if (categoriesQuery.isLoading) {
     return (
-      <div className='max-w-full'>
-        <Card className='border border-border shadow-none'>
+      <div className='flex flex-col flex-1 min-h-0'>
+        <Card className='border border-border shadow-none flex flex-col flex-1 min-h-0'>
           <CardHeader>
             <Skeleton className='h-8 w-48' />
           </CardHeader>
@@ -41,8 +38,8 @@ function Categories() {
   }
 
   return (
-    <div className='max-w-full'>
-      <Card className='border border-border shadow-none'>
+    <div className='flex flex-col flex-1 min-h-0'>
+      <Card className='border border-border shadow-none flex flex-col flex-1 min-h-0'>
         <CardHeader className='gap-y-2 lg:flex-row lg:items-center lg:justify-between space-y-0'>
           <CardTitle className='text-lg font-semibold'>Categories</CardTitle>
           <Button onClick={newCategory.onOpen}>
@@ -50,17 +47,8 @@ function Categories() {
             Add New
           </Button>
         </CardHeader>
-        <CardContent>
-          <DataTable
-            hasFooter
-            columns={columns}
-            data={categories}
-            onDeleteAction={row => {
-              const ids = row.map(r => r.original.id);
-              deleteCategories.mutate({ ids });
-            }}
-            disabled={isDisabled}
-          />
+        <CardContent className='flex flex-col flex-1 min-h-0 pb-4'>
+          <DataTable hasFooter columns={columns} data={categories} />
         </CardContent>
       </Card>
     </div>

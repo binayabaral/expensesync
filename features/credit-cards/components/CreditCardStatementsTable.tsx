@@ -80,5 +80,9 @@ export const CreditCardStatementsTable = ({ statements, onOverride }: Props) => 
     [onOverride]
   );
 
-  return <DataTable columns={columns} data={statements} onDeleteAction={() => {}} />;
+  return (
+    <div className='h-100 flex flex-col'>
+      <DataTable columns={columns} data={statements} />
+    </div>
+  );
 };

@@ -6,7 +6,6 @@ import { ColumnDef } from '@tanstack/react-table';
 
 import { client } from '@/lib/hono';
 import { DEFAULT_CURRENCY, cn, formatCurrency } from '@/lib/utils';
-import { Checkbox } from '@/components/ui/checkbox';
 import { SortableHeader } from '@/components/SortableHeader';
 
 import { Actions } from './Actions';
@@ -14,25 +13,6 @@ import { Actions } from './Actions';
 export type ResponseType = InferResponseType<typeof client.api.transfers.$get, 200>['data'][0];
 
 export const columns: ColumnDef<ResponseType>[] = [
-  {
-    id: 'select',
-    header: ({ table }) => (
-      <Checkbox
-        aria-label='Select all'
-        onCheckedChange={value => table.toggleAllPageRowsSelected(!!value)}
-        checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')}
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        aria-label='Select row'
-        checked={row.getIsSelected()}
-        onCheckedChange={value => row.toggleSelected(!!value)}
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false
-  },
   {
     accessorKey: 'date',
     header: ({ column }) => <SortableHeader column={column} label='Date' />,

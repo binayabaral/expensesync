@@ -12,7 +12,7 @@ type Props<TData> = {
 
 export function SortableHeader<TData>({ column, label }: Props<TData>) {
   return (
-    <Button variant='ghost' className='px-3' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+    <Button variant='ghost' className='px-3 whitespace-nowrap' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
       {label}
       <ArrowUpDown className='ml-2 h-4 w-4' />
     </Button>

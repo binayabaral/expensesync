@@ -38,7 +38,7 @@ async function DashboardLayout({ children }: Props) {
             <Filters />
           </div>
         </div>
-        <main className='p-4 h-[calc(100vh-4rem)] overflow-auto'>{children}</main>
+        <main className='p-4 h-[calc(100vh-4rem)] overflow-hidden flex flex-col'>{children}</main>
       </SidebarInset>
     </SidebarProvider>
     </SheetProvider>

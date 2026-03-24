@@ -9,7 +9,6 @@ import { DataTable } from '@/components/DataTable';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useGetAccounts } from '@/features/accounts/api/useGetAccounts';
 import { useAddAccount } from '@/features/accounts/hooks/useAddAccounts';
-import { useBulkDeleteAccount } from '@/features/accounts/api/useBulkDelete';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 import { columns } from './columns';
@@ -19,16 +18,13 @@ function Accounts() {
   const [showClosed, setShowClosed] = useState(false);
   const newAccount = useAddAccount();
   const accountsQuery = useGetAccounts();
-  const deleteAccounts = useBulkDeleteAccount();
-
   const allAccounts = accountsQuery.data || [];
   const visibleAccounts = showClosed ? allAccounts : allAccounts.filter(a => !a.isClosed && a.accountType !== 'BILL_SPLIT');
-  const isDisabled = accountsQuery.isLoading || deleteAccounts.isPending;
 
   if (accountsQuery.isLoading) {
     return (
-      <div className='max-w-full'>
-        <Card className='border border-border shadow-none'>
+      <div className='flex flex-col flex-1 min-h-0'>
+        <Card className='border border-border shadow-none flex flex-col flex-1 min-h-0'>
           <CardHeader>
             <Skeleton className='h-8 w-48' />
           </CardHeader>
@@ -43,8 +39,8 @@ function Accounts() {
   }
 
   return (
-    <div className='max-w-full'>
-      <Card className='border border-border shadow-none'>
+    <div className='flex flex-col flex-1 min-h-0'>
+      <Card className='border border-border shadow-none flex flex-col flex-1 min-h-0'>
         <CardHeader className='gap-y-2 lg:flex-row lg:items-center lg:justify-between space-y-0'>
           <CardTitle className='text-lg font-semibold'>Accounts</CardTitle>
           <div className='flex items-center gap-4'>
@@ -58,16 +54,8 @@ function Accounts() {
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
-          <DataTable
-            columns={columns}
-            data={visibleAccounts}
-            onDeleteAction={row => {
-              const ids = row.map(r => r.original.id);
-              deleteAccounts.mutate({ ids });
-            }}
-            disabled={isDisabled}
-          />
+        <CardContent className='flex flex-col flex-1 min-h-0 pb-4'>
+          <DataTable columns={columns} data={visibleAccounts} />
         </CardContent>
       </Card>
     </div>

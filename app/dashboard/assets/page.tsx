@@ -26,8 +26,8 @@ function AssetsPageInner() {
 
   if (isLoading) {
     return (
-      <div className='max-w-full'>
-        <Card className='border border-border shadow-none'>
+      <div className='flex flex-col flex-1 min-h-0'>
+        <Card className='border border-border shadow-none flex flex-col flex-1 min-h-0'>
           <CardHeader className='gap-y-2 lg:flex-row lg:items-center lg:justify-between space-y-0'>
             <Skeleton className='h-6 w-24' />
             <Skeleton className='h-9 w-24' />
@@ -43,8 +43,8 @@ function AssetsPageInner() {
   }
 
   return (
-    <div className='max-w-full'>
-      <Card className='border border-border shadow-none'>
+    <div className='flex flex-col flex-1 min-h-0'>
+      <Card className='border border-border shadow-none flex flex-col flex-1 min-h-0'>
         <CardHeader className='gap-y-2 lg:flex-row lg:items-center lg:justify-between space-y-0'>
           <CardTitle className='text-lg font-semibold'>Assets</CardTitle>
           <div className='flex items-center gap-4'>
@@ -58,8 +58,10 @@ function AssetsPageInner() {
             </Button>
           </div>
         </CardHeader>
-        <CardContent className='space-y-6'>
-          <DataTable columns={columns} data={visibleAssets} hasFooter onDeleteAction={() => {}} />
+        <CardContent className='flex flex-col flex-1 min-h-0 pb-4 gap-4'>
+          <div className='flex flex-col flex-1 min-h-[45vh]'>
+            <DataTable columns={columns} data={visibleAssets} hasFooter />
+          </div>
           <AssetLotsSheet />
         </CardContent>
       </Card>
