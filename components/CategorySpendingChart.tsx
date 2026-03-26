@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileSearch, Loader2, PieChart, Radar, Target } from 'lucide-react';
+import { FileSearch, Loader2, Radar, Target, Donut } from 'lucide-react';
 
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -46,8 +46,8 @@ function CategorySpendingChart({ isLoading, data = [] }: Props) {
           <SelectContent>
             <SelectItem value='pie'>
               <div className='flex items-center'>
-                <PieChart className='size-4 mr-2 shrink-0' />
-                <p>Pie Chart</p>
+                <Donut className='size-4 mr-2 shrink-0' />
+                <p>Half Donut Chart</p>
               </div>
             </SelectItem>
             <SelectItem value='radar'>

@@ -37,7 +37,7 @@ export const PayeeSpendingChartPieVariant = ({ data }: Props) => {
             <ul className='flex flex-wrap justify-center space-x-2'>
               {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                payload?.map((entry: any, index: number) => (
+                [...(payload ?? [])].sort((a: any, b: any) => b.payload.value - a.payload.value).map((entry: any, index: number) => (
                   <li key={`item-${index}`} className='flex items-center space-x-2'>
                     <span className='size-2 rounded-full' style={{ backgroundColor: entry.color }} />
                     <div className='space-x-1'>
@@ -53,14 +53,16 @@ export const PayeeSpendingChartPieVariant = ({ data }: Props) => {
         <Tooltip content={<PayeeSpendingChartTooltip />} />
         <Pie
           cx='50%'
-          cy='50%'
+          cy='70%'
           data={data}
           fill='#8884d4'
           dataKey='value'
-          outerRadius={90}
-          innerRadius={60}
+          outerRadius={110}
+          innerRadius={70}
           paddingAngle={2}
           labelLine={false}
+          startAngle={180}
+          endAngle={0}
         >
           {data.map((_entry, index) => (
             <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
