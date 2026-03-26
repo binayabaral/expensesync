@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn, formatCurrency, formatRemainingTime } from '@/lib/utils';
 import { useGetCreditCards } from '@/features/credit-cards/api/useGetCreditCards';
+import { useGetRecurringPayments } from '@/features/recurring-payments/api/useGetRecurringPayments';
 
 const getUtilizationTone = (value?: number | null) => {
   if (value === null || value === undefined) {
@@ -23,13 +24,39 @@ const getUtilizationTone = (value?: number | null) => {
 
 export const CreditCardCombinedWidget = () => {
   const { data = [], isLoading } = useGetCreditCards();
+  const { data: recurringPayments = [], isLoading: isLoadingRecurring } = useGetRecurringPayments();
 
-  const upcoming = data
+  type PaymentItem =
+    | { kind: 'card'; id: string; name: string; dueDate: Date; amount: number; days: number }
+    | { kind: 'recurring'; id: string; name: string; dueDate: Date | null; amount: number; days: number };
+
+  const cardItems: PaymentItem[] = data
     .filter(card => card.nextStatement)
-    .sort((a, b) => {
-      if (!a.nextStatement || !b.nextStatement) return 0;
-      return new Date(a.nextStatement.dueDate).getTime() - new Date(b.nextStatement.dueDate).getTime();
-    });
+    .map(card => ({
+      kind: 'card' as const,
+      id: card.id,
+      name: card.name,
+      dueDate: new Date(card.nextStatement!.dueDate),
+      amount: card.nextStatement!.paymentDueAmount,
+      days: card.nextStatement!.daysUntilDue ?? 0
+    }));
+
+  const recurringItems: PaymentItem[] = recurringPayments
+    .filter(p => {
+      const days = p.daysRemaining ?? 0;
+      const threshold = p.cadence === 'YEARLY' ? 30 : 10;
+      return days >= 0 && days <= threshold;
+    })
+    .map(p => ({
+      kind: 'recurring' as const,
+      id: p.id,
+      name: p.name,
+      dueDate: p.nextDueDate ? new Date(p.nextDueDate) : null,
+      amount: p.amount ?? 0,
+      days: p.daysRemaining ?? 0
+    }));
+
+  const upcomingPayments = [...cardItems, ...recurringItems].sort((a, b) => a.days - b.days);
 
   const totals = data.reduce(
     (acc, card) => {
@@ -42,7 +69,7 @@ export const CreditCardCombinedWidget = () => {
 
   const overallUtilization = totals.limit > 0 ? totals.owed / totals.limit : null;
 
-  if (isLoading) {
+  if (isLoading || isLoadingRecurring) {
     return (
       <Card className='border border-border shadow-none'>
         <CardHeader className='pb-3'>
@@ -60,40 +87,38 @@ export const CreditCardCombinedWidget = () => {
   return (
     <Card className='border border-border shadow-none'>
       <CardHeader className='pb-3'>
-        <CardTitle className='text-base font-semibold'>Credit Cards</CardTitle>
+        <CardTitle className='text-base font-semibold'>Credit Cards & Recurring Payments</CardTitle>
       </CardHeader>
       <CardContent className='pt-0 space-y-4'>
         <>
           <div>
-              <div className='text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2'>Payments</div>
-              {upcoming.length === 0 ? (
+              <div className='text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2'>Upcoming Payments</div>
+              {upcomingPayments.length === 0 ? (
                 <div className='text-xs text-muted-foreground'>No upcoming payments.</div>
               ) : (
                 <div className='space-y-2'>
-                  {upcoming.map(card => {
-                    const statement = card.nextStatement;
-                    if (!statement) return null;
-                    return (
-                      <div key={card.id} className='flex items-center justify-between rounded border border-border px-3 py-2 text-xs'>
-                        <div>
-                          <span className='font-medium'>{card.name}</span>
-                          <span className='text-muted-foreground ml-2'>Due {format(new Date(statement.dueDate), 'MMM dd')}</span>
-                        </div>
-                        <div className='flex items-center gap-2 shrink-0'>
-                          <span className='font-medium'>{formatCurrency(statement.paymentDueAmount)}</span>
-                          <span className={cn('text-muted-foreground', (statement.daysUntilDue ?? 0) < 0 && 'text-destructive')}>
-                            {formatRemainingTime((statement.daysUntilDue ?? 0), new Date(statement.dueDate))}
-                          </span>
-                        </div>
+                  {upcomingPayments.map(item => (
+                    <div key={item.id} className='flex items-center justify-between rounded border border-border px-3 py-2 text-xs'>
+                      <div>
+                        <span className='font-medium'>{item.name}</span>
+                        {item.dueDate && (
+                          <span className='text-muted-foreground ml-2'>Due {format(item.dueDate, 'MMM dd')}</span>
+                        )}
                       </div>
-                    );
-                  })}
+                      <div className='flex items-center gap-2 shrink-0'>
+                        <span className='font-medium'>{formatCurrency(item.amount)}</span>
+                        <span className={cn('text-muted-foreground', item.days < 0 && 'text-destructive')}>
+                          {formatRemainingTime(item.days, item.dueDate)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
 
             <div className='border-t border-border pt-3'>
-              <div className='text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2'>Utilization</div>
+              <div className='text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2'>Credit Card Utilization</div>
               {data.length === 0 ? (
                 <div className='text-xs text-muted-foreground'>No credit cards available.</div>
               ) : (
