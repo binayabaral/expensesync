@@ -8,6 +8,7 @@ import { useCreateTransfer } from '@/features/transfers/api/useCreateTransfer';
 import { useOpenAddTransferSheet } from '@/features/transfers/hooks/useOpenAddTransferSheet';
 import { useCompleteRecurringPayment } from '@/features/recurring-payments/api/useCompleteRecurringPayment';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const formSchema = insertTransferSchema.omit({
@@ -57,7 +58,7 @@ export const AddTransferSheet = () => {
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className='space-y-4' tabIndex={undefined}>
+      <SheetContent className='max-sm:w-full space-y-4 overflow-y-auto' tabIndex={undefined}>
         <SheetHeader>
           <SheetTitle>New Transfer</SheetTitle>
           <SheetDescription>Create a new transfer.</SheetDescription>
@@ -75,6 +76,7 @@ export const AddTransferSheet = () => {
             defaultValues={defaultValues}
           />
         )}
+      <Button variant="outline" onClick={onClose} className="w-full">Cancel</Button>
       </SheetContent>
     </Sheet>
   );

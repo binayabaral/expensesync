@@ -13,6 +13,7 @@ import { TransactionForm } from '@/features/transactions/components/TransactionF
 import { useDeleteTransaction } from '@/features/transactions/api/useDeleteTransaction';
 import { useOpenEditTransactionSheet } from '@/features/transactions/hooks/useOpenEditTransactionSheet';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const formSchema = insertTransactionSchema.omit({
@@ -91,7 +92,7 @@ export const EditTransactionSheet = () => {
     <>
       <ConfirmDialog />
       <Sheet open={isOpen} onOpenChange={onClose}>
-        <SheetContent className='space-y-4'>
+        <SheetContent className='max-sm:w-full space-y-4 overflow-y-auto'>
           <SheetHeader>
             <SheetTitle>Edit Transaction</SheetTitle>
             <SheetDescription>Edit an existing transaction.</SheetDescription>
@@ -113,6 +114,7 @@ export const EditTransactionSheet = () => {
               accounts={accounts}
             />
           )}
+        <Button variant="outline" onClick={onClose} className="w-full">Cancel</Button>
         </SheetContent>
       </Sheet>
     </>

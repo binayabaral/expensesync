@@ -11,6 +11,7 @@ import { TransferForm } from '@/features/transfers/components/TransferForm';
 import { useDeleteTransfer } from '@/features/transfers/api/useDeleteTransfer';
 import { useOpenEditTransferSheet } from '@/features/transfers/hooks/useOpenEditTransferSheet';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const formSchema = insertTransferSchema.omit({
@@ -99,7 +100,7 @@ export const EditTransferSheet = () => {
     <>
       <ConfirmDialog />
       <Sheet open={isOpen} onOpenChange={onClose}>
-        <SheetContent className='space-y-4'>
+        <SheetContent className='max-sm:w-full space-y-4 overflow-y-auto'>
           <SheetHeader>
             <SheetTitle>Edit Transfer</SheetTitle>
             <SheetDescription>Edit an existing transfer.</SheetDescription>
@@ -119,6 +120,7 @@ export const EditTransferSheet = () => {
               accounts={accounts}
             />
           )}
+        <Button variant="outline" onClick={onClose} className="w-full">Cancel</Button>
         </SheetContent>
       </Sheet>
     </>

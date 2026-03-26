@@ -253,7 +253,7 @@ export const AssetLotsSheet = () => {
         </div>
       )}
       <Sheet open={isEditSheetOpen} onOpenChange={open => (!open ? cancelEdit() : null)}>
-        <SheetContent className='space-y-4' tabIndex={undefined}>
+        <SheetContent className='max-sm:w-full space-y-4 overflow-y-auto' tabIndex={undefined}>
           <SheetHeader>
             <SheetTitle>Edit Asset Buy</SheetTitle>
           </SheetHeader>
@@ -316,6 +316,7 @@ export const AssetLotsSheet = () => {
               </Button>
             </div>
           </div>
+        <Button variant="outline" onClick={onClose} className="w-full">Cancel</Button>
         </SheetContent>
       </Sheet>
     </div>

@@ -7,6 +7,7 @@ import { useGetAccounts } from '@/features/accounts/api/useGetAccounts';
 import { useAddAsset } from '@/features/assets/hooks/useAddAsset';
 import { useCreateAsset } from '@/features/assets/api/useCreateAsset';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
 
 import { AssetForm } from './AssetForm';
 
@@ -53,7 +54,7 @@ export const AddAssetSheet = () => {
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className='space-y-4' tabIndex={undefined}>
+      <SheetContent className='max-sm:w-full space-y-4 overflow-y-auto' tabIndex={undefined}>
         <SheetHeader>
           <SheetTitle>New Asset</SheetTitle>
           <SheetDescription>Add a new asset purchase.</SheetDescription>
@@ -65,6 +66,7 @@ export const AddAssetSheet = () => {
         ) : (
           <AssetForm onSubmit={onSubmit} disabled={isPending} defaultValues={defaultValues} accountOptions={accountOptions} accounts={accounts} />
         )}
+      <Button variant="outline" onClick={onClose} className="w-full">Cancel</Button>
       </SheetContent>
     </Sheet>
   );

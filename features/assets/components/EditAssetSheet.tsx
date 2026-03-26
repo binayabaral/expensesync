@@ -8,6 +8,7 @@ import { useGetAsset } from '@/features/assets/api/useGetAsset';
 import { useEditAsset } from '@/features/assets/api/useEditAsset';
 import { useOpenEditAssetSheet } from '@/features/assets/hooks/useOpenEditAssetSheet';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
 
 import { AssetForm } from './AssetForm';
 
@@ -67,7 +68,7 @@ export const EditAssetSheet = () => {
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className='space-y-4' tabIndex={undefined}>
+      <SheetContent className='max-sm:w-full space-y-4 overflow-y-auto' tabIndex={undefined}>
         <SheetHeader>
           <SheetTitle>Edit Asset</SheetTitle>
           <SheetDescription>Edit an existing asset.</SheetDescription>
@@ -79,6 +80,7 @@ export const EditAssetSheet = () => {
         ) : (
           <AssetForm onSubmit={onSubmit} disabled={isPending} defaultValues={defaultValues} accountOptions={accountOptions} />
         )}
+      <Button variant="outline" onClick={onClose} className="w-full">Cancel</Button>
       </SheetContent>
     </Sheet>
   );

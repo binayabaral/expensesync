@@ -143,7 +143,7 @@ export const SellAssetSheet = () => {
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className='space-y-4' tabIndex={undefined}>
+      <SheetContent className='max-sm:w-full space-y-4 overflow-y-auto' tabIndex={undefined}>
         <SheetHeader>
           <SheetTitle>Sell Asset</SheetTitle>
           <SheetDescription>Sell all or part of this asset and deposit the amount into an account.</SheetDescription>
@@ -259,6 +259,7 @@ export const SellAssetSheet = () => {
             </div>
           </form>
         )}
+      <Button variant="outline" onClick={onClose} className="w-full">Cancel</Button>
       </SheetContent>
     </Sheet>
   );

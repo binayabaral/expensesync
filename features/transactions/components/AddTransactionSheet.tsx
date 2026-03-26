@@ -12,6 +12,7 @@ import { TransactionForm } from '@/features/transactions/components/TransactionF
 import { useCreateTransaction } from '@/features/transactions/api/useCreateTransaction';
 import { useCompleteRecurringPayment } from '@/features/recurring-payments/api/useCompleteRecurringPayment';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const formSchema = insertTransactionSchema.omit({
@@ -69,7 +70,7 @@ export const AddTransactionSheet = () => {
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className='space-y-4' tabIndex={undefined}>
+      <SheetContent className='max-sm:w-full space-y-4 overflow-y-auto' tabIndex={undefined}>
         <SheetHeader>
           <SheetTitle>New Transaction</SheetTitle>
           <SheetDescription>Create a new transaction.</SheetDescription>
@@ -89,6 +90,7 @@ export const AddTransactionSheet = () => {
             accounts={accounts}
           />
         )}
+      <Button variant="outline" onClick={onClose} className="w-full">Cancel</Button>
       </SheetContent>
     </Sheet>
   );

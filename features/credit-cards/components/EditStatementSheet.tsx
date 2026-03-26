@@ -54,7 +54,7 @@ export const EditStatementSheet = () => {
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className='space-y-4'>
+      <SheetContent className='max-sm:w-full space-y-4 overflow-y-auto'>
         <SheetHeader>
           <SheetTitle>Override Payment Due</SheetTitle>
           <SheetDescription>Adjust the payment due amount for this statement.</SheetDescription>
@@ -85,6 +85,7 @@ export const EditStatementSheet = () => {
             </form>
           </Form>
         )}
+      <Button variant="outline" onClick={onClose} className="w-full">Cancel</Button>
       </SheetContent>
     </Sheet>
   );

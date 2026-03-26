@@ -12,6 +12,7 @@ import {
   type RecurringPaymentApiValues
 } from '@/features/recurring-payments/components/RecurringPaymentForm';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const formSchema = insertRecurringPaymentSchema.omit({
@@ -72,7 +73,7 @@ export const AddRecurringPaymentSheet = () => {
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className='space-y-4' tabIndex={undefined}>
+      <SheetContent className='max-sm:w-full space-y-4 overflow-y-auto' tabIndex={undefined}>
         <SheetHeader>
           <SheetTitle>New Recurring Payment</SheetTitle>
           <SheetDescription>Create a new recurring payment.</SheetDescription>
@@ -91,6 +92,7 @@ export const AddRecurringPaymentSheet = () => {
             accounts={accounts}
           />
         )}
+      <Button variant="outline" onClick={onClose} className="w-full">Cancel</Button>
       </SheetContent>
     </Sheet>
   );

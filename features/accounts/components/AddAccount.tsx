@@ -5,6 +5,7 @@ import { AccountForm } from '@/features/accounts/components/AccountForm';
 import { useAddAccount } from '@/features/accounts/hooks/useAddAccounts';
 import { useCreateAccount } from '@/features/accounts/api/useCreateAccounts';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const formSchema = z.object({
@@ -37,7 +38,7 @@ export const AddAccount = () => {
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className='space-y-4'>
+      <SheetContent className='max-sm:w-full space-y-4 overflow-y-auto'>
         <SheetHeader>
           <SheetTitle>New Account</SheetTitle>
           <SheetDescription>Create a new account to track your transactions.</SheetDescription>
@@ -61,6 +62,7 @@ export const AddAccount = () => {
             minimumPaymentPercentage: '2'
           }}
         />
+      <Button variant="outline" onClick={onClose} className="w-full">Cancel</Button>
       </SheetContent>
     </Sheet>
   );

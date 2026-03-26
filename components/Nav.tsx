@@ -4,6 +4,7 @@ import { useMedia } from 'react-use';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Loader2, ChevronDown } from 'lucide-react';
 import { useState, Fragment } from 'react';
+import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ClerkLoaded, ClerkLoading, UserButton, useUser } from '@clerk/nextjs';
 import { shadcn } from '@clerk/themes';
@@ -11,7 +12,7 @@ import { FaLayerGroup, FaReceipt, FaWallet, FaTags, FaRightLeft, FaCirclePlus, F
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 function Nav() {
@@ -81,11 +82,6 @@ function Nav() {
   const isMobileDevice = useIsMobile();
 
   const enableMobileNav = isSmallerScreen || isMobileDevice;
-
-  const onSheetButtonClick = (href: string) => {
-    router.push(href);
-    setIsSheetOpen(false);
-  };
 
   const renderUserAvatar = () => (
     <>
@@ -162,26 +158,24 @@ function Nav() {
                       <div className='flex flex-col'>
                         <nav className='flex flex-wrap pt-6 pb-5'>
                           {allRoutes.map(route => (
-                            <Button
+                            <Link
                               key={route.label}
-                              variant='outline'
-                              onClick={() => onSheetButtonClick(route.href)}
+                              href={route.href}
+                              onClick={() => setIsSheetOpen(false)}
                               className={cn(
-                                'justify-between font-normal border-none outline-none transition shadow-none hover:bg-green-500/10 hover:text-primary',
+                                'justify-between font-normal border outline-none transition shadow-none hover:bg-green-500/10 hover:text-primary',
                                 pathName === route.href ? 'bg-green-500/10 text-primary' : 'bg-transparent',
-                                'w-1/4 py-5 text-[11px] px-1 h-20 flex flex-col border border-r'
+                                'w-1/4 py-5 text-[11px] px-1 h-20 flex flex-col items-center border-r rounded-none'
                               )}
                             >
                               <route.icon className='size-7' />
                               <span className='block'>{route.label}</span>
-                            </Button>
+                            </Link>
                           ))}
                         </nav>
-                        <SheetClose asChild>
-                          <Button variant='outline' className='w-full mb-10'>
-                            Close
-                          </Button>
-                        </SheetClose>
+                        <Button variant='outline' className='w-full mb-10' onClick={() => setIsSheetOpen(false)}>
+                          Close
+                        </Button>
                       </div>
                     </SheetContent>
                   </Sheet>

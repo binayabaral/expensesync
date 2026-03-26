@@ -117,7 +117,7 @@ export function RecordShareSheet() {
 
   return (
     <Sheet open={isOpen} onOpenChange={handleClose}>
-      <SheetContent className='space-y-4' tabIndex={undefined}>
+      <SheetContent className='max-sm:w-full space-y-4 overflow-y-auto' tabIndex={undefined}>
         <SheetHeader>
           <SheetTitle>{isEditMode ? 'Edit recording' : 'Record on my account'}</SheetTitle>
           <SheetDescription>
@@ -257,6 +257,7 @@ export function RecordShareSheet() {
             </form>
           </Form>
         )}
+      <Button variant="outline" onClick={onClose} className="w-full">Cancel</Button>
       </SheetContent>
     </Sheet>
   );

@@ -9,6 +9,7 @@ import { useCloseLoan } from '@/features/loans/api/useCloseLoan';
 import { EditAccountForm } from '@/features/accounts/components/EditAccountForm';
 import { useOpenEditAccountSheet } from '@/features/accounts/hooks/useOpenEditAccountSheet';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
 
 type DefaultValues = {
   name: string;
@@ -128,7 +129,7 @@ export const EditAccountSheet = () => {
     <>
       <ConfirmDialog />
       <Sheet open={isOpen} onOpenChange={onClose}>
-        <SheetContent className='space-y-4'>
+        <SheetContent className='max-sm:w-full space-y-4 overflow-y-auto'>
           <SheetHeader>
             <SheetTitle>Edit Account</SheetTitle>
             <SheetDescription>Edit an existing account.</SheetDescription>
@@ -148,6 +149,7 @@ export const EditAccountSheet = () => {
               defaultValues={defaultValues}
             />
           )}
+        <Button variant="outline" onClick={onClose} className="w-full">Cancel</Button>
         </SheetContent>
       </Sheet>
     </>

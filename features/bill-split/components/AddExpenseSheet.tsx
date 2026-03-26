@@ -1,6 +1,7 @@
 'use client';
 
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
 import { useOpenAddExpenseSheet } from '../hooks/useOpenAddExpenseSheet';
 import { useCreateExpense } from '../api/useCreateExpense';
 import { useRecordShare } from '../api/useRecordShare';
@@ -21,7 +22,7 @@ export function AddExpenseSheet() {
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className='space-y-4 overflow-y-auto'>
+      <SheetContent className='max-sm:w-full space-y-4 overflow-y-auto overflow-y-auto'>
         <SheetHeader>
           <SheetTitle>Add expense</SheetTitle>
           <SheetDescription>Split a bill with participants.</SheetDescription>
@@ -55,6 +56,7 @@ export function AddExpenseSheet() {
             );
           }}
         />
+      <Button variant="outline" onClick={onClose} className="w-full">Cancel</Button>
       </SheetContent>
     </Sheet>
   );

@@ -48,7 +48,7 @@ export function AddContactSheet() {
 
   return (
     <Sheet open={isOpen} onOpenChange={handleOpenChange}>
-      <SheetContent className='space-y-4'>
+      <SheetContent className='max-sm:w-full space-y-4 overflow-y-auto'>
         <SheetHeader>
           <SheetTitle>Add contact</SheetTitle>
           <SheetDescription>
@@ -96,6 +96,7 @@ export function AddContactSheet() {
             </Button>
           </form>
         </Form>
+      <Button variant="outline" onClick={onClose} className="w-full">Cancel</Button>
       </SheetContent>
     </Sheet>
   );

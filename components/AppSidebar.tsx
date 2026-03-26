@@ -29,7 +29,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarHeader,
-  SidebarFooter
+  SidebarFooter,
+  useSidebar
 } from '@/components/ui/sidebar';
 import { ClerkLoaded, ClerkLoading, UserButton, useUser } from '@clerk/nextjs';
 import { shadcn } from '@clerk/themes';
@@ -39,6 +40,12 @@ export function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { user } = useUser();
+  const { setOpenMobile } = useSidebar();
+
+  const navigate = (url: string) => {
+    setOpenMobile(false);
+    router.push(url);
+  };
 
   const mainItems = [
     {
@@ -136,7 +143,7 @@ export function AppSidebar() {
               {mainItems.map(item => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
-                    onClick={() => router.push(item.url)}
+                    onClick={() => navigate(item.url)}
                     isActive={pathname === item.url}
                     tooltip={item.title}
                   >
@@ -160,7 +167,7 @@ export function AppSidebar() {
               {transactionItems.map(item => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
-                    onClick={() => router.push(item.url)}
+                    onClick={() => navigate(item.url)}
                     isActive={pathname === item.url || (item.url !== '/' && pathname.startsWith(item.url))}
                     tooltip={item.title}
                   >
@@ -184,7 +191,7 @@ export function AppSidebar() {
               {accountItems.map(item => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
-                    onClick={() => router.push(item.url)}
+                    onClick={() => navigate(item.url)}
                     isActive={pathname === item.url}
                     tooltip={item.title}
                   >
@@ -208,7 +215,7 @@ export function AppSidebar() {
               {analyticsItems.map(item => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
-                    onClick={() => router.push(item.url)}
+                    onClick={() => navigate(item.url)}
                     isActive={pathname === item.url}
                     tooltip={item.title}
                   >

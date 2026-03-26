@@ -79,7 +79,7 @@ export const CloseStatementSheet = () => {
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className='space-y-4'>
+      <SheetContent className='max-sm:w-full space-y-4 overflow-y-auto'>
         <SheetHeader>
           <SheetTitle>Close Statement</SheetTitle>
           <SheetDescription>Create a new credit card statement for this cycle.</SheetDescription>
@@ -125,6 +125,7 @@ export const CloseStatementSheet = () => {
         ) : (
           <div className='text-sm text-muted-foreground'>No statement available to close yet.</div>
         )}
+      <Button variant="outline" onClick={onClose} className="w-full">Cancel</Button>
       </SheetContent>
     </Sheet>
   );

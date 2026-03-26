@@ -1,6 +1,7 @@
 'use client';
 
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
 import { useOpenEditExpenseSheet } from '../hooks/useOpenEditExpenseSheet';
 import { useEditExpense } from '../api/useEditExpense';
 import { useGetGroup } from '../api/useGetGroup';
@@ -18,7 +19,7 @@ export function EditExpenseSheet() {
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className='space-y-4 overflow-y-auto'>
+      <SheetContent className='max-sm:w-full space-y-4 overflow-y-auto overflow-y-auto'>
         <SheetHeader>
           <SheetTitle>Edit expense</SheetTitle>
           <SheetDescription>Update the expense details.</SheetDescription>
@@ -48,6 +49,7 @@ export function EditExpenseSheet() {
             }}
           />
         )}
+      <Button variant="outline" onClick={onClose} className="w-full">Cancel</Button>
       </SheetContent>
     </Sheet>
   );

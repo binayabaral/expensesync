@@ -1,6 +1,7 @@
 'use client';
 
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
 import { useOpenEditSettlementSheet } from '../hooks/useOpenEditSettlementSheet';
 import { useEditSettlement } from '../api/useEditSettlement';
 import { SettlementForm } from './SettlementForm';
@@ -13,7 +14,7 @@ export function EditSettlementSheet() {
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className='space-y-4 overflow-y-auto'>
+      <SheetContent className='max-sm:w-full space-y-4 overflow-y-auto overflow-y-auto'>
         <SheetHeader>
           <SheetTitle>Edit settlement</SheetTitle>
           <SheetDescription>Update the settlement details.</SheetDescription>
@@ -37,6 +38,7 @@ export function EditSettlementSheet() {
             mutate(values, { onSuccess: onClose });
           }}
         />
+      <Button variant="outline" onClick={onClose} className="w-full">Cancel</Button>
       </SheetContent>
     </Sheet>
   );

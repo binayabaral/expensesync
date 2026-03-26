@@ -48,7 +48,7 @@ export function AddMemberSheet() {
 
   return (
     <Sheet open={isOpen} onOpenChange={handleOpenChange}>
-      <SheetContent className='space-y-4'>
+      <SheetContent className='max-sm:w-full space-y-4 overflow-y-auto'>
         <SheetHeader>
           <SheetTitle>Add members</SheetTitle>
           <SheetDescription>Select one or more contacts to add to this group.</SheetDescription>
@@ -101,6 +101,7 @@ export function AddMemberSheet() {
         >
           {selected.size > 1 ? `Add ${selected.size} members` : 'Add to group'}
         </Button>
+      <Button variant="outline" onClick={onClose} className="w-full">Cancel</Button>
       </SheetContent>
     </Sheet>
   );
