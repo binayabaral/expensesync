@@ -93,10 +93,13 @@ export function DataTable<TData, TValue>({ data, columns, hasFooter }: DataTable
           className='max-w-sm'
         />
       </div>
-      <div className='flex-1 min-h-0 flex flex-col rounded-md border overflow-hidden'>
+      <div
+        ref={parentRef}
+        className='flex-1 min-h-0 overflow-auto rounded-md border [scrollbar-gutter:stable]'
+      >
         <Table className={colWidths.length ? 'table-fixed' : ''}>
           {fixedColGroup}
-          <TableHeader>
+          <TableHeader className='sticky top-0 z-10 bg-background'>
             {table.getHeaderGroups().map(headerGroup => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map(header => (
@@ -107,52 +110,44 @@ export function DataTable<TData, TValue>({ data, columns, hasFooter }: DataTable
               </TableRow>
             ))}
           </TableHeader>
-        </Table>
-        <div ref={parentRef} className='flex-1 overflow-auto min-h-0 [scrollbar-gutter:stable]'>
-          <Table className={colWidths.length ? 'table-fixed' : ''}>
-            {fixedColGroup}
-            <TableBody>
-              {rows.length ? (
-                <>
-                  {paddingTop > 0 && (
-                    <TableRow className='border-0'>
-                      <TableCell colSpan={columns.length} style={{ height: paddingTop, padding: 0, border: 0 }} />
+          <TableBody>
+            {rows.length ? (
+              <>
+                {paddingTop > 0 && (
+                  <TableRow className='border-0'>
+                    <TableCell colSpan={columns.length} style={{ height: paddingTop, padding: 0, border: 0 }} />
+                  </TableRow>
+                )}
+                {virtualItems.map(virtualRow => {
+                  const row = rows[virtualRow.index];
+                  return (
+                    <TableRow
+                      key={row.id}
+                      data-index={virtualRow.index}
+                      ref={virtualizer.measureElement}
+                    >
+                      {row.getVisibleCells().map(cell => (
+                        <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                      ))}
                     </TableRow>
-                  )}
-                  {virtualItems.map(virtualRow => {
-                    const row = rows[virtualRow.index];
-                    return (
-                      <TableRow
-                        key={row.id}
-                        data-index={virtualRow.index}
-                        ref={virtualizer.measureElement}
-                      >
-                        {row.getVisibleCells().map(cell => (
-                          <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
-                        ))}
-                      </TableRow>
-                    );
-                  })}
-                  {paddingBottom > 0 && (
-                    <TableRow className='border-0'>
-                      <TableCell colSpan={columns.length} style={{ height: paddingBottom, padding: 0, border: 0 }} />
-                    </TableRow>
-                  )}
-                </>
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={columns.length} className='h-24 text-center'>
-                    No results.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-        {hasFooter && (
-          <Table className={colWidths.length ? 'table-fixed' : ''}>
-            {fixedColGroup}
-            <TableFooter>
+                  );
+                })}
+                {paddingBottom > 0 && (
+                  <TableRow className='border-0'>
+                    <TableCell colSpan={columns.length} style={{ height: paddingBottom, padding: 0, border: 0 }} />
+                  </TableRow>
+                )}
+              </>
+            ) : (
+              <TableRow>
+                <TableCell colSpan={columns.length} className='h-24 text-center'>
+                  No results.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+          {hasFooter && (
+            <TableFooter className='sticky bottom-0 bg-background'>
               {table.getFooterGroups().map(footerGroup => (
                 <TableRow key={footerGroup.id}>
                   {footerGroup.headers.map(footer => (
@@ -163,8 +158,8 @@ export function DataTable<TData, TValue>({ data, columns, hasFooter }: DataTable
                 </TableRow>
               ))}
             </TableFooter>
-          </Table>
-        )}
+          )}
+        </Table>
       </div>
     </div>
   );
