@@ -83,6 +83,7 @@ export const getBaseColumns = (startDate: Date, endDate: Date): ColumnDef<Respon
         <>
           <div
             className={cn(
+              'whitespace-nowrap',
               total.income === prevTotal.income
                 ? 'text-muted-foreground'
                 : total.income < prevTotal.income
@@ -90,11 +91,12 @@ export const getBaseColumns = (startDate: Date, endDate: Date): ColumnDef<Respon
                 : 'text-primary'
             )}
           >
-            <span className='mr-1 inline-block min-w-8'>Inc:</span>
+            <span className='mr-1 inline-block min-w-8 shrink-0'>Inc:</span>
             <span className='inline-block'>{formatCurrency(total.income)}</span>
           </div>
           <div
             className={cn(
+              'whitespace-nowrap',
               total.expense === prevTotal.expense
                 ? 'text-muted-foreground'
                 : total.expense < prevTotal.expense
@@ -102,11 +104,12 @@ export const getBaseColumns = (startDate: Date, endDate: Date): ColumnDef<Respon
                 : 'text-primary'
             )}
           >
-            <span className='mr-1 inline-block min-w-8'>Exp:</span>
+            <span className='mr-1 inline-block min-w-8 shrink-0'>Exp:</span>
             <span className='inline-block'>{formatCurrency(total.expense)}</span>
           </div>
           <div
             className={cn(
+              'whitespace-nowrap',
               total.income + total.expense === prevTotal.income + prevTotal.expense
                 ? 'text-muted-foreground'
                 : total.income + total.expense < prevTotal.income + prevTotal.expense
@@ -114,7 +117,7 @@ export const getBaseColumns = (startDate: Date, endDate: Date): ColumnDef<Respon
                 : 'text-primary'
             )}
           >
-            <span className='mr-1 inline-block min-w-8'>Net:</span>
+            <span className='mr-1 inline-block min-w-8 shrink-0'>Net:</span>
             <span className='inline-block'>{formatCurrency(total.income + total.expense)}</span>
           </div>
         </>
@@ -193,6 +196,7 @@ export const BuildColumns = (payees: ResponseType[]) => {
           <>
             <div
               className={cn(
+                'whitespace-nowrap',
                 total.income === prevTotal.income
                   ? 'text-muted-foreground'
                   : total.income < prevTotal.income
@@ -200,11 +204,12 @@ export const BuildColumns = (payees: ResponseType[]) => {
                   : 'text-primary'
               )}
             >
-              <span className='mr-1 inline-block min-w-8'>Inc:</span>
+              <span className='mr-1 inline-block min-w-8 shrink-0'>Inc:</span>
               <span className='inline-block'>{formatCurrency(total.income)}</span>
             </div>
             <div
               className={cn(
+                'whitespace-nowrap',
                 total.expense === prevTotal.expense
                   ? 'text-muted-foreground'
                   : total.expense < prevTotal.expense
@@ -212,11 +217,12 @@ export const BuildColumns = (payees: ResponseType[]) => {
                   : 'text-primary'
               )}
             >
-              <span className='mr-1 inline-block min-w-8'>Exp:</span>
+              <span className='mr-1 inline-block min-w-8 shrink-0'>Exp:</span>
               <span className='inline-block'>{formatCurrency(total.expense)}</span>
             </div>
             <div
               className={cn(
+                'whitespace-nowrap',
                 total.income + total.expense === prevTotal.income + prevTotal.expense
                   ? 'text-muted-foreground'
                   : total.income + total.expense < prevTotal.income + prevTotal.expense
@@ -224,7 +230,7 @@ export const BuildColumns = (payees: ResponseType[]) => {
                   : 'text-primary'
               )}
             >
-              <span className='mr-1 inline-block min-w-8'>Net:</span>
+              <span className='mr-1 inline-block min-w-8 shrink-0'>Net:</span>
               <span className='inline-block'>{formatCurrency(total.income + total.expense)}</span>
             </div>
           </>

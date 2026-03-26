@@ -2,7 +2,7 @@
 
 import { client } from '@/lib/hono';
 import { InferResponseType } from 'hono';
-import { ColumnDef } from '@tanstack/react-table';
+import { ColumnDef, Row } from '@tanstack/react-table';
 
 import { DEFAULT_CURRENCY, cn, formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -90,3 +90,41 @@ export const columns: ColumnDef<ResponseType>[] = [
     cell: ({ row }) => <Actions id={row.original.id} isBillSplitAccount={row.original.accountType === 'BILL_SPLIT'} />
   }
 ];
+
+export function mobileRow(row: Row<ResponseType>) {
+  const a = row.original;
+
+  return (
+    <div className='flex items-center gap-3 px-3 py-2'>
+      <div className='flex-1'>
+        <div className='flex items-center justify-between gap-2'>
+          <div className='flex items-center gap-1.5 flex-wrap'>
+            <span className={cn(
+              'text-sm font-medium',
+              a.isClosed || a.isHidden ? 'text-muted-foreground' :
+              a.balance < 0 ? 'text-destructive' : ''
+            )}>
+              {a.name}
+            </span>
+          </div>
+          <span className={cn(
+            'text-sm font-semibold shrink-0 tabular-nums',
+            a.isHidden ? 'text-muted-foreground' :
+            a.balance < 0 ? 'text-destructive' : 'text-primary'
+          )}>
+            {formatCurrency(a.balance, false, a.currency ?? DEFAULT_CURRENCY)}
+          </span>
+        </div>
+        <div className='flex items-center gap-1.5 mt-0.5'>
+          <span className='text-xs text-muted-foreground'>{formatAccountType(a.accountType)}</span>
+          {a.isClosed && <Badge variant='outline' className='text-xs'>Closed</Badge>}
+          {a.accountType === 'BILL_SPLIT' && <Badge variant='outline' className='text-xs'>Bill Split</Badge>}
+          {a.currency !== DEFAULT_CURRENCY && (
+            <Badge variant='secondary' className='text-xs font-mono'>{a.currency}</Badge>
+          )}
+        </div>
+      </div>
+      <Actions id={a.id} isBillSplitAccount={a.accountType === 'BILL_SPLIT'} />
+    </div>
+  );
+}

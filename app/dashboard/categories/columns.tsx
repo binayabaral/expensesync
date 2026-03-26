@@ -31,7 +31,7 @@ export const getBaseColumns = (startDate: Date, endDate: Date): ColumnDef<Respon
     accessorKey: 'name',
     header: ({ column }) => <SortableHeader column={column} label='Name' />,
     cell: ({ row }) => (
-      <span className={cn(row.original.amount < (row.original.prevAmounts?.[0] ?? 0) ? 'text-destructive' : 'text-primary')}>
+      <span className={cn('whitespace-nowrap', row.original.amount < (row.original.prevAmounts?.[0] ?? 0) ? 'text-destructive' : 'text-primary')}>
         {row.original.name}
       </span>
     ),
@@ -72,16 +72,16 @@ export const getBaseColumns = (startDate: Date, endDate: Date): ColumnDef<Respon
 
       return (
         <>
-          <div className={cn(total.income === prevTotal.income ? 'text-muted-foreground' : total.income < prevTotal.income ? 'text-destructive' : 'text-primary')}>
-            <span className='mr-1 inline-block min-w-8'>Inc:</span>
+          <div className={cn('whitespace-nowrap', total.income === prevTotal.income ? 'text-muted-foreground' : total.income < prevTotal.income ? 'text-destructive' : 'text-primary')}>
+            <span className='mr-1 inline-block min-w-8 shrink-0'>Inc:</span>
             <span className='inline-block'>{formatCurrency(total.income)}</span>
           </div>
-          <div className={cn(total.expense === prevTotal.expense ? 'text-muted-foreground' : total.expense < prevTotal.expense ? 'text-destructive' : 'text-primary')}>
-            <span className='mr-1 inline-block min-w-8'>Exp:</span>
+          <div className={cn('whitespace-nowrap', total.expense === prevTotal.expense ? 'text-muted-foreground' : total.expense < prevTotal.expense ? 'text-destructive' : 'text-primary')}>
+            <span className='mr-1 inline-block min-w-8 shrink-0'>Exp:</span>
             <span className='inline-block'>{formatCurrency(total.expense)}</span>
           </div>
-          <div className={cn(total.income + total.expense === prevTotal.income + prevTotal.expense ? 'text-muted-foreground' : total.income + total.expense < prevTotal.income + prevTotal.expense ? 'text-destructive' : 'text-primary')}>
-            <span className='mr-1 inline-block min-w-8'>Net:</span>
+          <div className={cn('whitespace-nowrap', total.income + total.expense === prevTotal.income + prevTotal.expense ? 'text-muted-foreground' : total.income + total.expense < prevTotal.income + prevTotal.expense ? 'text-destructive' : 'text-primary')}>
+            <span className='mr-1 inline-block min-w-8 shrink-0'>Net:</span>
             <span className='inline-block'>{formatCurrency(total.income + total.expense)}</span>
           </div>
         </>
@@ -138,16 +138,16 @@ export const BuildColumns = (data: ResponseType[]): ColumnDef<ResponseType>[] =>
 
       return (
         <>
-          <div className={cn(total.income === prevTotal.income ? 'text-muted-foreground' : total.income < prevTotal.income ? 'text-destructive' : 'text-primary')}>
-            <span className='mr-1 inline-block min-w-8'>Inc:</span>
+          <div className={cn('whitespace-nowrap', total.income === prevTotal.income ? 'text-muted-foreground' : total.income < prevTotal.income ? 'text-destructive' : 'text-primary')}>
+            <span className='mr-1 inline-block min-w-8 shrink-0'>Inc:</span>
             <span className='inline-block'>{formatCurrency(total.income)}</span>
           </div>
-          <div className={cn(total.expense === prevTotal.expense ? 'text-muted-foreground' : total.expense < prevTotal.expense ? 'text-destructive' : 'text-primary')}>
-            <span className='mr-1 inline-block min-w-8'>Exp:</span>
+          <div className={cn('whitespace-nowrap', total.expense === prevTotal.expense ? 'text-muted-foreground' : total.expense < prevTotal.expense ? 'text-destructive' : 'text-primary')}>
+            <span className='mr-1 inline-block min-w-8 shrink-0'>Exp:</span>
             <span className='inline-block'>{formatCurrency(total.expense)}</span>
           </div>
-          <div className={cn(total.income + total.expense === prevTotal.income + prevTotal.expense ? 'text-muted-foreground' : total.income + total.expense < prevTotal.income + prevTotal.expense ? 'text-destructive' : 'text-primary')}>
-            <span className='mr-1 inline-block min-w-8'>Net:</span>
+          <div className={cn('whitespace-nowrap', total.income + total.expense === prevTotal.income + prevTotal.expense ? 'text-muted-foreground' : total.income + total.expense < prevTotal.income + prevTotal.expense ? 'text-destructive' : 'text-primary')}>
+            <span className='mr-1 inline-block min-w-8 shrink-0'>Net:</span>
             <span className='inline-block'>{formatCurrency(total.income + total.expense)}</span>
           </div>
         </>

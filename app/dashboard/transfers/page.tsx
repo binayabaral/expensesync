@@ -10,7 +10,7 @@ import { useGetTransfers } from '@/features/transfers/api/useGetTransfers';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useOpenAddTransferSheet } from '@/features/transfers/hooks/useOpenAddTransferSheet';
 
-import { columns } from './columns';
+import { columns, mobileRow } from './columns';
 
 function TransferPage() {
   const transfersQuery = useGetTransfers();
@@ -48,7 +48,7 @@ function TransferPage() {
           </Button>
         </CardHeader>
         <CardContent className='flex flex-col flex-1 min-h-0 pb-4'>
-          <DataTable columns={columns} data={transactions} />
+          <DataTable columns={columns} data={transactions} renderMobileRow={mobileRow} />
         </CardContent>
       </Card>
     </div>

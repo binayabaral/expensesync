@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useGetRecurringPayments } from '@/features/recurring-payments/api/useGetRecurringPayments';
 import { useAddRecurringPayment } from '@/features/recurring-payments/hooks/useAddRecurringPayment';
 
-import { columns } from './columns';
+import { columns, mobileRow } from './columns';
 
 function RecurringPayments() {
   const paymentsQuery = useGetRecurringPayments();
@@ -48,7 +48,7 @@ function RecurringPayments() {
           </Button>
         </CardHeader>
         <CardContent className='flex flex-col flex-1 min-h-0 pb-4'>
-          <DataTable columns={columns} data={payments} />
+          <DataTable columns={columns} data={payments} renderMobileRow={mobileRow} />
         </CardContent>
       </Card>
     </div>

@@ -13,12 +13,13 @@ const app = new Hono().get(
     z.object({
       to: z.string().optional(),
       from: z.string().optional(),
-      accountId: z.string().optional()
+      accountId: z.string().optional(),
+      periods: z.string().optional()
     })
   ),
   async c => {
     const auth = getAuth(c);
-    const { to, from, accountId } = c.req.valid('query');
+    const { to, from, accountId, periods } = c.req.valid('query');
 
     if (!auth?.userId) {
       return c.json({ error: 'Unauthorized' }, 401);
@@ -39,7 +40,8 @@ const app = new Hono().get(
       false
     );
 
-    const prevPeriods = Array.from({ length: 6 }).map((_, i) => {
+    const periodCount = periods === 'all' ? 120 : periods === '12' ? 12 : 6;
+    const prevPeriods = Array.from({ length: periodCount }).map((_, i) => {
       const offset = i + 1;
 
       const periodStart = subMonths(startDate, offset);

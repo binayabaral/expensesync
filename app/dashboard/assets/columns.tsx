@@ -1,4 +1,4 @@
-import { ColumnDef } from '@tanstack/react-table';
+import { ColumnDef, Row } from '@tanstack/react-table';
 import { InferResponseType } from 'hono';
 
 import { client } from '@/lib/hono';
@@ -137,3 +137,44 @@ export const columns: ColumnDef<ResponseType>[] = [
     footer: () => ''
   }
 ];
+
+export function mobileRow(row: Row<ResponseType>) {
+  const a = row.original;
+  const currency = a.accountCurrency ?? DEFAULT_CURRENCY;
+  const realizedPL = a.realizedProfitLoss ?? 0;
+  const unrealizedPL = a.unrealizedProfitLoss;
+  const displayValue = a.currentValue != null ? a.currentValue : a.totalPaid;
+
+  return (
+    <div className='flex items-start gap-3 px-3 py-2'>
+      <div className='flex-1'>
+        <div className='flex items-baseline justify-between gap-2'>
+          <span className='text-sm font-medium'>{a.name}</span>
+          <span className={cn('text-sm font-semibold shrink-0 tabular-nums', displayValue < 0 ? 'text-destructive' : 'text-primary')}>
+            {formatCurrency(displayValue, false, currency)}
+          </span>
+        </div>
+        <div className='flex flex-wrap gap-x-1 mt-0.5 text-xs text-muted-foreground'>
+          <span>{a.type}</span>
+          <span>· {a.quantity} {a.unit}</span>
+        </div>
+        <div className='mt-0.5 text-xs text-muted-foreground'>Bought: {formatCurrency(a.assetPrice, false, currency)}/{a.unit}</div>
+        {a.liveUnitPrice != null && <div className='mt-0.5 text-xs text-muted-foreground'>Current: {formatCurrency(a.liveUnitPrice, false, currency)}/{a.unit}</div>}
+        {a.extraCharge !== 0 && <div className='mt-0.5 text-xs text-muted-foreground'>Charges: {formatCurrency(a.extraCharge, false, currency)}</div>}
+        {realizedPL !== 0 && (
+          <div className={cn('mt-0.5 text-xs', realizedPL > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400')}>
+            Realized: {formatCurrency(realizedPL, false, currency)}
+          </div>
+        )}
+        {unrealizedPL != null && (
+          <div className={cn('mt-0.5 text-xs', unrealizedPL > 0 ? 'text-emerald-600 dark:text-emerald-400' : unrealizedPL < 0 ? 'text-red-600 dark:text-red-400' : 'text-muted-foreground')}>
+            Unrealized: {formatCurrency(unrealizedPL, false, currency)}
+          </div>
+        )}
+      </div>
+      <div className='shrink-0 mt-0.5'>
+        <Actions id={a.id} />
+      </div>
+    </div>
+  );
+}

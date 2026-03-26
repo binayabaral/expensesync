@@ -11,7 +11,7 @@ import { useGetAccounts } from '@/features/accounts/api/useGetAccounts';
 import { useAddAccount } from '@/features/accounts/hooks/useAddAccounts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-import { columns } from './columns';
+import { columns, mobileRow } from './columns';
 import { Suspense } from 'react';
 
 function Accounts() {
@@ -55,7 +55,7 @@ function Accounts() {
           </div>
         </CardHeader>
         <CardContent className='flex flex-col flex-1 min-h-0 pb-4'>
-          <DataTable columns={columns} data={visibleAccounts} />
+          <DataTable columns={columns} data={visibleAccounts} renderMobileRow={mobileRow} />
         </CardContent>
       </Card>
     </div>

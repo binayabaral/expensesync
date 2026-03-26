@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAddTransaction } from '@/features/transactions/hooks/useAddTransaction';
 import { useGetTransactions } from '@/features/transactions/api/useGetTransactions';
 
-import { columns } from './columns';
+import { columns, mobileRow } from './columns';
 import { Suspense } from 'react';
 
 function Transactions() {
@@ -45,7 +45,7 @@ function Transactions() {
           </Button>
         </CardHeader>
         <CardContent className='flex flex-col flex-1 min-h-0 pb-4'>
-          <DataTable columns={columns} data={transactions} />
+          <DataTable columns={columns} data={transactions} renderMobileRow={mobileRow} />
         </CardContent>
       </Card>
     </div>

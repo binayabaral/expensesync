@@ -12,7 +12,7 @@ import { useGetAssets } from '@/features/assets/api/useGetAssets';
 import { useAddAsset } from '@/features/assets/hooks/useAddAsset';
 import { AssetLotsSheet } from '@/features/assets/components/AssetLotsSheet';
 
-import { columns } from './columns';
+import { columns, mobileRow } from './columns';
 
 function AssetsPageInner() {
   const [showSold, setShowSold] = useState(false);
@@ -60,7 +60,7 @@ function AssetsPageInner() {
         </CardHeader>
         <CardContent className='flex flex-col flex-1 min-h-0 pb-4 gap-4'>
           <div className='flex flex-col flex-1 min-h-[45vh]'>
-            <DataTable columns={columns} data={visibleAssets} hasFooter />
+            <DataTable columns={columns} data={visibleAssets} hasFooter renderMobileRow={mobileRow} />
           </div>
           <AssetLotsSheet />
         </CardContent>

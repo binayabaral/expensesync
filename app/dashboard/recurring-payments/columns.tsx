@@ -2,7 +2,7 @@
 
 import { format } from 'date-fns';
 import { InferResponseType } from 'hono';
-import { ColumnDef } from '@tanstack/react-table';
+import { ColumnDef, Row } from '@tanstack/react-table';
 
 import { client } from '@/lib/hono';
 import { DEFAULT_CURRENCY, cn, formatCurrency, formatRemainingTime } from '@/lib/utils';
@@ -104,3 +104,47 @@ export const columns: ColumnDef<ResponseType>[] = [
     cell: ({ row }) => <Actions item={row.original} />
   }
 ];
+
+export function mobileRow(row: Row<ResponseType>) {
+  const p = row.original;
+  const amount = p.amount ?? 0;
+  const currency = p.accountCurrency ?? DEFAULT_CURRENCY;
+  const days = p.daysRemaining ?? 0;
+  const isYearly = p.cadence === 'YEARLY';
+  const warningThreshold = isYearly ? 30 : 10;
+  const dueDate = p.nextDueDate ? new Date(p.nextDueDate) : null;
+
+  const cadenceLabel = p.cadence === 'MONTHLY' && (p.intervalMonths ?? 1) > 1
+    ? `Every ${p.intervalMonths} months`
+    : p.cadence.charAt(0) + p.cadence.slice(1).toLowerCase();
+
+  return (
+    <div className='flex items-start gap-3 px-3 py-2'>
+      <div className='flex-1'>
+        <div className='flex items-baseline justify-between gap-2'>
+          <span className='text-sm font-medium'>{p.name}</span>
+          <span className='text-sm font-semibold shrink-0 tabular-nums'>
+            {formatCurrency(amount, false, currency)}
+          </span>
+        </div>
+        <div className='flex flex-wrap gap-x-1 mt-0.5 text-xs text-muted-foreground'>
+          {p.account && <span>{p.type === 'TRANSFER' ? `${p.account} → ${p.toAccount ?? 'N/A'}` : p.account}</span>}
+          {p.type === 'TRANSACTION' && <span>{p.account ? '· ' : ''}{p.category || 'Uncategorized'}</span>}
+        </div>
+        <div className='flex flex-wrap gap-x-1 mt-0.5 text-xs text-muted-foreground'>
+          <span>{cadenceLabel}</span>
+          <span>· {dueDate ? `Due ${format(dueDate, 'dd MMMM, yyyy')}` : 'No due date'}</span>
+          <span className={cn({
+            'text-destructive': days < 0,
+            'text-yellow-500': days >= 0 && days <= warningThreshold,
+          })}>
+            · {formatRemainingTime(days, dueDate)}
+          </span>
+        </div>
+      </div>
+      <div className='shrink-0 mt-0.5'>
+        <Actions item={p} />
+      </div>
+    </div>
+  );
+}

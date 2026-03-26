@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import {
   ColumnDef,
+  Row,
   flexRender,
   SortingState,
   useReactTable,
@@ -10,6 +11,7 @@ import {
   getFilteredRowModel
 } from '@tanstack/react-table';
 
+import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
@@ -18,9 +20,11 @@ interface DataTableProps<TData, TValue> {
   disabled?: boolean;
   hasFooter?: boolean;
   columns: ColumnDef<TData, TValue>[];
+  renderMobileRow?: (row: Row<TData>) => React.ReactNode;
+  pinnedColumns?: number;
 }
 
-export function DataTable<TData, TValue>({ data, columns, hasFooter }: DataTableProps<TData, TValue>) {
+export function DataTable<TData, TValue>({ data, columns, hasFooter, renderMobileRow, pinnedColumns }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = React.useState('');
 
@@ -55,14 +59,25 @@ export function DataTable<TData, TValue>({ data, columns, hasFooter }: DataTable
 
   const measureColWidths = React.useCallback(() => {
     if (!parentRef.current) return;
-    const firstRow = parentRef.current.querySelector('tbody tr:not([class*="border-0"])');
-    if (!firstRow) return;
-    const raw = Array.from(firstRow.querySelectorAll('td')).map(td => td.getBoundingClientRect().width);
+    const bodyRows = Array.from(parentRef.current.querySelectorAll('tbody tr:not([class*="border-0"])'));
+    if (!bodyRows.length) return;
+    const firstRow = bodyRows[0];
+    const raw = Array.from(firstRow.querySelectorAll('td')).map((td, i) => {
+      if (i < (pinnedColumns ?? 0)) {
+        return Math.max(...bodyRows.map(row => (row.querySelectorAll('td')[i]?.getBoundingClientRect().width ?? 0)));
+      }
+      return td.getBoundingClientRect().width;
+    });
     if (!raw.length || raw.every(w => w === 0)) return;
-    const avg = raw.reduce((a, b) => a + b, 0) / raw.length;
+    const nonPinnedWidths = raw.slice(pinnedColumns ?? 0);
+    const avg = nonPinnedWidths.length ? nonPinnedWidths.reduce((a, b) => a + b, 0) / nonPinnedWidths.length : 0;
     const cap = avg * 1.2;
-    setColWidths(raw.map(w => Math.min(w, cap)));
-  }, []);
+    setColWidths(raw.map((w, i) => i < (pinnedColumns ?? 0) ? w : Math.min(w, cap)));
+  }, [pinnedColumns]);
+
+  React.useEffect(() => {
+    setColWidths([]);
+  }, [columns.length]);
 
   React.useLayoutEffect(() => {
     measureColWidths();
@@ -83,6 +98,30 @@ export function DataTable<TData, TValue>({ data, columns, hasFooter }: DataTable
       </colgroup>
     ) : null;
 
+
+  const pinnedCount = pinnedColumns ?? 0;
+  const pinnedOffsets = React.useMemo(() => {
+    const offsets: number[] = [];
+    let acc = 0;
+    for (let i = 0; i < pinnedCount; i++) {
+      offsets.push(acc);
+      acc += colWidths[i] ?? 0;
+    }
+    return offsets;
+  }, [colWidths, pinnedCount]);
+
+  const getPinnedStyle = (index: number): React.CSSProperties | undefined =>
+    index < pinnedCount ? { left: pinnedOffsets[index] } : undefined;
+
+  const getPinnedClass = (index: number, isEdgeRow = false) =>
+    index < pinnedCount
+      ? cn(
+          'sticky',
+          isEdgeRow ? 'bg-background z-20' : 'bg-background z-[3] group-hover:bg-muted',
+          index === pinnedCount - 1 && 'border-r shadow-[2px_0_4px_-2px_rgba(0,0,0,0.15)]'
+        )
+      : undefined;
+
   return (
     <div className='flex flex-col flex-1 min-h-0'>
       <div className='pb-4'>
@@ -93,73 +132,105 @@ export function DataTable<TData, TValue>({ data, columns, hasFooter }: DataTable
           className='max-w-sm'
         />
       </div>
-      <div
-        ref={parentRef}
-        className='flex-1 min-h-0 overflow-auto rounded-md border [scrollbar-gutter:stable]'
-      >
-        <Table className={colWidths.length ? 'table-fixed' : ''}>
-          {fixedColGroup}
-          <TableHeader className='sticky top-0 z-10 bg-background'>
-            {table.getHeaderGroups().map(headerGroup => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map(header => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {rows.length ? (
-              <>
-                {paddingTop > 0 && (
-                  <TableRow className='border-0'>
-                    <TableCell colSpan={columns.length} style={{ height: paddingTop, padding: 0, border: 0 }} />
-                  </TableRow>
-                )}
-                {virtualItems.map(virtualRow => {
-                  const row = rows[virtualRow.index];
-                  return (
-                    <TableRow
-                      key={row.id}
-                      data-index={virtualRow.index}
-                      ref={virtualizer.measureElement}
+
+      {/* Mobile card list */}
+      {renderMobileRow && (
+        <div className='md:hidden flex-1 overflow-y-auto rounded-md border divide-y'>
+          {rows.length === 0 ? (
+            <div className='h-24 flex items-center justify-center text-sm text-muted-foreground'>
+              No results.
+            </div>
+          ) : (
+            rows.map(row => (
+              <React.Fragment key={row.id}>
+                {renderMobileRow(row)}
+              </React.Fragment>
+            ))
+          )}
+        </div>
+      )}
+
+      {/* Desktop table */}
+      <div className={cn('flex flex-col flex-1 min-h-0 rounded-md border overflow-hidden', renderMobileRow && 'hidden md:flex')}>
+        <div
+          ref={parentRef}
+          className='flex-1 min-h-0 overflow-auto [scrollbar-gutter:stable]'
+        >
+          <Table className={cn('border-separate border-spacing-0', colWidths.length ? 'table-fixed' : '')}>
+            {fixedColGroup}
+            <TableHeader className='sticky top-0 z-10 bg-background'>
+              {table.getHeaderGroups().map(headerGroup => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header, index) => (
+                    <TableHead
+                      key={header.id}
+                      style={getPinnedStyle(index)}
+                      className={cn(getPinnedClass(index, true), 'border-b-2 border-border')}
                     >
-                      {row.getVisibleCells().map(cell => (
-                        <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
-                      ))}
-                    </TableRow>
-                  );
-                })}
-                {paddingBottom > 0 && (
-                  <TableRow className='border-0'>
-                    <TableCell colSpan={columns.length} style={{ height: paddingBottom, padding: 0, border: 0 }} />
-                  </TableRow>
-                )}
-              </>
-            ) : (
-              <TableRow>
-                <TableCell colSpan={columns.length} className='h-24 text-center'>
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-          {hasFooter && (
-            <TableFooter className='sticky bottom-0 bg-background'>
-              {table.getFooterGroups().map(footerGroup => (
-                <TableRow key={footerGroup.id}>
-                  {footerGroup.headers.map(footer => (
-                    <TableCell key={footer.id}>
-                      {footer.isPlaceholder ? null : flexRender(footer.column.columnDef.footer, footer.getContext())}
-                    </TableCell>
+                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
                   ))}
                 </TableRow>
               ))}
-            </TableFooter>
-          )}
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {rows.length ? (
+                <>
+                  {paddingTop > 0 && (
+                    <TableRow className='border-0'>
+                      <TableCell colSpan={columns.length} style={{ height: paddingTop, padding: 0, border: 0 }} />
+                    </TableRow>
+                  )}
+                  {virtualItems.map(virtualRow => {
+                    const row = rows[virtualRow.index];
+                    return (
+                      <TableRow
+                        key={row.id}
+                        data-index={virtualRow.index}
+                        ref={virtualizer.measureElement}
+                        className='group'
+                      >
+                        {row.getVisibleCells().map((cell, index) => (
+                          <TableCell key={cell.id} style={getPinnedStyle(index)} className={cn(getPinnedClass(index), 'border-b border-border')}>
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    );
+                  })}
+                  {paddingBottom > 0 && (
+                    <TableRow className='border-0'>
+                      <TableCell colSpan={columns.length} style={{ height: paddingBottom, padding: 0, border: 0 }} />
+                    </TableRow>
+                  )}
+                </>
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className='h-24 text-center'>
+                    No results.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+            {hasFooter && (
+              <TableFooter className='sticky bottom-0 z-10 border-t-0 bg-muted'>
+                {table.getFooterGroups().map(footerGroup => (
+                  <TableRow key={footerGroup.id}>
+                    {footerGroup.headers.map((footer, index) => (
+                      <TableCell
+                        key={footer.id}
+                        style={getPinnedStyle(index)}
+                        className={cn(getPinnedClass(index, true), 'border-t-2 border-border')}
+                      >
+                        {footer.isPlaceholder ? null : flexRender(footer.column.columnDef.footer, footer.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableFooter>
+            )}
+          </Table>
+        </div>
       </div>
     </div>
   );

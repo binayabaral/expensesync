@@ -8,11 +8,12 @@ export const useGetPayeesWithExpenses = () => {
   const from = params.get('from') || '';
   const to = params.get('to') || '';
   const accountId = params.get('accountId') || '';
+  const periods = params.get('periods') || '6';
 
   const query = useQuery({
-    queryKey: ['payeesWithExpenses', { from, to, accountId }],
+    queryKey: ['payeesWithExpenses', { from, to, accountId, periods }],
     queryFn: async () => {
-      const response = await client.api.payees['with-expenses'].$get({ query: { from, to, accountId } });
+      const response = await client.api.payees['with-expenses'].$get({ query: { from, to, accountId, periods } });
 
       if (!response.ok) {
         throw new Error('Failed to fetch payees with expenses');

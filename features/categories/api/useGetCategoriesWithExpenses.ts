@@ -8,11 +8,12 @@ export const useGetCategoriesWithExpenses = () => {
   const from = params.get('from') || '';
   const to = params.get('to') || '';
   const accountId = params.get('accountId') || '';
+  const periods = params.get('periods') || '6';
 
   const query = useQuery({
-    queryKey: ['categoriesWithExpenses', { from, to, accountId }],
+    queryKey: ['categoriesWithExpenses', { from, to, accountId, periods }],
     queryFn: async () => {
-      const response = await client.api.categories['with-expenses'].$get({ query: { from, to, accountId } });
+      const response = await client.api.categories['with-expenses'].$get({ query: { from, to, accountId, periods } });
 
       if (!response.ok) {
         throw new Error('Failed to fetch categories with expenses');
