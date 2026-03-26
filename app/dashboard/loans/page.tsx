@@ -56,7 +56,7 @@ function Loans() {
   }
 
   return (
-    <div className='max-w-full space-y-6'>
+    <div className='h-full overflow-y-auto space-y-6'>
       {/* EMI Loans */}
       <section>
         <h2 className='text-base font-semibold mb-3'>EMI Loans</h2>

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { z } from 'zod';
-import isMobile from 'is-mobile';
 import { useForm } from 'react-hook-form';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { Select } from '@/components/Select';
@@ -94,7 +94,7 @@ export const AssetForm = ({ disabled, defaultValues, accountOptions, accounts = 
     defaultValues
   });
 
-  const isMobileDevice = isMobile();
+  const isMobileDevice = useIsMobile();
   const selectedType = form.watch('type');
   const watchedAccountId = form.watch('accountId');
   const watchedQuantity = form.watch('quantity');

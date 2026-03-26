@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import isMobile from 'is-mobile';
 import { Trash } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
@@ -96,7 +96,7 @@ export const RecurringPaymentForm = ({
   const type = form.watch('type');
   const watchedAccountId = form.watch('accountId');
   const accountCurrency = accounts.find(a => a.id === watchedAccountId)?.currency ?? DEFAULT_CURRENCY;
-  const isMobileDevice = isMobile();
+  const isMobileDevice = useIsMobile();
 
   const handleSubmit = (values: RecurringPaymentFormValues) => {
     const amountInMiliUnits = convertAmountToMiliUnits(parseFloat(values.amount));

@@ -2,8 +2,8 @@
 
 import qs from 'query-string';
 import { useState } from 'react';
-import isMobile from 'is-mobile';
 import { CalendarIcon, ChevronDown } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { DateRange } from 'react-day-picker';
 import { format, startOfMonth } from 'date-fns';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -31,6 +31,7 @@ function FilterDate() {
   };
 
   const [date, setDate] = useState<DateRange | undefined>(paramState);
+  const isMobileDevice = useIsMobile();
 
   const pushToUrl = (dateRange: DateRange | undefined) => {
     const query = {
@@ -68,7 +69,7 @@ function FilterDate() {
           defaultMonth={date?.from}
           selected={date}
           onSelect={setDate}
-          numberOfMonths={isMobile() ? 1 : 2}
+          numberOfMonths={isMobileDevice ? 1 : 2}
         />
         <div className='p-4 w-full flex items-center gap-x-2'>
           <PopoverClose asChild>

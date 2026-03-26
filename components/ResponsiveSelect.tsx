@@ -1,7 +1,6 @@
 'use client';
 
-import isMobile from 'is-mobile';
-
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Select } from '@/components/Select';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 
@@ -30,7 +29,8 @@ export function ResponsiveSelect({
   onCreate,
   onChangeAction
 }: Props) {
-  if (isMobile()) {
+  const isMobileDevice = useIsMobile();
+  if (isMobileDevice) {
     return (
       <NativeSelect value={value} onChange={e => onChangeAction(e.target.value)} disabled={disabled} className='w-full'>
         <NativeSelectOption value=''>{placeholder}</NativeSelectOption>

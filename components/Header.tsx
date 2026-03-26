@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import isMobile from 'is-mobile';
 import { useMedia } from 'react-use';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 import { cn } from '@/lib/utils';
 import Nav from '@/components/Nav';
@@ -12,7 +12,7 @@ import HeaderWelcome from '@/components/HeaderWelcome';
 
 function Header() {
   const isSmallerScreen = useMedia('(max-width: 1024px)', false);
-  const isMobileDevice = isMobile();
+  const isMobileDevice = useIsMobile();
 
   const enableMobileNav = isSmallerScreen || isMobileDevice;
 

@@ -1,6 +1,6 @@
 import * as React from 'react';
-import isMobile from 'is-mobile';
 import { DayPicker } from 'react-day-picker';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useImperativeHandle, useRef } from 'react';
 import { type Locale, enUS } from 'date-fns/locale';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
@@ -385,7 +385,7 @@ const TimePeriodSelect = React.forwardRef<HTMLButtonElement, PeriodSelectorProps
         <Select defaultValue={period} onValueChange={(value: Period) => handleValueChange(value)}>
           <SelectTrigger
             ref={ref}
-            className='w-[65px] focus:bg-accent focus:text-accent-foreground'
+            className='w-16.25 focus:bg-accent focus:text-accent-foreground'
             onKeyDown={handleKeyDown}
           >
             <SelectValue />
@@ -493,7 +493,7 @@ const TimePickerInput = React.forwardRef<HTMLInputElement, TimePickerInputProps>
         id={id || picker}
         name={name || picker}
         className={cn(
-          'w-[48px] text-center font-mono text-base tabular-nums caret-transparent focus:bg-accent focus:text-accent-foreground [&::-webkit-inner-spin-button]:appearance-none',
+          'w-12 text-center font-mono text-base tabular-nums caret-transparent focus:bg-accent focus:text-accent-foreground [&::-webkit-inner-spin-button]:appearance-none',
           className
         )}
         value={value || calculatedValue}
@@ -671,6 +671,7 @@ const DateTimePicker = React.forwardRef<Partial<DateTimePickerRef>, DateTimePick
     },
     ref
   ) => {
+    const isMobileDevice = useIsMobile();
     const [month, setMonth] = React.useState<Date>(value ?? defaultPopupValue);
     const buttonRef = useRef<HTMLButtonElement>(null);
     const [displayDate, setDisplayDate] = React.useState<Date | undefined>(value ?? undefined);
@@ -730,7 +731,6 @@ const DateTimePicker = React.forwardRef<Partial<DateTimePickerRef>, DateTimePick
       };
     }
 
-    const isMobileDevice = isMobile();
 
     if (isMobileDevice) {
       const formatString = hourCycle === 24 ? initHourFormat.hour24 : initHourFormat.hour12;

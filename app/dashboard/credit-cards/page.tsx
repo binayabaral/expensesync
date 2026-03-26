@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import isMobile from 'is-mobile';
 import { Loader2 } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { format } from 'date-fns';
 
 import { Select } from '@/components/Select';
@@ -27,6 +27,7 @@ export default function CreditCardsPage() {
   const { onOpen: openCloseStatementSheet } = useOpenCloseStatementSheet();
   const { onOpen: openEditStatementSheet } = useOpenEditStatementSheet();
   const { onOpen: openTransferSheet } = useOpenAddTransferSheet();
+  const isMobileDevice = useIsMobile();
 
   useEffect(() => {
     if (!selectedCardId && cards.length > 0) {
@@ -76,7 +77,7 @@ export default function CreditCardsPage() {
           <CardTitle className='text-lg font-semibold'>Credit Cards</CardTitle>
           {accountOptions.length > 0 && (
             <div className='w-full max-w-xs'>
-              {isMobile() ? (
+              {isMobileDevice ? (
                 <NativeSelect
                   value={selectedCardId}
                   onChange={event => setSelectedCardId(event.target.value)}

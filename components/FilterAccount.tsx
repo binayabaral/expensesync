@@ -1,8 +1,8 @@
 'use client';
 
 import qs from 'query-string';
-import isMobile from 'is-mobile';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useGetAccounts } from '@/features/accounts/api/useGetAccounts';
@@ -42,7 +42,8 @@ function FilterAccount() {
     router.push(url);
   };
 
-  if (isMobile()) {
+  const isMobileDevice = useIsMobile();
+  if (isMobileDevice) {
     return (
       <select
         value={accountId}

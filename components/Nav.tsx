@@ -1,7 +1,7 @@
 'use client';
 
-import isMobile from 'is-mobile';
 import { useMedia } from 'react-use';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Loader2, ChevronDown } from 'lucide-react';
 import { useState, Fragment } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
@@ -78,7 +78,7 @@ function Nav() {
   const { user } = useUser();
   const pathName = usePathname();
   const isSmallerScreen = useMedia('(max-width: 1024px)', false);
-  const isMobileDevice = isMobile();
+  const isMobileDevice = useIsMobile();
 
   const enableMobileNav = isSmallerScreen || isMobileDevice;
 

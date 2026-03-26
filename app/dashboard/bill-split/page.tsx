@@ -53,7 +53,7 @@ function BillSplitContent() {
   const totalOwed = balances.filter(b => b.netAmount > 0).reduce((s, b) => s + b.netAmount, 0);
 
   return (
-    <div className='max-w-full space-y-5'>
+    <div className='h-full overflow-y-auto space-y-5'>
       {/* Page header */}
       <h1 className='text-xl font-bold'>Bill Split</h1>
 

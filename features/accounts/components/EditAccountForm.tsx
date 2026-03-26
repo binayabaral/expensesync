@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import isMobile from 'is-mobile';
 import { Trash } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
@@ -64,6 +64,7 @@ export const EditAccountForm = ({ id, isClosed, onSubmit, onDelete, onCloseLoan,
     defaultValues: defaultValues
   });
 
+  const isMobileDevice = useIsMobile();
   const accountCurrency = form.watch('currency') ?? DEFAULT_CURRENCY;
 
   const handleSubmit = (values: FormValues) => {
@@ -162,7 +163,7 @@ export const EditAccountForm = ({ id, isClosed, onSubmit, onDelete, onCloseLoan,
             <FormItem>
               <FormLabel>Account Type</FormLabel>
               <FormControl>
-                {isMobile() ? (
+                {isMobileDevice ? (
                   <NativeSelect value={field.value} onChange={field.onChange} disabled={disabled} className='w-full'>
                     <NativeSelectOption value='CASH'>Cash</NativeSelectOption>
                     <NativeSelectOption value='BANK'>Bank</NativeSelectOption>
@@ -238,7 +239,7 @@ export const EditAccountForm = ({ id, isClosed, onSubmit, onDelete, onCloseLoan,
                 <FormItem>
                   <FormLabel>Statement Close</FormLabel>
                   <FormControl>
-                    {isMobile() ? (
+                    {isMobileDevice ? (
                       <NativeSelect value={field.value} onChange={field.onChange} disabled={disabled} className='w-full'>
                         <NativeSelectOption value='DAY'>Day of Month</NativeSelectOption>
                         <NativeSelectOption value='EOM'>End of Month</NativeSelectOption>
@@ -289,7 +290,7 @@ export const EditAccountForm = ({ id, isClosed, onSubmit, onDelete, onCloseLoan,
                 <FormItem>
                   <FormLabel>Payment Due</FormLabel>
                   <FormControl>
-                    {isMobile() ? (
+                    {isMobileDevice ? (
                       <NativeSelect value={field.value} onChange={field.onChange} disabled={disabled} className='w-full'>
                         <NativeSelectOption value='DAY'>Day of Month</NativeSelectOption>
                         <NativeSelectOption value='DAYS'>Days After Close</NativeSelectOption>
@@ -387,7 +388,7 @@ export const EditAccountForm = ({ id, isClosed, onSubmit, onDelete, onCloseLoan,
                 <FormItem>
                   <FormLabel>Loan Type</FormLabel>
                   <FormControl>
-                    {isMobile() ? (
+                    {isMobileDevice ? (
                       <NativeSelect value={field.value ?? ''} onChange={field.onChange} disabled={disabled} className='w-full'>
                         <NativeSelectOption value=''>Select type</NativeSelectOption>
                         <NativeSelectOption value='EMI'>EMI (Installment)</NativeSelectOption>

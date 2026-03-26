@@ -5,7 +5,7 @@ import HealthDataGrid from "@/components/HealthDataGrid";
 
 export default function HealthPage() {
   return (
-    <div className='max-w-full'>
+    <div className='h-full overflow-y-auto'>
       <Suspense>
         <HealthDataGrid/>
         <HealthChart/>

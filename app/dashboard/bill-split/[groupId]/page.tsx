@@ -186,7 +186,7 @@ export default function GroupDetailPage({ params }: Props) {
     });
 
   return (
-    <div className='max-w-full space-y-4'>
+    <div className='h-full overflow-y-auto space-y-4'>
       {/* Header */}
       <div className='space-y-3'>
         <Link href='/dashboard/bill-split' className='flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground w-fit'>
@@ -295,9 +295,9 @@ export default function GroupDetailPage({ params }: Props) {
       </div>
 
       {/* Expenses + Settlements side by side */}
-      <div className='grid grid-cols-[1fr_320px] gap-4 items-start'>
+      <div className='grid grid-cols-1 md:grid-cols-[1fr_320px] gap-4 items-start'>
         {/* Expenses */}
-        <div className='border rounded-md px-3 py-2'>
+        <div className='border rounded-md px-3 py-2 order-2 md:order-1'>
           <div className='flex items-center justify-between mb-1.5'>
             <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wide'>Expenses</p>
             <Button size='sm' onClick={() => openAddExpense(groupId)}>Add expense</Button>
@@ -326,7 +326,7 @@ export default function GroupDetailPage({ params }: Props) {
         </div>
 
         {/* Settlements */}
-        <div className='border rounded-md px-3 py-2'>
+        <div className='border rounded-md px-3 py-2 order-1 md:order-2'>
           <div className='flex items-center justify-between mb-1.5'>
             <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wide'>Settlements</p>
             <Button

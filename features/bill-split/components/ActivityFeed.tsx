@@ -71,7 +71,7 @@ export function ActivityFeed({ expenses, settlements, groups, currentUserId, isL
       ) : items.length === 0 ? (
         <p className='px-3 py-4 text-sm text-muted-foreground text-center'>No activity yet.</p>
       ) : (
-        <div className='divide-y max-h-[480px] overflow-y-auto'>
+        <div className='divide-y'>
           {items.map(item => {
             if (item.type === 'expense') {
               const e = item.data;
