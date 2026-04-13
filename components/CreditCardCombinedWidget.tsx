@@ -2,6 +2,7 @@
 
 import { format } from 'date-fns';
 import { Loader2 } from 'lucide-react';
+import { useState } from 'react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -22,7 +23,10 @@ const getUtilizationTone = (value?: number | null) => {
   return 'bg-rose-500';
 };
 
+const PAYMENTS_VISIBLE = 2;
+
 export const CreditCardCombinedWidget = () => {
+  const [showAllPayments, setShowAllPayments] = useState(false);
   const { data = [], isLoading } = useGetCreditCards();
   const { data: recurringPayments = [], isLoading: isLoadingRecurring } = useGetRecurringPayments();
 
@@ -97,7 +101,7 @@ export const CreditCardCombinedWidget = () => {
                 <div className='text-xs text-muted-foreground'>No upcoming payments.</div>
               ) : (
                 <div className='space-y-2'>
-                  {upcomingPayments.map(item => (
+                  {(showAllPayments ? upcomingPayments : upcomingPayments.slice(0, PAYMENTS_VISIBLE)).map(item => (
                     <div key={item.id} className='flex items-center justify-between rounded border border-border px-3 py-2 text-xs'>
                       <div>
                         <span className='font-medium'>{item.name}</span>
@@ -113,6 +117,14 @@ export const CreditCardCombinedWidget = () => {
                       </div>
                     </div>
                   ))}
+                  {upcomingPayments.length > PAYMENTS_VISIBLE && (
+                    <button
+                      onClick={() => setShowAllPayments(prev => !prev)}
+                      className='text-xs text-muted-foreground hover:text-foreground transition-colors w-full text-center pt-1'
+                    >
+                      {showAllPayments ? 'Show less' : `+${upcomingPayments.length - PAYMENTS_VISIBLE} more`}
+                    </button>
+                  )}
                 </div>
               )}
             </div>
