@@ -1,5 +1,6 @@
 'use client';
 
+import { Check, X } from 'lucide-react';
 import { InferResponseType } from 'hono';
 import { ColumnDef } from '@tanstack/react-table';
 import { useSearchParams } from 'next/navigation';
@@ -7,11 +8,29 @@ import { endOfDay, format, parse, startOfDay, startOfMonth, subMonths } from 'da
 
 import { client } from '@/lib/hono';
 import { cn, formatCurrency } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { SortableHeader } from '@/components/SortableHeader';
 
 import { Actions } from './Actions';
 
 export type ResponseType = InferResponseType<(typeof client.api.categories)['with-expenses']['$get'], 200>['data'][0];
+
+export type EditingValues = { name: string };
+
+export type CategoryTableMeta = {
+  editingRowId: string | null;
+  editingValues: EditingValues | null;
+  updateEditingValues: (patch: Partial<EditingValues>) => void;
+  cancelEditing: () => void;
+  saveEditing: () => void;
+  startEditingById: (id: string, values: EditingValues) => void;
+  isSaving: boolean;
+};
+
+export function buildEditingValues(t: ResponseType): EditingValues {
+  return { name: t.name };
+}
 
 const formatDateRange = (start: Date, end: Date): string => {
   const sameYear = start.getFullYear() === end.getFullYear();
@@ -30,11 +49,29 @@ export const getBaseColumns = (startDate: Date, endDate: Date): ColumnDef<Respon
   {
     accessorKey: 'name',
     header: ({ column }) => <SortableHeader column={column} label='Name' />,
-    cell: ({ row }) => (
-      <span className={cn('whitespace-nowrap', row.original.amount < (row.original.prevAmounts?.[0] ?? 0) ? 'text-destructive' : 'text-primary')}>
-        {row.original.name}
-      </span>
-    ),
+    cell: ({ row, table }) => {
+      const meta = table.options.meta as CategoryTableMeta | undefined;
+      const isEditing = meta?.editingRowId === row.original.id;
+
+      if (isEditing && meta?.editingValues) {
+        return (
+          <div onClick={e => e.stopPropagation()} className='min-w-40'>
+            <Input
+              value={meta.editingValues.name}
+              onChange={e => meta.updateEditingValues({ name: e.target.value })}
+              disabled={meta.isSaving}
+              placeholder='e.g. Food, Travel, etc.'
+            />
+          </div>
+        );
+      }
+
+      return (
+        <span className={cn('whitespace-nowrap', row.original.amount < (row.original.prevAmounts?.[0] ?? 0) ? 'text-destructive' : 'text-primary')}>
+          {row.original.name}
+        </span>
+      );
+    },
     footer: () => <span className='text-muted-foreground'>Totals</span>
   },
   {
@@ -160,7 +197,31 @@ export const BuildColumns = (data: ResponseType[]): ColumnDef<ResponseType>[] =>
     ...prevColumns,
     {
       id: 'actions',
-      cell: ({ row }) => <Actions id={row.original.id} />
+      cell: ({ row, table }) => {
+        const meta = table.options.meta as CategoryTableMeta | undefined;
+        const isEditing = meta?.editingRowId === row.original.id;
+
+        if (isEditing) {
+          return (
+            <div onClick={e => e.stopPropagation()} className='flex items-center gap-1'>
+              <Button size='sm' onClick={meta?.saveEditing} disabled={meta?.isSaving} className='h-8 w-8 p-0'>
+                <Check className='size-4' />
+              </Button>
+              <Button size='sm' variant='ghost' onClick={meta?.cancelEditing} disabled={meta?.isSaving} className='h-8 w-8 p-0'>
+                <X className='size-4' />
+              </Button>
+            </div>
+          );
+        }
+
+        return (
+          <div onClick={e => e.stopPropagation()}>
+            <Actions
+              id={row.original.id}
+            />
+          </div>
+        );
+      }
     }
   ];
 };

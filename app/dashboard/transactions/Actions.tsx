@@ -5,7 +5,6 @@ import { Edit, MoreHorizontal, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useConfirm } from '@/hooks/useConfirm';
 import { useDeleteTransaction } from '@/features/transactions/api/useDeleteTransaction';
-import { useOpenEditTransactionSheet } from '@/features/transactions/hooks/useOpenEditTransactionSheet';
 import {
   DropdownMenu,
   DropdownMenuItem,
@@ -16,12 +15,12 @@ import {
 type Props = {
   id: string;
   isDisabled: boolean;
+  onEditAction?: () => void;
 };
 
-export const Actions = ({ id, isDisabled }: Props) => {
+export const Actions = ({ id, isDisabled, onEditAction }: Props) => {
   const [ConfirmDialog, confirm] = useConfirm('Are you sure?', 'You are about to delete this transaction.');
   const deleteMutation = useDeleteTransaction(id);
-  const { onOpen } = useOpenEditTransactionSheet();
 
   const handleDelete = async () => {
     const ok = await confirm();
@@ -41,7 +40,7 @@ export const Actions = ({ id, isDisabled }: Props) => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align='end'>
-          <DropdownMenuItem onClick={() => onOpen(id)} disabled={deleteMutation.isPending}>
+          <DropdownMenuItem onClick={onEditAction} disabled={isDisabled || deleteMutation.isPending}>
             <Edit className='size-4 mr-2' /> Edit
           </DropdownMenuItem>
           <DropdownMenuItem onClick={handleDelete} disabled={deleteMutation.isPending}>

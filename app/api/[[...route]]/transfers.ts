@@ -110,7 +110,10 @@ const app = new Hono()
           fromAccount: sql<string>`CASE WHEN ${fromAccount.isDeleted} THEN CONCAT(${fromAccount.name}, ' (deleted account)') ELSE ${fromAccount.name} END`,
           transferCharge: transfers.transferCharge,
           fromAccountCurrency: fromAccount.currency,
-          toAccountCurrency: toAccount.currency
+          toAccountCurrency: toAccount.currency,
+          fromAccountId: transfers.fromAccountId,
+          toAccountId: transfers.toAccountId,
+          creditCardStatementId: transfers.creditCardStatementId
         })
         .from(transfers)
         .leftJoin(toAccount, eq(transfers.toAccountId, toAccount.id))

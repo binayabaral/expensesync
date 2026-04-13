@@ -1,37 +1,152 @@
 'use client';
 
 import { format } from 'date-fns';
+import { Check, X } from 'lucide-react';
 import { InferResponseType } from 'hono';
 import { ColumnDef, Row } from '@tanstack/react-table';
 
 import { client } from '@/lib/hono';
-import { DEFAULT_CURRENCY, cn, formatCurrency } from '@/lib/utils';
+import { DEFAULT_CURRENCY, cn, convertAmountFromMiliUnits, formatCurrency } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { AmountInput } from '@/components/AmountInput';
 import { SortableHeader } from '@/components/SortableHeader';
+import { ResponsiveSelect } from '@/components/ResponsiveSelect';
+import { DateInputWithPicker } from '@/components/DateInputWithPicker';
 
 import { Actions } from './Actions';
 
 export type ResponseType = InferResponseType<typeof client.api.transfers.$get, 200>['data'][0];
 
+export type EditingValues = {
+  date: Date;
+  fromAccountId: string;
+  toAccountId: string;
+  amount: string;
+  transferCharge: string;
+  notes: string | null;
+  toAmount: number | null;
+  creditCardStatementId: string | null;
+};
+
+export type TransferTableMeta = {
+  editingRowId: string | null;
+  editingValues: EditingValues | null;
+  updateEditingValues: (patch: Partial<EditingValues>) => void;
+  cancelEditing: () => void;
+  saveEditing: () => void;
+  startEditingById: (id: string, values: EditingValues) => void;
+  accountOptions: { label: string; value: string }[];
+  accounts: { id: string; currency?: string | null }[];
+  isSaving: boolean;
+};
+
+export function buildEditingValues(t: ResponseType): EditingValues {
+  return {
+    date: new Date(t.date),
+    fromAccountId: t.fromAccountId ?? '',
+    toAccountId: t.toAccountId ?? '',
+    amount: convertAmountFromMiliUnits(t.amount).toString(),
+    transferCharge: convertAmountFromMiliUnits(t.transferCharge ?? 0).toString(),
+    notes: t.notes ?? null,
+    toAmount: t.toAmount ?? null,
+    creditCardStatementId: t.creditCardStatementId ?? null
+  };
+}
+
 export const columns: ColumnDef<ResponseType>[] = [
   {
     accessorKey: 'date',
     header: ({ column }) => <SortableHeader column={column} label='Date' />,
-    cell: ({ row }) => <span>{format(row.getValue('date') as Date, 'dd MMMM, yyyy hh:mm a')}</span>
+    cell: ({ row, table }) => {
+      const meta = table.options.meta as TransferTableMeta | undefined;
+      const isEditing = meta?.editingRowId === row.original.id;
+
+      if (isEditing && meta?.editingValues) {
+        return (
+          <div onClick={e => e.stopPropagation()} className='min-w-50'>
+            <DateInputWithPicker
+              value={meta.editingValues.date}
+              onChangeAction={date => meta.updateEditingValues({ date })}
+              disabled={meta.isSaving}
+            />
+          </div>
+        );
+      }
+
+      return <span>{format(row.getValue('date') as Date, 'dd MMMM, yyyy hh:mm a')}</span>;
+    }
   },
   {
     accessorKey: 'fromAccount',
     header: ({ column }) => <SortableHeader column={column} label='Sender Account' />,
-    cell: ({ row }) => <span>{row.original.fromAccount}</span>
+    cell: ({ row, table }) => {
+      const meta = table.options.meta as TransferTableMeta | undefined;
+      const isEditing = meta?.editingRowId === row.original.id;
+
+      if (isEditing && meta?.editingValues) {
+        return (
+          <div onClick={e => e.stopPropagation()} className='min-w-35'>
+            <ResponsiveSelect
+              value={meta.editingValues.fromAccountId}
+              options={meta.accountOptions}
+              placeholder='Sender Account'
+              disabled={meta.isSaving}
+              onChangeAction={v => meta.updateEditingValues({ fromAccountId: v })}
+            />
+          </div>
+        );
+      }
+
+      return <span>{row.original.fromAccount}</span>;
+    }
   },
   {
     accessorKey: 'toAccount',
     header: ({ column }) => <SortableHeader column={column} label='Receiver Account' />,
-    cell: ({ row }) => <span>{row.original.toAccount}</span>
+    cell: ({ row, table }) => {
+      const meta = table.options.meta as TransferTableMeta | undefined;
+      const isEditing = meta?.editingRowId === row.original.id;
+
+      if (isEditing && meta?.editingValues) {
+        return (
+          <div onClick={e => e.stopPropagation()} className='min-w-35'>
+            <ResponsiveSelect
+              value={meta.editingValues.toAccountId}
+              options={meta.accountOptions}
+              placeholder='Receiver Account'
+              disabled={meta.isSaving}
+              onChangeAction={v => meta.updateEditingValues({ toAccountId: v })}
+            />
+          </div>
+        );
+      }
+
+      return <span>{row.original.toAccount}</span>;
+    }
   },
   {
     accessorKey: 'amount',
     header: ({ column }) => <SortableHeader column={column} label='Amount' />,
-    cell: ({ row }) => {
+    cell: ({ row, table }) => {
+      const meta = table.options.meta as TransferTableMeta | undefined;
+      const isEditing = meta?.editingRowId === row.original.id;
+
+      if (isEditing && meta?.editingValues) {
+        const currency = meta.accounts.find(a => a.id === meta.editingValues!.fromAccountId)?.currency ?? DEFAULT_CURRENCY;
+        return (
+          <div onClick={e => e.stopPropagation()} className='min-w-35 [&_p]:hidden'>
+            <AmountInput
+              value={meta.editingValues.amount}
+              onChange={v => meta.updateEditingValues({ amount: v ?? '' })}
+              disabled={meta.isSaving}
+              placeholder='0.00'
+              currency={currency}
+            />
+          </div>
+        );
+      }
+
       const amount = parseFloat(row.getValue('amount'));
       const fromCurrency = row.original.fromAccountCurrency ?? DEFAULT_CURRENCY;
       const toCurrency = row.original.toAccountCurrency ?? DEFAULT_CURRENCY;
@@ -55,17 +170,31 @@ export const columns: ColumnDef<ResponseType>[] = [
   {
     accessorKey: 'transferCharge',
     header: ({ column }) => <SortableHeader column={column} label='Extra Charges' />,
-    cell: ({ row }) => {
+    cell: ({ row, table }) => {
+      const meta = table.options.meta as TransferTableMeta | undefined;
+      const isEditing = meta?.editingRowId === row.original.id;
+
+      if (isEditing && meta?.editingValues) {
+        const currency = meta.accounts.find(a => a.id === meta.editingValues!.fromAccountId)?.currency ?? DEFAULT_CURRENCY;
+        return (
+          <div onClick={e => e.stopPropagation()} className='min-w-35 [&_p]:hidden'>
+            <AmountInput
+              value={meta.editingValues.transferCharge}
+              onChange={v => meta.updateEditingValues({ transferCharge: v ?? '0' })}
+              disabled={meta.isSaving}
+              placeholder='0.00'
+              currency={currency}
+              allowNegativeValue={false}
+            />
+          </div>
+        );
+      }
+
       const charge = parseFloat(row.getValue('transferCharge'));
       const fromCurrency = row.original.fromAccountCurrency ?? DEFAULT_CURRENCY;
 
       return (
-        <span
-          className={cn(
-            'whitespace-nowrap',
-            charge === 0 ? 'text-muted-foreground' : charge < 0 ? 'text-primary' : 'text-destructive'
-          )}
-        >
+        <span className={cn('whitespace-nowrap', charge === 0 ? 'text-muted-foreground' : charge < 0 ? 'text-primary' : 'text-destructive')}>
           {formatCurrency(charge, false, fromCurrency)}
         </span>
       );
@@ -74,11 +203,54 @@ export const columns: ColumnDef<ResponseType>[] = [
   {
     accessorKey: 'notes',
     header: ({ column }) => <SortableHeader column={column} label='Notes' />,
-    cell: ({ row }) => <span>{row.original.notes}</span>
+    cell: ({ row, table }) => {
+      const meta = table.options.meta as TransferTableMeta | undefined;
+      const isEditing = meta?.editingRowId === row.original.id;
+
+      if (isEditing && meta?.editingValues) {
+        return (
+          <div onClick={e => e.stopPropagation()} className='min-w-30'>
+            <Input
+              value={meta.editingValues.notes ?? ''}
+              onChange={e => meta.updateEditingValues({ notes: e.target.value || null })}
+              disabled={meta.isSaving}
+              placeholder='Add a note'
+            />
+          </div>
+        );
+      }
+
+      return <span>{row.original.notes}</span>;
+    }
   },
   {
     id: 'actions',
-    cell: ({ row }) => <Actions id={row.original.id} />
+    cell: ({ row, table }) => {
+      const meta = table.options.meta as TransferTableMeta | undefined;
+      const isEditing = meta?.editingRowId === row.original.id;
+
+      if (isEditing) {
+        return (
+          <div onClick={e => e.stopPropagation()} className='flex items-center gap-1'>
+            <Button size='sm' onClick={meta?.saveEditing} disabled={meta?.isSaving} className='h-8 w-8 p-0'>
+              <Check className='size-4' />
+            </Button>
+            <Button size='sm' variant='ghost' onClick={meta?.cancelEditing} disabled={meta?.isSaving} className='h-8 w-8 p-0'>
+              <X className='size-4' />
+            </Button>
+          </div>
+        );
+      }
+
+      return (
+        <div onClick={e => e.stopPropagation()}>
+          <Actions
+            id={row.original.id}
+            onEditAction={() => meta?.startEditingById(row.original.id, buildEditingValues(row.original))}
+          />
+        </div>
+      );
+    }
   }
 ];
 

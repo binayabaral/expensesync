@@ -22,9 +22,13 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   renderMobileRow?: (row: Row<TData>) => React.ReactNode;
   pinnedColumns?: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  meta?: Record<string, any>;
+  onRowClick?: (row: Row<TData>) => void;
+  isRowHighlighted?: (row: Row<TData>) => boolean;
 }
 
-export function DataTable<TData, TValue>({ data, columns, hasFooter, renderMobileRow, pinnedColumns }: DataTableProps<TData, TValue>) {
+export function DataTable<TData, TValue>({ data, columns, hasFooter, renderMobileRow, pinnedColumns, meta, onRowClick, isRowHighlighted }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = React.useState('');
 
@@ -36,7 +40,8 @@ export function DataTable<TData, TValue>({ data, columns, hasFooter, renderMobil
     getSortedRowModel: getSortedRowModel(),
     onGlobalFilterChange: setGlobalFilter,
     getFilteredRowModel: getFilteredRowModel(),
-    state: { sorting, globalFilter }
+    state: { sorting, globalFilter },
+    meta
   });
 
   const rows = table.getRowModel().rows;
@@ -188,7 +193,14 @@ export function DataTable<TData, TValue>({ data, columns, hasFooter, renderMobil
                         key={row.id}
                         data-index={virtualRow.index}
                         ref={virtualizer.measureElement}
-                        className='group'
+                        data-editing={isRowHighlighted?.(row) ? 'true' : undefined}
+                        className={cn(
+                          'group',
+                          isRowHighlighted?.(row)
+                            ? 'bg-amber-50 dark:bg-amber-900/15'
+                            : onRowClick && 'cursor-pointer hover:bg-muted/50'
+                        )}
+                        onClick={() => onRowClick?.(row)}
                       >
                         {row.getVisibleCells().map((cell, index) => (
                           <TableCell key={cell.id} style={getPinnedStyle(index)} className={cn(getPinnedClass(index), 'border-b border-border')}>
