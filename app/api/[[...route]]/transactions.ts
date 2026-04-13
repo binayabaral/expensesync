@@ -4,7 +4,7 @@ import { getAuth } from '@hono/clerk-auth';
 import { createId } from '@paralleldrive/cuid2';
 import { zValidator } from '@hono/zod-validator';
 import { endOfDay, parse, startOfDay, startOfMonth } from 'date-fns';
-import { and, desc, eq, gte, inArray, lte, not, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, isNotNull, lte, not, sql } from 'drizzle-orm';
 
 import { db } from '@/db/drizzle';
 import { transactions, insertTransactionSchema, categories, accounts } from '@/db/schema';
@@ -63,6 +63,34 @@ const app = new Hono()
           )
         )
         .orderBy(desc(transactions.date));
+
+      return c.json({ data });
+    }
+  )
+  .get(
+    '/payee-categories',
+    async c => {
+      const auth = getAuth(c);
+
+      if (!auth?.userId) {
+        return c.json({ error: 'Unauthorized' }, 401);
+      }
+
+      const data = await db
+        .selectDistinctOn([transactions.payee], {
+          payee: transactions.payee,
+          categoryId: transactions.categoryId
+        })
+        .from(transactions)
+        .innerJoin(accounts, eq(transactions.accountId, accounts.id))
+        .where(
+          and(
+            eq(accounts.userId, auth.userId),
+            isNotNull(transactions.categoryId),
+            eq(transactions.type, 'USER_CREATED')
+          )
+        )
+        .orderBy(transactions.payee, desc(transactions.date));
 
       return c.json({ data });
     }

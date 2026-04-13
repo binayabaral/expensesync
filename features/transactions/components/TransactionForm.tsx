@@ -12,6 +12,7 @@ import { AmountInput } from '@/components/AmountInput';
 import { ResponsiveSelect } from '@/components/ResponsiveSelect';
 import { DateTimePicker } from '@/components/ui-extended/Datepicker';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { useGetPayeeCategories } from '@/features/transactions/api/useGetPayeeCategories';
 
 const formSchema = z.object({
   payee: z.string(),
@@ -61,6 +62,15 @@ export const TransactionForm = ({
   const watchedAccountId = form.watch('accountId');
   const accountCurrency = accounts.find(a => a.id === watchedAccountId)?.currency ?? DEFAULT_CURRENCY;
 
+  const { data: payeeCategories = {} } = useGetPayeeCategories();
+
+  const handlePayeeBlur = (payee: string) => {
+    const currentCategory = form.getValues('categoryId');
+    if (!currentCategory && payee && payeeCategories[payee]) {
+      form.setValue('categoryId', payeeCategories[payee]);
+    }
+  };
+
   const handleSubmit = (values: FormValues) => {
     const amountInMiliUnits = convertAmountToMiliUnits(parseFloat(values.amount));
     onSubmit({ ...values, amount: amountInMiliUnits, date: new Date(values.date) });
@@ -99,6 +109,27 @@ export const TransactionForm = ({
           )}
         />
         <FormField
+          name='payee'
+          control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Payee</FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  value={field.value || ''}
+                  disabled={disabled}
+                  placeholder='Add a payee'
+                  onBlur={e => {
+                    field.onBlur();
+                    handlePayeeBlur(e.target.value);
+                  }}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        <FormField
           name='categoryId'
           control={form.control}
           render={({ field }) => (
@@ -114,18 +145,6 @@ export const TransactionForm = ({
                   onCreate={onCreateCategory}
                   onChangeAction={field.onChange}
                 />
-              </FormControl>
-            </FormItem>
-          )}
-        />
-        <FormField
-          name='payee'
-          control={form.control}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Payee</FormLabel>
-              <FormControl>
-                <Input {...field} value={field.value || ''} disabled={disabled} placeholder='Add a payee' />
               </FormControl>
             </FormItem>
           )}
