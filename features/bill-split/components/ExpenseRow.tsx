@@ -59,12 +59,12 @@ export function ExpenseRow({ expense, contextName, isCreator, groupId }: Props) 
       : `${expense.shares.find(s => s.contactId === expense.paidByContactId)?.contactName ?? 'Someone'} paid`;
 
   return (
-    <div className='py-2.5 border-b last:border-b-0'>
+    <div className='py-2.5 border-b last:border-b-0 print-no-break print:border-gray-200'>
       <div className='flex items-start justify-between gap-2'>
         <div className='min-w-0 flex-1'>
           <div className='flex items-baseline gap-1.5 min-w-0'>
             <span className='text-sm font-medium truncate'>{expense.description}</span>
-            {expense.notes && <span className='text-xs text-muted-foreground italic truncate hidden sm:inline'>{expense.notes}</span>}
+            {expense.notes && <span className='text-xs text-muted-foreground italic truncate hidden sm:inline print:inline'>{expense.notes}</span>}
           </div>
           <p className='text-xs text-muted-foreground'>{format(new Date(expense.date), 'MMM d, yyyy')} · {paidByLabel}</p>
         </div>
@@ -79,7 +79,7 @@ export function ExpenseRow({ expense, contextName, isCreator, groupId }: Props) 
                       <Button
                         size='icon'
                         variant='ghost'
-                        className='h-6 w-6'
+                        className='print:hidden h-6 w-6'
                         disabled={expense.shares.some(s => s.transactionId)}
                         onClick={() => openEditExpense({
                           expenseId: expense.id,
@@ -112,7 +112,7 @@ export function ExpenseRow({ expense, contextName, isCreator, groupId }: Props) 
                   )}
                 </Tooltip>
               </TooltipProvider>
-              <Button size='icon' variant='ghost' className='h-6 w-6 -mr-1' disabled={isDeleting} onClick={() => deleteExpense()}>
+              <Button size='icon' variant='ghost' className='print:hidden h-6 w-6 -mr-1' disabled={isDeleting} onClick={() => deleteExpense()}>
                 <FaTrash className='h-3 w-3 text-muted-foreground' />
               </Button>
             </>
@@ -124,14 +124,14 @@ export function ExpenseRow({ expense, contextName, isCreator, groupId }: Props) 
         {expense.shares.map(share => (
           <div
             key={share.id}
-            className={`flex items-center gap-1 text-xs rounded px-1.5 py-0.5 ${share.isMine ? 'bg-primary/10 text-primary' : 'bg-muted/60 text-muted-foreground'}`}
+            className={`flex items-center gap-1 text-xs rounded px-1.5 py-0.5 ${share.isMine ? 'bg-primary/10 text-primary print:bg-muted/60 print:text-muted-foreground' : 'bg-muted/60 text-muted-foreground'}`}
           >
             <span className='font-medium'>{share.isMine ? 'You' : (share.contactName ?? 'Unknown')}</span>
             <span>{formatCurrency(share.shareAmount)}</span>
             {share.isMine && !share.transactionId && (
               <Badge
                 variant='outline'
-                className='text-xs cursor-pointer hover:bg-muted ml-0.5'
+                className='print:hidden text-xs cursor-pointer hover:bg-muted ml-0.5'
                 onClick={() =>
                   openRecordShare({
                     expenseId: expense.id,
@@ -152,7 +152,7 @@ export function ExpenseRow({ expense, contextName, isCreator, groupId }: Props) 
                 <Button
                   size='icon'
                   variant='ghost'
-                  className='h-4 w-4 ml-0.5'
+                  className='print:hidden h-4 w-4 ml-0.5'
                   title='Edit recording'
                   onClick={() =>
                     openRecordShare({
@@ -172,7 +172,7 @@ export function ExpenseRow({ expense, contextName, isCreator, groupId }: Props) 
                 >
                   <FaPencilAlt className='h-2 w-2' />
                 </Button>
-                <Badge variant='secondary' className='text-xs'>Recorded</Badge>
+                <Badge variant='secondary' className='print:hidden text-xs'>Recorded</Badge>
               </>
             )}
           </div>

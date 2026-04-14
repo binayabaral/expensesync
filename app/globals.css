@@ -126,3 +126,47 @@
     @apply cursor-pointer;
   }
 }
+
+@media print {
+  @page {
+    margin: 1.25cm;
+    size: A4;
+  }
+
+  /* Force light-mode variables regardless of dark class */
+  :root, .dark {
+    --background: hsl(0 0% 100%);
+    --foreground: hsl(240 10% 3.9%);
+    --card: hsl(0 0% 100%);
+    --card-foreground: hsl(240 10% 3.9%);
+    --muted: hsl(240 4.8% 95.9%);
+    --muted-foreground: hsl(240 3.8% 46.1%);
+    --border: hsl(240 5.9% 90%);
+    --primary: hsl(142.1 76.2% 36.3%);
+    --primary-foreground: hsl(355.7 100% 97.3%);
+    --secondary: hsl(240 4.8% 95.9%);
+    --secondary-foreground: hsl(240 5.9% 10%);
+  }
+
+  body {
+    background: white !important;
+    color: hsl(240 10% 3.9%) !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Fix main content area for print */
+  main {
+    height: auto !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Prevent rows from breaking across pages */
+  .print-no-break {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

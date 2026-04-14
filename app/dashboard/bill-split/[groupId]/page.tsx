@@ -87,12 +87,12 @@ function SettlementRow({
   return (
     <>
       <ConfirmDialog />
-      <div className='py-2.5 border-b last:border-b-0'>
+      <div className='py-2.5 border-b last:border-b-0 print-no-break print:border-gray-200'>
         <div className='flex items-start justify-between gap-2'>
           <div className='min-w-0'>
             <div className='flex items-baseline gap-1.5'>
               <span className='text-sm font-medium'>{isBatchSettle ? 'Group settle' : 'Settlement'}</span>
-              {settlement.notes && <span className='text-xs text-muted-foreground italic truncate hidden sm:inline'>{settlement.notes}</span>}
+              {settlement.notes && <span className='text-xs text-muted-foreground italic truncate hidden sm:inline print:inline'>{settlement.notes}</span>}
             </div>
             <p className='text-xs text-muted-foreground'>
               {format(new Date(settlement.date), 'MMM d, yyyy')} · {direction}
@@ -101,19 +101,19 @@ function SettlementRow({
           <div className='flex items-center gap-1 shrink-0'>
             <span className='text-sm font-semibold'>{formatCurrency(settlement.amount)}</span>
             {hasRecord && (
-              <Badge variant='secondary' className='text-xs'>Recorded</Badge>
+              <Badge variant='secondary' className='print:hidden text-xs'>Recorded</Badge>
             )}
             {isOwn && (
               <>
                 {!isBatchSettle && (
-                  <Button size='icon' variant='ghost' className='h-6 w-6' onClick={onEdit}>
+                  <Button size='icon' variant='ghost' className='print:hidden h-6 w-6' onClick={onEdit}>
                     <FaPencilAlt className='h-3 w-3' />
                   </Button>
                 )}
                 <Button
                   size='icon'
                   variant='ghost'
-                  className='h-6 w-6 text-destructive hover:text-destructive'
+                  className='print:hidden h-6 w-6 text-destructive hover:text-destructive'
                   disabled={isDeleting}
                   onClick={async () => {
                     const ok = await confirm();
@@ -186,9 +186,33 @@ export default function GroupDetailPage({ params }: Props) {
     });
 
   return (
-    <div className='h-full overflow-y-auto space-y-4'>
-      {/* Header */}
-      <div className='space-y-3'>
+    <div className='h-full overflow-y-auto space-y-4 print:h-auto print:overflow-visible'>
+      {/* Print-only document header */}
+      <div className='hidden print:block mb-6 pb-4 border-b-2 border-gray-200'>
+        <div className='flex items-start justify-between'>
+          <div>
+            <p className='text-xs text-gray-400 uppercase tracking-widest mb-1'>ExpenseSync · Bill Split</p>
+            <h1 className='text-2xl font-bold text-gray-900'>{group.name}</h1>
+            {group.description && (
+              <p className='text-sm text-gray-500 mt-0.5'>{group.description}</p>
+            )}
+            <div className='flex items-center gap-2 mt-1.5'>
+              <span className='text-xs font-medium bg-gray-100 text-gray-600 rounded px-2 py-0.5'>{group.currency}</span>
+              {group.isArchived && (
+                <span className='text-xs font-medium bg-gray-100 text-gray-500 rounded px-2 py-0.5'>Archived</span>
+              )}
+            </div>
+          </div>
+          <div className='text-right'>
+            <p className='text-xs text-gray-400'>Generated</p>
+            <p className='text-xs text-gray-600 font-medium'>{format(new Date(), 'MMM d, yyyy · h:mm a')}</p>
+            <p className='text-xs text-gray-400 mt-1'>{expenses.length} expense{expenses.length !== 1 ? 's' : ''} · {settlements.length} settlement{settlements.length !== 1 ? 's' : ''}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Header (screen only) */}
+      <div className='space-y-3 print:hidden'>
         <Link href='/dashboard/bill-split' className='flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground w-fit'>
           <FaArrowLeft className='h-3 w-3' />
           Bill Split
@@ -254,13 +278,13 @@ export default function GroupDetailPage({ params }: Props) {
       </div>
 
       {/* Members */}
-      <div className='border rounded-md px-3 py-2'>
+      <div className='border rounded-md px-3 py-2 print:border-gray-200'>
         <div className='flex items-center justify-between gap-2 mb-1.5'>
           <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wide'>Members</p>
           <Button
             size='sm'
             variant='ghost'
-            className='h-6 px-2 text-xs text-muted-foreground'
+            className='print:hidden h-6 px-2 text-xs text-muted-foreground'
             onClick={() => openAddMember(group.id, group.members.map(m => m.contactId))}
           >
             <FaUserPlus className='h-3 w-3 mr-1' />
@@ -276,7 +300,7 @@ export default function GroupDetailPage({ params }: Props) {
                   {member.isCurrentUser ? 'You' : (member.displayName ?? member.contactName)}
                 </span>
                 {!member.userId && (
-                  <Badge variant='outline' className='text-xs text-muted-foreground'>pending</Badge>
+                  <Badge variant='outline' className='print:hidden text-xs text-muted-foreground'>pending</Badge>
                 )}
                 {!member.isCurrentUser && balance && balance.netAmount !== 0 && (
                   <span className={`text-xs font-medium ${balance.netAmount > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'}`}>
@@ -295,12 +319,12 @@ export default function GroupDetailPage({ params }: Props) {
       </div>
 
       {/* Expenses + Settlements side by side */}
-      <div className='grid grid-cols-1 md:grid-cols-[1fr_320px] gap-4 items-start'>
+      <div className='grid grid-cols-1 md:grid-cols-[1fr_320px] gap-4 items-start print:grid-cols-1'>
         {/* Expenses */}
-        <div className='border rounded-md px-3 py-2 order-2 md:order-1'>
+        <div className='border rounded-md px-3 py-2 order-2 md:order-1 print:order-1 print:border-gray-200'>
           <div className='flex items-center justify-between mb-1.5'>
             <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wide'>Expenses</p>
-            <Button size='sm' onClick={() => openAddExpense(groupId)}>Add expense</Button>
+            <Button size='sm' className='print:hidden' onClick={() => openAddExpense(groupId)}>Add expense</Button>
           </div>
           {expensesQuery.isLoading ? (
             <div className='space-y-2'>
@@ -326,12 +350,13 @@ export default function GroupDetailPage({ params }: Props) {
         </div>
 
         {/* Settlements */}
-        <div className='border rounded-md px-3 py-2 order-1 md:order-2'>
+        <div className={`border rounded-md px-3 py-2 order-1 md:order-2 print:order-2 print:border-gray-200${settlements.length === 0 ? ' print:hidden' : ''}`}>
           <div className='flex items-center justify-between mb-1.5'>
             <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wide'>Settlements</p>
             <Button
               size='sm'
               variant='outline'
+              className='print:hidden'
               onClick={() => openSettlement({
                 groupId,
                 groupName: group.name,
