@@ -72,7 +72,7 @@ export function ExpenseRow({ expense, contextName, isCreator, groupId, currentUs
             {expense.notes && <span className='text-xs text-muted-foreground italic truncate hidden sm:inline print:inline'>{expense.notes}</span>}
           </div>
           <p className='text-xs text-muted-foreground'>
-            {format(new Date(expense.date), 'MMM d, yyyy')} · <span className='print:hidden'>{paidByLabelWeb}</span><span className='hidden print:inline'>{paidByLabelPrint}</span>
+            {format(new Date(expense.date), 'MMM d, yyyy, h:mm a')} ·<span className='print:hidden'>{paidByLabelWeb}</span><span className='hidden print:inline'>{paidByLabelPrint}</span>
           </p>
         </div>
         <div className='flex items-center gap-1 shrink-0'>
