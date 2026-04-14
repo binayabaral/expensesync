@@ -20,6 +20,7 @@ export const useEditExpense = (id: string) => {
       queryClient.invalidateQueries({ queryKey: ['split-expenses'] });
       queryClient.invalidateQueries({ queryKey: ['split-balances'] });
       queryClient.invalidateQueries({ queryKey: ['split-group-balances'] });
+      queryClient.invalidateQueries({ queryKey: ['split-group-member-debts'] });
     },
     onError: () => {
       toast.error('Failed to update expense');

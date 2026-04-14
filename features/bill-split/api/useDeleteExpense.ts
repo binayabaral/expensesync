@@ -18,6 +18,7 @@ export const useDeleteExpense = (id: string) => {
       queryClient.invalidateQueries({ queryKey: ['split-groups'] });
       queryClient.invalidateQueries({ queryKey: ['split-balances'] });
       queryClient.invalidateQueries({ queryKey: ['split-group-balances'] });
+      queryClient.invalidateQueries({ queryKey: ['split-group-member-debts'] });
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
       queryClient.invalidateQueries({ queryKey: ['summary'] });

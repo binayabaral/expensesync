@@ -187,6 +187,9 @@ export default function GroupDetailPage({ params }: Props) {
 
   const currentUserName = toTitleCase(group.members.find(m => m.isCurrentUser)?.displayName ?? group.members.find(m => m.isCurrentUser)?.contactName ?? '');
 
+  const totalExpenses = expenses.reduce((sum, e) => sum + e.totalAmount, 0);
+  const totalSettled = settlements.reduce((sum, s) => sum + s.amount, 0);
+
   const otherMembers = group.members
     .filter(m => !m.isCurrentUser)
     .map(m => {
@@ -219,7 +222,10 @@ export default function GroupDetailPage({ params }: Props) {
           <div className='text-right'>
             <p className='text-xs text-gray-400'>Generated</p>
             <p className='text-xs text-gray-600 font-medium'>{format(new Date(), 'MMM d, yyyy · h:mm a')}</p>
-            <p className='text-xs text-gray-400 mt-1'>{expenses.length} expense{expenses.length !== 1 ? 's' : ''} · {settlements.length} settlement{settlements.length !== 1 ? 's' : ''}</p>
+            <p className='text-xs text-gray-400 mt-1'>{expenses.length} expense{expenses.length !== 1 ? 's' : ''} · {formatCurrency(totalExpenses)}</p>
+            {settlements.length > 0 && (
+              <p className='text-xs text-gray-400'>{settlements.length} settlement{settlements.length !== 1 ? 's' : ''} · {formatCurrency(totalSettled)}</p>
+            )}
           </div>
         </div>
       </div>
@@ -350,6 +356,11 @@ export default function GroupDetailPage({ params }: Props) {
               <Button size='sm' className='print:hidden' onClick={() => openAddExpense(groupId)}>Add expense</Button>
             </div>
             <p className='text-xs text-muted-foreground/60 pb-0.5'>All shared costs added to this group.</p>
+            {expenses.length > 0 && (
+              <div className='border-t pt-1.5 mt-1'>
+                <p className='text-sm'><span className='text-muted-foreground'>Total: </span><span className='font-semibold'>{formatCurrency(totalExpenses)}</span></p>
+              </div>
+            )}
           </div>
           {expensesQuery.isLoading ? (
             <div className='space-y-2'>
@@ -457,6 +468,11 @@ export default function GroupDetailPage({ params }: Props) {
                 </Button>
               </div>
               <p className='text-xs text-muted-foreground/60 pb-0.5'>Payments recorded to settle debts in this group.</p>
+              {settlements.length > 0 && (
+                <div className='border-t pt-1.5 mt-1'>
+                  <p className='text-sm font-semibold'>{formatCurrency(totalSettled)} <span className='text-xs font-normal text-muted-foreground'>total</span></p>
+                </div>
+              )}
             </div>
             {settlementsQuery.isLoading ? (
               <div className='space-y-2'>
