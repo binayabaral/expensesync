@@ -97,43 +97,41 @@ function SettlementRow({
     <>
       <ConfirmDialog />
       <div className='py-2.5 border-b last:border-b-0 print-no-break print:border-gray-200'>
-        <div className='flex items-start justify-between gap-2'>
-          <div className='min-w-0'>
-            <div className='flex items-baseline gap-1.5'>
-              <span className='text-sm font-medium'>{isBatchSettle ? 'Group settle' : 'Settlement'}</span>
-              {settlement.notes && <span className='text-xs text-muted-foreground italic truncate hidden sm:inline print:inline'>{settlement.notes}</span>}
-            </div>
-            <p className='text-xs text-muted-foreground'>
+        <div className='flex items-baseline justify-between gap-2'>
+          <span className='text-sm font-medium'>{isBatchSettle ? 'Group settle' : 'Settlement'}</span>
+          <span className='text-sm font-semibold shrink-0'>{formatCurrency(settlement.amount)}</span>
+        </div>
+        <div className='flex items-center justify-between gap-1 mt-0.5'>
+          <div className='flex items-center gap-1.5 flex-wrap min-w-0'>
+            <span className='text-xs text-muted-foreground'>
               {format(new Date(settlement.date), 'MMM d, yyyy')} · <span className='print:hidden'>{directionWeb}</span><span className='hidden print:inline'>{directionPrint}</span>
-            </p>
-          </div>
-          <div className='flex items-center gap-1 shrink-0'>
-            <span className='text-sm font-semibold'>{formatCurrency(settlement.amount)}</span>
+            </span>
+            {settlement.notes && <span className='text-xs text-muted-foreground italic truncate hidden sm:inline print:inline'>{settlement.notes}</span>}
             {hasRecord && (
               <Badge variant='secondary' className='print:hidden text-xs'>Recorded</Badge>
             )}
-            {isOwn && (
-              <>
-                {!isBatchSettle && (
-                  <Button size='icon' variant='ghost' className='print:hidden h-6 w-6' onClick={onEdit}>
-                    <FaPencilAlt className='h-3 w-3' />
-                  </Button>
-                )}
-                <Button
-                  size='icon'
-                  variant='ghost'
-                  className='print:hidden h-6 w-6 text-destructive hover:text-destructive'
-                  disabled={isDeleting}
-                  onClick={async () => {
-                    const ok = await confirm();
-                    if (ok) deleteSettlement();
-                  }}
-                >
-                  <FaTrash className='h-3 w-3' />
-                </Button>
-              </>
-            )}
           </div>
+          {isOwn && (
+            <div className='flex items-center gap-1 shrink-0 print:hidden'>
+              {!isBatchSettle && (
+                <Button size='icon' variant='ghost' className='h-6 w-6' onClick={onEdit}>
+                  <FaPencilAlt className='h-3 w-3' />
+                </Button>
+              )}
+              <Button
+                size='icon'
+                variant='ghost'
+                className='h-6 w-6 text-destructive hover:text-destructive'
+                disabled={isDeleting}
+                onClick={async () => {
+                  const ok = await confirm();
+                  if (ok) deleteSettlement();
+                }}
+              >
+                <FaTrash className='h-3 w-3' />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </>
@@ -504,7 +502,8 @@ export default function GroupDetailPage({ params }: Props) {
                         amount: settlement.amount,
                         date: new Date(settlement.date),
                         notes: settlement.notes,
-                        initialAccountId: settlement.transferAccountId ?? null
+                        initialAccountId: settlement.transferAccountId ?? null,
+                        initialTransferCharge: settlement.transferCharge ?? null
                       });
                     }}
                   />

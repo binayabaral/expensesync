@@ -22,6 +22,7 @@ const formSchema = z.object({
   direction: z.enum(['paying', 'receiving']),
   recordTransaction: z.boolean(),
   accountId: z.string().nullable(),
+  transferCharge: z.string(),
   notes: z.string().optional()
 });
 
@@ -39,6 +40,7 @@ type Props = {
     initialDate?: Date;
     initialNotes?: string | null;
     initialAccountId?: string | null;
+    initialTransferCharge?: number | null;
   };
   disabled?: boolean;
   submitLabel?: string;
@@ -50,6 +52,7 @@ type Props = {
     toIsUser: boolean;
     toContactId: string | null;
     accountId: string | null;
+    transferCharge: number;
     groupId: string | null;
     notes: string | null;
   }) => void;
@@ -72,6 +75,9 @@ export function SettlementForm({ defaults, disabled, submitLabel = 'Record settl
   const initialAmountStr = defaults?.initialAmount != null
     ? String(convertAmountFromMiliUnits(defaults.initialAmount))
     : '';
+  const initialTransferChargeStr = defaults?.initialTransferCharge != null && defaults.initialTransferCharge !== 0
+    ? String(convertAmountFromMiliUnits(defaults.initialTransferCharge))
+    : '0';
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -82,6 +88,7 @@ export function SettlementForm({ defaults, disabled, submitLabel = 'Record settl
       direction: initialDirection,
       recordTransaction: hasInitialAccount,
       accountId: defaults?.initialAccountId ?? null,
+      transferCharge: initialTransferChargeStr,
       notes: defaults?.initialNotes ?? ''
     }
   });
@@ -120,6 +127,7 @@ export function SettlementForm({ defaults, disabled, submitLabel = 'Record settl
       toIsUser,
       toContactId: toIsUser ? null : values.contactId,
       accountId: values.recordTransaction ? (values.accountId ?? null) : null,
+      transferCharge: values.recordTransaction ? convertAmountToMiliUnits(parseFloat(values.transferCharge) || 0) : 0,
       groupId: defaults?.groupId ?? null,
       notes: values.notes || null
     });
@@ -265,27 +273,50 @@ export function SettlementForm({ defaults, disabled, submitLabel = 'Record settl
           />
         )}
 
-        {/* Account selector — shown when recording */}
+        {/* Account selector and extra charge — shown when recording */}
         {recordTransaction && (
-          <FormField
-            control={form.control}
-            name='accountId'
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{direction === 'paying' ? 'Pay from account' : 'Receive into account'}</FormLabel>
-                <FormControl>
-                  <ResponsiveSelect
-                    value={field.value ?? ''}
-                    options={accountOptions}
-                    placeholder='Select account'
-                    disabled={disabled || accountsQuery.isLoading}
-                    onChangeAction={val => field.onChange(val || null)}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <>
+            <FormField
+              control={form.control}
+              name='accountId'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{direction === 'paying' ? 'Pay from account' : 'Receive into account'}</FormLabel>
+                  <FormControl>
+                    <ResponsiveSelect
+                      value={field.value ?? ''}
+                      options={accountOptions}
+                      placeholder='Select account'
+                      disabled={disabled || accountsQuery.isLoading}
+                      onChangeAction={val => field.onChange(val || null)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name='transferCharge'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Rounding Adjustment (optional)</FormLabel>
+                  <FormControl>
+                    <AmountInput
+                      {...field}
+                      disabled={disabled}
+                      placeholder='0.00'
+                      currency={DEFAULT_CURRENCY}
+                      allowNegativeValue={true}
+                    />
+                  </FormControl>
+                  <p className='text-xs text-muted-foreground'>
+                    Adjusts the account transaction when the actual amount differs from the settlement (e.g. friend rounds 12.35 to 12 or 13)
+                  </p>
+                </FormItem>
+              )}
+            />
+          </>
         )}
 
         <Button type='submit' disabled={disabled} className='w-full'>

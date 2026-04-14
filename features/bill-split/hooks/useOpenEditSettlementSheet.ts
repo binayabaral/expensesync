@@ -14,6 +14,7 @@ export type EditSettlementData = {
   date?: Date;
   notes?: string | null;
   initialAccountId?: string | null;
+  initialTransferCharge?: number | null;
 };
 
 type State = {

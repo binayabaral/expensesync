@@ -184,7 +184,6 @@ export const columns: ColumnDef<ResponseType>[] = [
               disabled={meta.isSaving}
               placeholder='0.00'
               currency={currency}
-              allowNegativeValue={false}
             />
           </div>
         );

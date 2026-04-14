@@ -31,6 +31,7 @@ const settlementInputSchema = z.object({
   currency: z.enum(SUPPORTED_CURRENCIES).optional(),
   date: z.coerce.date(),
   accountId: z.string().nullable().optional(),
+  transferCharge: z.number().int().optional().default(0),
   notes: z.string().nullable().optional()
 });
 
@@ -64,7 +65,8 @@ async function createSettlementTransfer(
   date: Date,
   payee: string,
   systemNote: string,
-  userNotes: string | null
+  userNotes: string | null,
+  transferCharge: number = 0
 ): Promise<string> {
   const [insertedTransfer] = await db
     .insert(transfers)
@@ -75,16 +77,17 @@ async function createSettlementTransfer(
       date,
       fromAccountId: fromIsUser ? accountId : (virtualAccountId ?? null),
       toAccountId: fromIsUser ? (virtualAccountId ?? null) : accountId,
-      transferCharge: 0,
+      transferCharge,
       notes: userNotes ?? null
     })
     .returning();
 
-  // Transaction on the user's real account
+  // Transaction on the user's real account — includes transferCharge so the account
+  // reflects the actual money exchanged (e.g. friend rounds to 12 or 13 for a 12.35 debt)
   await db.insert(transactions).values({
     id: createId(),
     date,
-    amount: fromIsUser ? -amount : amount,
+    amount: fromIsUser ? -(amount + transferCharge) : (amount + transferCharge),
     accountId,
     transferId: insertedTransfer.id,
     payee,
@@ -148,7 +151,8 @@ const app = new Hono()
         createdAt: splitSettlements.createdAt,
         fromContactName: fromContacts.name,
         toContactName: toContacts.name,
-        transferAccountId: sql<string | null>`COALESCE(${transfers.fromAccountId}, ${transfers.toAccountId})`
+        transferAccountId: sql<string | null>`COALESCE(${transfers.fromAccountId}, ${transfers.toAccountId})`,
+        transferCharge: transfers.transferCharge
       })
       .from(splitSettlements)
       .leftJoin(fromContacts, eq(splitSettlements.fromContactId, fromContacts.id))
@@ -177,6 +181,7 @@ const app = new Hono()
 
       const values = c.req.valid('json');
       const { fromIsUser, fromContactId, toIsUser, toContactId, amount, date, accountId, notes } = values;
+      const transferCharge = values.transferCharge ?? 0;
       const currency = values.currency ?? 'NPR';
       const groupId = values.groupId ?? null;
 
@@ -251,7 +256,7 @@ const app = new Hono()
               : `BILL SPLIT: settle with ${contactName}`;
             sharedTransferId = await createSettlementTransfer(
               auth.userId, fromIsUser, accountId, distributed[0].virtualAccountId,
-              amount, date, contactName, sysNote, notes ?? null
+              amount, date, contactName, sysNote, notes ?? null, transferCharge
             );
           }
 
@@ -311,7 +316,7 @@ const app = new Hono()
       // Transfer creation + settlement insert sequentially
       let transferId: string | null = null;
       if (accountId) {
-        transferId = await createSettlementTransfer(auth.userId, fromIsUser, accountId, virtualAccountId, amount, date, contactName, systemNote, notes ?? null);
+        transferId = await createSettlementTransfer(auth.userId, fromIsUser, accountId, virtualAccountId, amount, date, contactName, systemNote, notes ?? null, transferCharge);
       }
 
       const [settlement] = await db
@@ -464,6 +469,7 @@ const app = new Hono()
       const { id } = c.req.param();
       const values = c.req.valid('json');
       const { fromIsUser, fromContactId, toIsUser, toContactId, amount, date, accountId, notes } = values;
+      const transferCharge = values.transferCharge ?? 0;
       const currency = values.currency ?? 'NPR';
       const groupId = values.groupId ?? null;
 
@@ -499,6 +505,7 @@ const app = new Hono()
             date,
             fromAccountId: fromIsUser ? accountId : (virtualAccountId ?? null),
             toAccountId: fromIsUser ? (virtualAccountId ?? null) : accountId,
+            transferCharge,
             notes: notes ?? null
           }).where(eq(transfers.id, existing.transferId));
 
@@ -506,8 +513,10 @@ const app = new Hono()
           const txRows = await db.select().from(transactions).where(eq(transactions.transferId, existing.transferId));
           for (const tx of txRows) {
             const isVirtualSide = virtualAccountId && tx.accountId === virtualAccountId;
+            // Virtual side: always ±amount (bill split balance, no charge)
+            // Real account side: ±(amount + transferCharge) to reflect actual money exchanged
             await db.update(transactions).set({
-              amount: isVirtualSide ? (fromIsUser ? amount : -amount) : (fromIsUser ? -amount : amount),
+              amount: isVirtualSide ? (fromIsUser ? amount : -amount) : (fromIsUser ? -(amount + transferCharge) : (amount + transferCharge)),
               date,
               accountId: isVirtualSide ? virtualAccountId : accountId,
               payee: contactName,
@@ -521,7 +530,7 @@ const app = new Hono()
         }
       } else if (accountId) {
         // New account link — create transfer
-        finalTransferId = await createSettlementTransfer(auth.userId, fromIsUser, accountId, virtualAccountId, amount, date, contactName, systemNote, notes ?? null);
+        finalTransferId = await createSettlementTransfer(auth.userId, fromIsUser, accountId, virtualAccountId, amount, date, contactName, systemNote, notes ?? null, transferCharge);
       }
 
       const [updated] = await db

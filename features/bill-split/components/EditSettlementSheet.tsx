@@ -14,7 +14,7 @@ export function EditSettlementSheet() {
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className='max-sm:w-full space-y-4 overflow-y-auto overflow-y-auto'>
+      <SheetContent className='max-sm:w-full space-y-4 overflow-y-auto'>
         <SheetHeader>
           <SheetTitle>Edit settlement</SheetTitle>
           <SheetDescription>Update the settlement details.</SheetDescription>
@@ -31,7 +31,8 @@ export function EditSettlementSheet() {
             initialAmount: data.amount,
             initialDate: data.date,
             initialNotes: data.notes,
-            initialAccountId: data.initialAccountId
+            initialAccountId: data.initialAccountId,
+            initialTransferCharge: data.initialTransferCharge
           }}
           disabled={isPending}
           onSubmit={values => {

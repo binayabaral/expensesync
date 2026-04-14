@@ -24,7 +24,7 @@ export function toTitleCase(name: string | null | undefined): string {
 }
 
 export function convertAmountToMiliUnits(amount: number) {
-  return amount * 1000;
+  return Math.round(amount * 1000);
 }
 
 export function convertAmountFromMiliUnits(amount: number) {
