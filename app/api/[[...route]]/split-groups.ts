@@ -46,15 +46,13 @@ async function resolveGroupMembers(groupId: string, currentUserId: string) {
 
   // Batch-resolve all enrolled user names in one query
   const enrolledUserIds = [
-    ...new Set(rawMembers.filter(m => m.userId && m.userId !== currentUserId).map(m => m.userId!))
+    ...new Set(rawMembers.filter(m => m.userId).map(m => m.userId!))
   ];
   const userNameMap = await batchResolveUserNames(enrolledUserIds);
 
   return rawMembers.map(member => {
     let displayName = member.contactName;
-    if (member.userId === currentUserId) {
-      displayName = 'You';
-    } else if (member.userId && userNameMap.has(member.userId)) {
+    if (member.userId && userNameMap.has(member.userId)) {
       displayName = userNameMap.get(member.userId)!;
     }
     return { ...member, displayName, isCurrentUser: member.userId === currentUserId };
@@ -151,9 +149,7 @@ const app = new Hono()
       const rawMembers = membersByGroup.get(group.id) ?? [];
       const members = rawMembers.map(member => {
         let displayName = member.contactName;
-        if (member.userId === auth.userId) {
-          displayName = 'You';
-        } else if (member.userId && userNameMap.has(member.userId)) {
+        if (member.userId && userNameMap.has(member.userId)) {
           displayName = userNameMap.get(member.userId)!;
         }
         return { ...member, displayName, isCurrentUser: member.userId === auth.userId };
@@ -745,6 +741,146 @@ const app = new Hono()
     }));
 
     return c.json({ data: balances });
+  })
+
+  // GET /:id/member-debts — simplified (min-transactions) debts between all members
+  .get('/:id/member-debts', async c => {
+    const auth = getAuth(c);
+    if (!auth?.userId) return c.json({ error: 'Unauthorized' }, 401);
+    if (!await ensureEnrolled(auth.userId)) return c.json({ error: 'Not enrolled' }, 403);
+
+    const { id: groupId } = c.req.param();
+    const group = await getGroupWithAccess(groupId, auth.userId);
+    if (!group) return c.json({ error: 'Group not found or access denied' }, 404);
+
+    // Fetch all group members
+    const rawMembers = await db
+      .select({ contactId: splitGroupMembers.contactId, userId: splitGroupMembers.userId, contactName: splitContacts.name })
+      .from(splitGroupMembers)
+      .innerJoin(splitContacts, eq(splitGroupMembers.contactId, splitContacts.id))
+      .where(eq(splitGroupMembers.groupId, groupId));
+
+    // Resolve display names for enrolled members
+    const enrolledUserIds = [...new Set(rawMembers.filter(m => m.userId).map(m => m.userId!))];
+    const nameMap = enrolledUserIds.length > 0 ? await batchResolveUserNames(enrolledUserIds) : new Map<string, string>();
+
+    // memberMeta: canonical key → real display name for all members
+    const memberMeta = new Map(rawMembers.map(m => {
+      const key = m.userId ?? m.contactId;
+      const name = m.userId ? (nameMap.get(m.userId) ?? m.contactName) : m.contactName;
+      return [key, name];
+    }));
+
+    // Fetch all expense share rows + settlements (same queries as /:id/balances simplifyDebts path)
+    const [allExpenseData, allSettlementsData] = await Promise.all([
+      db.select({
+        expenseId: splitExpenses.id,
+        createdByUserId: splitExpenses.createdByUserId,
+        paidByUser: splitExpenses.paidByUser,
+        paidByContactId: splitExpenses.paidByContactId,
+        shareIsUser: splitExpenseShares.isUser,
+        shareContactId: splitExpenseShares.contactId,
+        shareAmount: splitExpenseShares.shareAmount
+      })
+        .from(splitExpenses)
+        .innerJoin(splitExpenseShares, eq(splitExpenseShares.expenseId, splitExpenses.id))
+        .where(eq(splitExpenses.groupId, groupId)),
+      db.select({
+        createdByUserId: splitSettlements.createdByUserId,
+        fromIsUser: splitSettlements.fromIsUser,
+        toIsUser: splitSettlements.toIsUser,
+        fromContactId: splitSettlements.fromContactId,
+        toContactId: splitSettlements.toContactId,
+        amount: splitSettlements.amount
+      })
+        .from(splitSettlements)
+        .where(eq(splitSettlements.groupId, groupId))
+    ]);
+
+    // Batch-resolve all contact IDs to canonical keys
+    const globalContactIdSet = new Set<string>();
+    for (const r of allExpenseData) {
+      if (r.paidByContactId) globalContactIdSet.add(r.paidByContactId);
+      if (r.shareContactId) globalContactIdSet.add(r.shareContactId);
+    }
+    for (const s of allSettlementsData) {
+      if (s.fromContactId) globalContactIdSet.add(s.fromContactId);
+      if (s.toContactId) globalContactIdSet.add(s.toContactId);
+    }
+    const globalContactMap = globalContactIdSet.size > 0 ? await batchResolveContacts([...globalContactIdSet]) : new Map();
+    const resolveContactKey = (contactId: string) => globalContactMap.get(contactId)?.linkedUserId ?? contactId;
+
+    // Build global net positions (positive = owed by others, negative = owes others)
+    const globalNet = new Map<string, number>();
+    for (const m of rawMembers) globalNet.set(m.userId ?? m.contactId, 0);
+
+    // Group expense rows by expenseId
+    const expenseGrouped = new Map<string, {
+      createdByUserId: string;
+      paidByUser: boolean;
+      paidByContactId: string | null;
+      shares: { isUser: boolean; contactId: string | null; shareAmount: number }[];
+    }>();
+    for (const row of allExpenseData) {
+      if (!expenseGrouped.has(row.expenseId)) {
+        expenseGrouped.set(row.expenseId, { createdByUserId: row.createdByUserId, paidByUser: row.paidByUser, paidByContactId: row.paidByContactId, shares: [] });
+      }
+      expenseGrouped.get(row.expenseId)!.shares.push({ isUser: row.shareIsUser, contactId: row.shareContactId, shareAmount: row.shareAmount });
+    }
+
+    for (const [, expense] of expenseGrouped) {
+      const payerKey = expense.paidByUser
+        ? expense.createdByUserId
+        : expense.paidByContactId ? resolveContactKey(expense.paidByContactId) : expense.createdByUserId;
+
+      for (const share of expense.shares) {
+        const ownerKey = share.isUser ? expense.createdByUserId : share.contactId ? resolveContactKey(share.contactId) : null;
+        if (!ownerKey || ownerKey === payerKey) continue;
+        globalNet.set(payerKey, (globalNet.get(payerKey) ?? 0) + share.shareAmount);
+        globalNet.set(ownerKey, (globalNet.get(ownerKey) ?? 0) - share.shareAmount);
+      }
+    }
+
+    for (const s of allSettlementsData) {
+      const fromKey = s.fromIsUser ? s.createdByUserId : s.fromContactId ? resolveContactKey(s.fromContactId) : null;
+      const toKey = s.toIsUser ? s.createdByUserId : s.toContactId ? resolveContactKey(s.toContactId) : null;
+      if (!fromKey || !toKey) continue;
+      globalNet.set(fromKey, (globalNet.get(fromKey) ?? 0) + s.amount);
+      globalNet.set(toKey, (globalNet.get(toKey) ?? 0) - s.amount);
+    }
+
+    // Greedy minimum-transactions simplification
+    const creditors: { key: string; amount: number }[] = [];
+    const debtors: { key: string; amount: number }[] = [];
+    for (const [key, net] of globalNet) {
+      if (net > 1) creditors.push({ key, amount: net });
+      else if (net < -1) debtors.push({ key, amount: -net });
+    }
+    creditors.sort((a, b) => b.amount - a.amount);
+    debtors.sort((a, b) => b.amount - a.amount);
+
+    const result: { fromName: string; toName: string; fromIsCurrentUser: boolean; toIsCurrentUser: boolean; amount: number }[] = [];
+    let ci = 0, di = 0;
+    while (ci < creditors.length && di < debtors.length) {
+      const creditor = creditors[ci];
+      const debtor = debtors[di];
+      const amount = Math.min(creditor.amount, debtor.amount);
+      if (amount > 0) {
+        result.push({
+          fromName: memberMeta.get(debtor.key) ?? 'Unknown',
+          toName: memberMeta.get(creditor.key) ?? 'Unknown',
+          fromIsCurrentUser: debtor.key === auth.userId,
+          toIsCurrentUser: creditor.key === auth.userId,
+          amount
+        });
+      }
+      creditor.amount -= amount;
+      debtor.amount -= amount;
+      if (creditor.amount < 1) ci++;
+      if (debtor.amount < 1) di++;
+    }
+
+    return c.json({ data: result });
   })
 
   // DELETE /:id — delete group (creator only)

@@ -18,6 +18,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export function toTitleCase(name: string | null | undefined): string {
+  if (!name) return '';
+  return name.replace(/\b\w/g, c => c.toUpperCase());
+}
+
 export function convertAmountToMiliUnits(amount: number) {
   return amount * 1000;
 }

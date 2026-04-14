@@ -7,7 +7,7 @@ import { FaPencilAlt } from 'react-icons/fa';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, toTitleCase } from '@/lib/utils';
 import { useOpenRecordShareSheet } from '../hooks/useOpenRecordShareSheet';
 import { useOpenEditExpenseSheet } from '../hooks/useOpenEditExpenseSheet';
 import { useDeleteExpense } from '../api/useDeleteExpense';
@@ -45,18 +45,23 @@ type Props = {
   contextName: string;
   isCreator: boolean;
   groupId?: string | null;
+  currentUserName: string;
 };
 
-export function ExpenseRow({ expense, contextName, isCreator, groupId }: Props) {
+export function ExpenseRow({ expense, contextName, isCreator, groupId, currentUserName }: Props) {
   const { onOpen: openRecordShare } = useOpenRecordShareSheet();
   const { onOpen: openEditExpense } = useOpenEditExpenseSheet();
   const { mutate: deleteExpense, isPending: isDeleting } = useDeleteExpense(expense.id);
 
-  const paidByLabel = expense.paidByMe
+  const paidByLabelWeb = expense.paidByMe
     ? 'You paid'
     : expense.paidByUser
-      ? `${expense.shares.find(s => s.isUser)?.contactName ?? 'Member'} paid`
-      : `${expense.shares.find(s => s.contactId === expense.paidByContactId)?.contactName ?? 'Someone'} paid`;
+      ? `${toTitleCase(expense.shares.find(s => s.isUser)?.contactName) || 'Member'} paid`
+      : `${toTitleCase(expense.shares.find(s => s.contactId === expense.paidByContactId)?.contactName) || 'Someone'} paid`;
+
+  const paidByLabelPrint = expense.paidByMe
+    ? `${currentUserName} paid`
+    : paidByLabelWeb;
 
   return (
     <div className='py-2.5 border-b last:border-b-0 print-no-break print:border-gray-200'>
@@ -66,7 +71,9 @@ export function ExpenseRow({ expense, contextName, isCreator, groupId }: Props) 
             <span className='text-sm font-medium truncate'>{expense.description}</span>
             {expense.notes && <span className='text-xs text-muted-foreground italic truncate hidden sm:inline print:inline'>{expense.notes}</span>}
           </div>
-          <p className='text-xs text-muted-foreground'>{format(new Date(expense.date), 'MMM d, yyyy')} · {paidByLabel}</p>
+          <p className='text-xs text-muted-foreground'>
+            {format(new Date(expense.date), 'MMM d, yyyy')} · <span className='print:hidden'>{paidByLabelWeb}</span><span className='hidden print:inline'>{paidByLabelPrint}</span>
+          </p>
         </div>
         <div className='flex items-center gap-1 shrink-0'>
           <span className='text-sm font-semibold'>{formatCurrency(expense.totalAmount)}</span>
@@ -126,7 +133,14 @@ export function ExpenseRow({ expense, contextName, isCreator, groupId }: Props) 
             key={share.id}
             className={`flex items-center gap-1 text-xs rounded px-1.5 py-0.5 ${share.isMine ? 'bg-primary/10 text-primary print:bg-muted/60 print:text-muted-foreground' : 'bg-muted/60 text-muted-foreground'}`}
           >
-            <span className='font-medium'>{share.isMine ? 'You' : (share.contactName ?? 'Unknown')}</span>
+            <span className='font-medium'>
+              {share.isMine ? (
+                <>
+                  <span className='print:hidden'>You</span>
+                  <span className='hidden print:inline'>{currentUserName}</span>
+                </>
+              ) : toTitleCase(share.contactName) || 'Unknown'}
+            </span>
             <span>{formatCurrency(share.shareAmount)}</span>
             {share.isMine && !share.transactionId && (
               <Badge

@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/lib/utils';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth, useUser } from '@clerk/nextjs';
 import { EnrollmentGate } from '@/features/bill-split/components/EnrollmentGate';
 import { ExpenseRow } from '@/features/bill-split/components/ExpenseRow';
 import { ActivityFeed } from '@/features/bill-split/components/ActivityFeed';
@@ -28,6 +28,7 @@ import { useSettleGroups } from '@/features/bill-split/api/useSettleGroups';
 function BillSplitContent() {
   const [showArchived, setShowArchived] = useState(false);
   const { userId } = useAuth();
+  const { user } = useUser();
 
   const groupsQuery = useGetGroups();
   const balancesQuery = useGetBalances();
@@ -254,6 +255,7 @@ function BillSplitContent() {
                 expense={expense}
                 contextName={expense.description}
                 isCreator={true}
+                currentUserName={user?.fullName ?? ''}
               />
             ))}
           </div>
