@@ -22,7 +22,6 @@ import { useOpenAddGroupSheet } from '@/features/bill-split/hooks/useOpenAddGrou
 import { useOpenAddExpenseSheet } from '@/features/bill-split/hooks/useOpenAddExpenseSheet';
 import { useOpenAddContactSheet } from '@/features/bill-split/hooks/useOpenAddContactSheet';
 import { useOpenAddSettlementSheet } from '@/features/bill-split/hooks/useOpenAddSettlementSheet';
-import { useSettleGroups } from '@/features/bill-split/api/useSettleGroups';
 
 
 function BillSplitContent() {
@@ -40,7 +39,6 @@ function BillSplitContent() {
   const { onOpen: openAddExpense } = useOpenAddExpenseSheet();
   const { onOpen: openAddContact } = useOpenAddContactSheet();
   const { onOpen: openSettlement } = useOpenAddSettlementSheet();
-  const { mutate: settleGroups, isPending: isSettlingGroups } = useSettleGroups();
 
   const groups = groupsQuery.data ?? [];
   const balances = balancesQuery.data ?? [];
@@ -120,18 +118,7 @@ function BillSplitContent() {
                     }
                   </div>
                   {isSettled ? (
-                    <div className='flex items-center justify-between gap-1'>
-                      <p className='text-xs text-muted-foreground'>Settled</p>
-                      {contact.contactId && contact.linkedUserId && contact.hasOutstandingGroupBalances && (
-                        <button
-                          className='text-xs text-muted-foreground hover:text-foreground border rounded px-1.5 py-0.5 shrink-0 transition-colors disabled:opacity-50'
-                          disabled={isSettlingGroups}
-                          onClick={() => settleGroups({ contactId: contact.contactId!, date: new Date() })}
-                        >
-                          Settle groups
-                        </button>
-                      )}
-                    </div>
+                    <p className='text-xs text-muted-foreground'>Settled</p>
                   ) : (
                     <div className='flex items-center justify-between gap-1'>
                       <div>
