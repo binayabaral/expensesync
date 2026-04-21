@@ -207,8 +207,11 @@ async function handleRequest() {
       amount: recurringPayments.amount,
       cadence: recurringPayments.cadence,
       intervalMonths: recurringPayments.intervalMonths,
+      dayOfMonth: recurringPayments.dayOfMonth,
       lastCompletedAt: recurringPayments.lastCompletedAt,
-      notes: recurringPayments.notes
+      notes: recurringPayments.notes,
+      accountId: recurringPayments.accountId,
+      toAccountId: recurringPayments.toAccountId
     })
       .from(recurringPayments)
       .where(and(
@@ -431,8 +434,11 @@ async function handleRequest() {
       const label = r.cadence === 'MONTHLY'
         ? r.intervalMonths > 1 ? `every ${r.intervalMonths} months` : 'monthly'
         : r.cadence.toLowerCase();
+      const toAccName = r.toAccountId ? accountNameMap.get(r.toAccountId) : null;
+      const accountStr = toAccName ? ` → into "${toAccName}"` : '';
+      const dueDayStr = r.dayOfMonth ? ` on day ${r.dayOfMonth}` : '';
       const noteStr = r.notes ? ` — note: "${r.notes}"` : '';
-      lines.push(`- ${r.name}: ${toNPR(r.amount)} ${label}${noteStr}`);
+      lines.push(`- ${r.name}: ${toNPR(r.amount)} ${label}${dueDayStr}${accountStr}${noteStr}`);
     }
   }
 
@@ -443,8 +449,14 @@ async function handleRequest() {
         ? r.intervalMonths > 1 ? `every ${r.intervalMonths} months` : 'monthly'
         : r.cadence.toLowerCase();
       const lastDone = r.lastCompletedAt ? format(new Date(r.lastCompletedAt), 'dd MMM yyyy') : 'never';
+      const fromAccName = r.accountId ? accountNameMap.get(r.accountId) : null;
+      const toAccName = r.toAccountId ? accountNameMap.get(r.toAccountId) : null;
+      const accountStr = fromAccName && toAccName
+        ? ` from "${fromAccName}" → "${toAccName}"`
+        : fromAccName ? ` from "${fromAccName}"` : toAccName ? ` → "${toAccName}"` : '';
+      const dueDayStr = r.dayOfMonth ? ` on day ${r.dayOfMonth}` : '';
       const noteStr = r.notes ? ` — note: "${r.notes}"` : '';
-      lines.push(`- ${r.name}: ${toNPR(Math.abs(r.amount))} ${label} (last completed: ${lastDone})${noteStr}`);
+      lines.push(`- ${r.name}: ${toNPR(Math.abs(r.amount))} ${label}${dueDayStr}${accountStr} (last completed: ${lastDone})${noteStr}`);
     }
   }
 
@@ -487,6 +499,7 @@ Important context for interpretation:
 - EMI loans have fixed repayment schedules — flag only if the APR is high or the balance is large relative to income.
 - Amounts are in Nepalese Rupees (NPR). Nepal context: typical mid-level salaries range NPR 50,000–200,000/month.
 - Accounts marked [CLOSED] are inactive — ignore their balances and do not flag them as issues.
+- Some accounts include a description (shown after —). Use these descriptions to understand the account's purpose before making recommendations about it — e.g. a wallet with a low balance may be intentionally kept low, a tracking-only account is not a real financial account.
 - The user manually logs recurring payments — "last completed" being old does not mean they missed a payment.
 - Monthly breakdown shows income/spending trends — flag if expenses are increasing month over month or savings rate is declining.
 - Savings rate below 20% of income is a concern; below 10% is high priority.
@@ -502,12 +515,27 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with this exact st
       "description": "Specific observation referencing actual numbers from the data",
       "action": "Concrete next step the user can take"
     }
-  ]
+  ],
+  "paycheckPlan": {
+    "intro": "1-2 sentences summarising this month's obligations and how much of the paycheck is already committed",
+    "actions": [
+      {
+        "step": 1,
+        "instruction": "Transfer NPR X to [Account Name]",
+        "reason": "Brief reason — e.g. covers SIP auto-debit on the 5th"
+      }
+    ]
+  }
 }
 
 Priority must be "high", "medium", or "low".
 Category must be one of: "spending", "debt", "savings", "investments", "cashflow", "general".
 Include 5-8 recommendations ordered from highest to lowest priority.
+The paycheckPlan is a full paycheck allocation guide. It should cover:
+1. Fixed obligations first (recurring transfers, EMIs, insurance premiums, SIPs) — ordered by due date, specifying source and destination accounts
+2. Savings step — how much to set aside this month and which account to save in, based on the user's savings rate and goals
+3. Spending guidance — which account to use for day-to-day expenses this month, and a suggested spending ceiling based on what's left
+If a recurring expense has no source account, note it can be paid from any available account. Use specific account names from the data. Do not invent amounts not present in the data.
 Do not invent concerns not supported by the data. Base every recommendation on specific numbers provided.`;
 
   const vertexApiKey = process.env.VERTEX_AI_API_KEY;

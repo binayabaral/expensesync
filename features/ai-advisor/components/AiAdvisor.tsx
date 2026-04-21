@@ -29,9 +29,21 @@ type Recommendation = {
   action: string;
 };
 
+type PaycheckAction = {
+  step: number;
+  instruction: string;
+  reason: string;
+};
+
+type PaycheckPlan = {
+  intro: string;
+  actions: PaycheckAction[];
+};
+
 type AdvisorData = {
   summary: string;
   recommendations: Recommendation[];
+  paycheckPlan?: PaycheckPlan;
 };
 
 type Meta = {
@@ -207,6 +219,35 @@ export default function AiAdvisor() {
                 <p className='text-sm leading-relaxed'>{data.summary}</p>
               </CardContent>
             </Card>
+
+            {/* Paycheck Plan */}
+            {data.paycheckPlan && (
+              <div className='space-y-3'>
+                <h2 className='text-sm font-semibold text-muted-foreground uppercase tracking-wide'>
+                  When You Get Paid
+                </h2>
+                <Card>
+                  <CardContent className='pt-4 pb-4 space-y-3'>
+                    <p className='text-sm text-muted-foreground leading-relaxed'>
+                      {data.paycheckPlan.intro}
+                    </p>
+                    <ol className='space-y-2'>
+                      {data.paycheckPlan.actions.map((action) => (
+                        <li key={action.step} className='flex gap-3 text-sm'>
+                          <span className='shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-semibold flex items-center justify-center mt-0.5'>
+                            {action.step}
+                          </span>
+                          <div>
+                            <span className='font-medium'>{action.instruction}</span>
+                            <span className='text-muted-foreground'> — {action.reason}</span>
+                          </div>
+                        </li>
+                      ))}
+                    </ol>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
 
             {/* Recommendations */}
             {[
