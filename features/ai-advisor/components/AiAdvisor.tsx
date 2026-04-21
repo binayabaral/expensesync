@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Loader2, Sparkles, RefreshCw } from 'lucide-react';
+import { format } from 'date-fns';
 import {
   FaMoneyBillWave,
   FaCreditCard,
@@ -12,8 +13,9 @@ import {
 } from 'react-icons/fa6';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
 type Priority = 'high' | 'medium' | 'low';
@@ -32,6 +34,14 @@ type AdvisorData = {
   recommendations: Recommendation[];
 };
 
+type Meta = {
+  createdAt: string;
+  model: string;
+  tier: string;
+  canRefresh: boolean;
+  nextRefreshAt: string;
+};
+
 const categoryIcon: Record<Category, React.ReactNode> = {
   spending: <FaMoneyBillWave className='h-4 w-4' />,
   debt: <FaCreditCard className='h-4 w-4' />,
@@ -47,10 +57,27 @@ const priorityConfig: Record<Priority, { label: string; borderClass: string; bad
   low: { label: 'Low', borderClass: 'border-l-green-500', badgeVariant: 'outline' }
 };
 
+function modelLabel(model: string): string {
+  if (model.includes('vertex')) return 'Gemini · Vertex AI';
+  return 'Gemini';
+}
+
 export default function AiAdvisor() {
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetchingCached, setIsFetchingCached] = useState(true);
   const [data, setData] = useState<AdvisorData | null>(null);
+  const [meta, setMeta] = useState<Meta | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/ai-advisor')
+      .then(r => r.json())
+      .then(({ data: d, meta: m }) => {
+        if (d) { setData(d); setMeta(m); }
+      })
+      .catch(() => {})
+      .finally(() => setIsFetchingCached(false));
+  }, []);
 
   const fetchRecommendations = async () => {
     setIsLoading(true);
@@ -58,14 +85,21 @@ export default function AiAdvisor() {
     try {
       const res = await fetch('/api/ai-advisor', { method: 'POST' });
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? 'Request failed');
+      if (!res.ok) {
+        if (json.raw) console.error('[AI Advisor] raw error:', json.raw);
+        throw new Error(json.error ?? 'Request failed');
+      }
       setData(json.data);
+      setMeta(json.meta);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong');
     } finally {
       setIsLoading(false);
     }
   };
+
+  const canRefresh = meta?.canRefresh ?? true;
+  const isDisabled = isLoading || isFetchingCached || !canRefresh;
 
   const highRecs = data?.recommendations.filter(r => r.priority === 'high') ?? [];
   const mediumRecs = data?.recommendations.filter(r => r.priority === 'medium') ?? [];
@@ -75,40 +109,55 @@ export default function AiAdvisor() {
     <div className='h-full overflow-y-auto'>
       <div className='max-w-4xl mx-auto p-4 space-y-6'>
         {/* Header */}
-        <div className='flex items-start justify-between gap-4'>
-          <div>
-            <h1 className='text-2xl font-bold flex items-center gap-2'>
-              <Sparkles className='h-6 w-6 text-primary' />
+        <div className='flex flex-col gap-3'>
+          <div className='flex items-center justify-between gap-3'>
+            <h1 className='text-xl font-bold flex items-center gap-2'>
+              <Sparkles className='h-5 w-5 text-primary shrink-0' />
               AI Financial Advisor
             </h1>
-            <p className='text-muted-foreground mt-1 text-sm'>
-              Analyzes all your financial data and surfaces what actually needs your attention.
-            </p>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span>
+                    <Button
+                      onClick={fetchRecommendations}
+                      disabled={isDisabled}
+                      size='sm'
+                      variant={data ? 'outline' : 'default'}
+                      className='shrink-0'
+                    >
+                      {isLoading ? (
+                        <Loader2 className='h-4 w-4 animate-spin' />
+                      ) : data ? (
+                        <RefreshCw className='h-4 w-4' />
+                      ) : (
+                        <>
+                          <Sparkles className='h-4 w-4 mr-2' />
+                          Analyze
+                        </>
+                      )}
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                {meta && !canRefresh && (
+                  <TooltipContent>
+                    Next refresh available {format(new Date(meta.nextRefreshAt), 'MMM d, yyyy')}
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
           </div>
-          <Button
-            onClick={fetchRecommendations}
-            disabled={isLoading}
-            size='sm'
-            variant={data ? 'outline' : 'default'}
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className='h-4 w-4 animate-spin mr-2' />
-                Analyzing…
-              </>
-            ) : data ? (
-              <>
-                <RefreshCw className='h-4 w-4 mr-2' />
-                Refresh
-              </>
-            ) : (
-              <>
-                <Sparkles className='h-4 w-4 mr-2' />
-                Analyze My Finances
-              </>
-            )}
-          </Button>
+          <p className='text-muted-foreground text-sm'>
+            Analyzes all your financial data and surfaces what actually needs your attention.
+          </p>
         </div>
+
+        {/* Meta row */}
+        {meta && !isLoading && (
+          <p className='text-xs text-muted-foreground'>
+            {modelLabel(meta.model)} · {format(new Date(meta.createdAt), 'MMM d, h:mm a')}
+          </p>
+        )}
 
         {/* Error */}
         {error && (
@@ -120,7 +169,7 @@ export default function AiAdvisor() {
         )}
 
         {/* Empty state */}
-        {!data && !isLoading && !error && (
+        {!data && !isLoading && !isFetchingCached && !error && (
           <Card className='border-dashed'>
             <CardContent className='flex flex-col items-center justify-center py-16 text-center gap-3'>
               <Sparkles className='h-10 w-10 text-muted-foreground/40' />
@@ -132,7 +181,7 @@ export default function AiAdvisor() {
         )}
 
         {/* Loading skeleton */}
-        {isLoading && (
+        {(isLoading || isFetchingCached) && !data && (
           <div className='space-y-3'>
             {[1, 2, 3].map(i => (
               <Card key={i} className='border-l-4 border-l-muted animate-pulse'>

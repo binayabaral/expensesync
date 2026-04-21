@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { relations } from 'drizzle-orm';
 import { createInsertSchema } from 'drizzle-zod';
-import { integer, pgTable, text, timestamp, pgEnum, boolean, bigint, doublePrecision, date, index, uniqueIndex } from 'drizzle-orm/pg-core';
+import { integer, pgTable, text, timestamp, pgEnum, boolean, bigint, doublePrecision, date, index, uniqueIndex, jsonb } from 'drizzle-orm/pg-core';
 
 export const TransactionTypeEnum = pgEnum('transaction_type', [
   'USER_CREATED',
@@ -485,3 +485,15 @@ export const insertAssetLotSchema = createInsertSchema(assetLots).extend({
 export const insertAssetPriceSchema = createInsertSchema(assetPrices).extend({
   fetchedAt: z.coerce.date().optional()
 });
+
+export const aiRecommendations = pgTable('ai_recommendations', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull(),
+  data: jsonb('data').notNull(),
+  model: text('model').notNull(),
+  tier: text('tier').notNull(),
+  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull()
+}, (t) => [
+  index('idx_air_user_id').on(t.userId),
+  index('idx_air_user_created').on(t.userId, t.createdAt)
+]);

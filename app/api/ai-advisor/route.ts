@@ -1,10 +1,11 @@
 import { auth } from '@clerk/nextjs/server';
+import { createClerkClient } from '@clerk/backend';
 import { and, desc, eq, gte, isNotNull, lte, ne, sql, sum } from 'drizzle-orm';
 import { subDays, endOfDay, startOfDay, format, startOfMonth, endOfMonth, subMonths } from 'date-fns';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { createId } from '@paralleldrive/cuid2';
 
 import { db } from '@/db/drizzle';
-import { accounts, assets, assetPrices, categories, creditCardStatements, recurringPayments, transactions } from '@/db/schema';
+import { accounts, aiRecommendations, assets, assetPrices, categories, creditCardStatements, recurringPayments, transactions } from '@/db/schema';
 import {
   fetchFinancialData,
   fetchTransactionsByCategory,
@@ -12,6 +13,24 @@ import {
 } from '../utils/common';
 
 export const maxDuration = 60;
+
+const RATE_LIMIT_MS = 7 * 24 * 60 * 60 * 1000;
+
+function isRateLimitBypassed(userId: string): boolean {
+  if (process.env.NODE_ENV === 'development') return true;
+  const list = (process.env.BYPASS_AI_RATE_LIMIT_USERS ?? '').split(',').map(s => s.trim()).filter(Boolean);
+  return list.includes(userId);
+}
+
+async function getUserTier(userId: string): Promise<'paid' | 'free'> {
+  try {
+    const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
+    const user = await clerk.users.getUser(userId);
+    return user.publicMetadata?.tier === 'paid' ? 'paid' : 'free';
+  } catch {
+    return 'free';
+  }
+}
 
 const toNPR = (mili: number | null | undefined) => {
   const val = Math.round((mili ?? 0) / 1000);
@@ -21,15 +40,45 @@ const toNPR = (mili: number | null | undefined) => {
 const pct = (value: number, total: number) =>
   total === 0 ? '0%' : `${Math.round((value / total) * 100)}%`;
 
+export async function GET() {
+  const { userId } = await auth();
+  if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const rows = await db.select()
+    .from(aiRecommendations)
+    .where(eq(aiRecommendations.userId, userId))
+    .orderBy(desc(aiRecommendations.createdAt))
+    .limit(1);
+
+  if (rows.length === 0) return Response.json({ data: null, meta: null });
+
+  const row = rows[0];
+  const nextRefreshAt = new Date(row.createdAt.getTime() + RATE_LIMIT_MS);
+  return Response.json({
+    data: row.data,
+    meta: {
+      createdAt: row.createdAt,
+      model: row.model,
+      tier: row.tier,
+      canRefresh: isRateLimitBypassed(userId) || new Date() >= nextRefreshAt,
+      nextRefreshAt
+    }
+  });
+}
+
 export async function POST() {
   try {
     return await handleRequest();
   } catch (err) {
     const raw = err instanceof Error ? err.message : String(err);
-    const message = raw.includes('503') ? 'Gemini is temporarily overloaded — please try again in a moment.'
-      : raw.includes('429') ? 'Gemini rate limit reached — please wait a moment and try again.'
+    console.error('[ai-advisor] error:', raw);
+    const message = raw.includes('503') ? 'AI service temporarily overloaded — please try again in a moment.'
+      : raw.includes('429') ? 'AI rate limit reached — please wait a moment and try again.'
       : raw.includes('401') || raw.includes('403') ? 'AI service authentication failed — check the API key.'
       : 'Something went wrong. Please try again.';
+    if (process.env.NODE_ENV === 'development') {
+      return Response.json({ error: message, raw }, { status: 500 });
+    }
     return Response.json({ error: message }, { status: 500 });
   }
 }
@@ -38,8 +87,23 @@ async function handleRequest() {
   const { userId } = await auth();
   if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-  if (!apiKey) return Response.json({ error: 'AI service not configured' }, { status: 500 });
+  const apiKey = process.env.VERTEX_AI_API_KEY;
+
+  // Rate limit check
+  const latest = await db.select()
+    .from(aiRecommendations)
+    .where(eq(aiRecommendations.userId, userId))
+    .orderBy(desc(aiRecommendations.createdAt))
+    .limit(1);
+
+  if (latest.length > 0 && !isRateLimitBypassed(userId)) {
+    const nextRefreshAt = new Date(latest[0].createdAt.getTime() + RATE_LIMIT_MS);
+    if (new Date() < nextRefreshAt) {
+      return Response.json({ error: 'rate_limited', nextRefreshAt }, { status: 429 });
+    }
+  }
+
+  const tier = await getUserTier(userId);
 
   const now = new Date();
   const today = endOfDay(now);
@@ -78,7 +142,8 @@ async function handleRequest() {
       apr: accounts.apr,
       loanSubType: accounts.loanSubType,
       paymentDueDay: accounts.paymentDueDay,
-      currency: accounts.currency
+      currency: accounts.currency,
+      isClosed: accounts.isClosed
     })
       .from(accounts)
       .where(and(
@@ -276,7 +341,7 @@ async function handleRequest() {
   if (cashBankAccounts.length > 0) {
     lines.push('\n## Cash & Bank Accounts');
     for (const a of cashBankAccounts) {
-      lines.push(`- ${a.name} (${a.accountType}): ${toNPR(a.balance)}`);
+      lines.push(`- ${a.name} (${a.accountType}): ${toNPR(a.balance)}${a.isClosed ? ' [CLOSED]' : ''}`);
     }
   }
 
@@ -287,7 +352,7 @@ async function handleRequest() {
         ? Math.round((Math.abs(a.balance) / a.creditLimit) * 100)
         : null;
       lines.push(
-        `- ${a.name}: Balance ${toNPR(Math.abs(a.balance))}, Limit ${toNPR(a.creditLimit)}, Utilization ${utilization ?? 'N/A'}%${a.apr ? `, APR ${a.apr}%` : ''}${a.paymentDueDay ? `, due day ${a.paymentDueDay}` : ''}`
+        `- ${a.name}${a.isClosed ? ' [CLOSED]' : ''}: Balance ${toNPR(Math.abs(a.balance))}, Limit ${toNPR(a.creditLimit)}, Utilization ${utilization ?? 'N/A'}%${a.apr ? `, APR ${a.apr}%` : ''}${a.paymentDueDay ? `, due day ${a.paymentDueDay}` : ''}`
       );
     }
     if (ccPaymentNote) lines.push(`Payment history: ${ccPaymentNote}`);
@@ -319,7 +384,7 @@ async function handleRequest() {
     lines.push('\n## Loans');
     for (const a of loanAccounts) {
       lines.push(
-        `- ${a.name} (${a.loanSubType ?? 'PEER'}): Remaining ${toNPR(Math.abs(a.balance))}${a.apr ? `, APR ${a.apr}%` : ', 0% interest'}`
+        `- ${a.name}${a.isClosed ? ' [CLOSED]' : ''} (${a.loanSubType ?? 'PEER'}): Remaining ${toNPR(Math.abs(a.balance))}${a.apr ? `, APR ${a.apr}%` : ', 0% interest'}`
       );
     }
   }
@@ -410,7 +475,7 @@ async function handleRequest() {
 
   const context = lines.join('\n');
 
-  const prompt = `You are a personal finance advisor for a user in Nepal. Analyze the following financial data and provide actionable, specific recommendations.
+  const systemPrompt = `You are a personal finance advisor for a user in Nepal. Analyze the financial data provided by the user and give actionable, specific recommendations.
 
 Important context for interpretation:
 - Credit cards: distinguish carefully between "OVERDUE unpaid statements" and "Current cycle statements". OVERDUE statements (due date already passed) are always high priority regardless of payment history — flag them with the exact amount and days overdue. Current cycle statements are normal monthly spending not yet due — do NOT flag these if the user has a history of paying in full.
@@ -419,11 +484,10 @@ Important context for interpretation:
 - Peer loans (PEER subtype) are informal loans at 0% interest. Always flag any outstanding peer loan balance — even without interest cost, carrying informal debt is a financial risk worth addressing.
 - EMI loans have fixed repayment schedules — flag only if the APR is high or the balance is large relative to income.
 - Amounts are in Nepalese Rupees (NPR). Nepal context: typical mid-level salaries range NPR 50,000–200,000/month.
+- Accounts marked [CLOSED] are inactive — ignore their balances and do not flag them as issues.
 - The user manually logs recurring payments — "last completed" being old does not mean they missed a payment.
 - Monthly breakdown shows income/spending trends — flag if expenses are increasing month over month or savings rate is declining.
 - Savings rate below 20% of income is a concern; below 10% is high priority.
-
-${context}
 
 Return ONLY a valid JSON object (no markdown, no code blocks) with this exact structure:
 {
@@ -444,10 +508,38 @@ Category must be one of: "spending", "debt", "savings", "investments", "cashflow
 Include 5-8 recommendations ordered from highest to lowest priority.
 Do not invent concerns not supported by the data. Base every recommendation on specific numbers provided.`;
 
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-  const result = await model.generateContent(prompt);
-  const text = result.response.text().trim().replace(/^```json\n?/, '').replace(/\n?```$/, '');
+  const useVertexAI = tier === 'paid' && !!apiKey;
+  const geminiApiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+
+  const endpoint = useVertexAI
+    ? `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`
+    : `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`;
+
+  if (!useVertexAI && !geminiApiKey) {
+    return Response.json({ error: 'AI service not configured' }, { status: 500 });
+  }
+
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      systemInstruction: { parts: [{ text: systemPrompt }] },
+      contents: [{ role: 'user', parts: [{ text: context }] }],
+      generationConfig: {
+        responseMimeType: 'application/json',
+        maxOutputTokens: 8192,
+        temperature: 0.7
+      }
+    })
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`AI ${res.status}: ${errText}`);
+  }
+
+  const aiResponse = await res.json();
+  const text = aiResponse.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
 
   let data;
   try {
@@ -456,5 +548,24 @@ Do not invent concerns not supported by the data. Base every recommendation on s
     return Response.json({ error: 'Failed to parse AI response', raw: text }, { status: 500 });
   }
 
-  return Response.json({ data });
+  const modelUsed = useVertexAI ? 'gemini-2.5-flash-lite (vertex)' : 'gemini-2.5-flash';
+  await db.insert(aiRecommendations).values({
+    id: createId(),
+    userId,
+    data,
+    model: modelUsed,
+    tier
+  });
+
+  const nextRefreshAt = new Date(Date.now() + RATE_LIMIT_MS);
+  return Response.json({
+    data,
+    meta: {
+      createdAt: new Date(),
+      model: modelUsed,
+      tier,
+      canRefresh: isRateLimitBypassed(userId),
+      nextRefreshAt
+    }
+  });
 }
