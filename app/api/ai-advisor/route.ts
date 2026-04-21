@@ -537,13 +537,21 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with this exact st
 Priority must be "high", "medium", or "low".
 Category must be one of: "spending", "debt", "savings", "investments", "cashflow", "general".
 Include 5-8 recommendations ordered from highest to lowest priority.
-The paycheckPlan is a full paycheck allocation guide. Order steps as follows:
-1. Emergency fund top-up — if the emergency fund appears underfunded (under 3 months of expenses), this is step 1
-2. Savings and investments — SIPs, recurring savings transfers (with due dates and destination accounts)
-3. Fixed obligations — EMIs, insurance premiums, loan repayments (include transfer charges/interest where present), ordered by due date
-4. Spending account funding — transfer only what is needed for this month's expenses to the spending/current account; recommend keeping the rest in the highest-interest savings account
-5. Remaining balance guidance — suggest what to do with any leftover after all of the above
-If a recurring expense has no source account specified, note it can be paid from any available account. Use specific account names from the data. Do not invent amounts not present in the data.
+The paycheckPlan is a full paycheck allocation guide for the current month. Today's date is ${format(now, 'dd MMM yyyy')}.
+
+Before building the plan:
+- Check each recurring payment's lastCompletedAt against today and its cadence. Skip any payment already completed in the current period — it does not need action this month. For example: a monthly payment last completed in April does not need to appear in the April plan; a quarterly payment last completed in April is done for this quarter.
+- For EMI payments with charges, use the combined total (principal + charges/interest) as the amount in the plan.
+- Distinguish automated vs manual payments: if a recurring payment has both a source account AND a destination account specified, it is auto-debited — phrase the step as "Ensure NPR X is available in [Source Account] by day Y" not "Transfer NPR X". If no source account is specified, the user must act manually — phrase as "Transfer NPR X to [Account]".
+
+Order steps as follows:
+1. Emergency fund top-up — if underfunded (under 3 months of expenses), make this step 1
+2. Savings and investments due this month (SIPs, savings transfers) — only those not yet completed this period
+3. Fixed obligations due this month (EMIs, insurance, loans) — only those not yet completed, ordered by due date, with total outflow including charges
+4. Spending account funding — specify which account and only fund what is estimated for this month's variable expenses (reference top categories/payees for the estimate); keep the rest in the highest-interest savings account
+5. Remaining balance — suggest where to park it
+
+Use specific account names from the data. Do not invent amounts not present in the data. Do not include any payment that was already completed in the current period.
 Do not invent concerns not supported by the data. Base every recommendation on specific numbers provided.`;
 
   const vertexApiKey = process.env.VERTEX_AI_API_KEY;
