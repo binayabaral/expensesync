@@ -494,7 +494,7 @@ async function handleRequest() {
   const systemPrompt = `You are a personal finance advisor for a user in Nepal. Analyze the financial data provided by the user and give actionable, specific recommendations.
 
 Important context for interpretation:
-- Credit cards: distinguish carefully between "OVERDUE unpaid statements" and "Current cycle statements". OVERDUE statements (due date already passed) are always high priority regardless of payment history — flag them with the exact amount and days overdue. Current cycle statements are normal monthly spending not yet due — do NOT flag these if the user has a history of paying in full.
+- Credit cards: the CC account balance shown is the running unbilled balance — this is normal monthly spending, NOT carried debt. Do NOT flag it as a debt concern unless there is an overdue unpaid statement. OVERDUE statements (due date already passed) are always high priority — flag them with the exact amount and days overdue. Current cycle unpaid statements (due date not yet passed) are normal — do NOT flag if the user has a history of paying in full. If the payment history shows the user consistently pays in full, never recommend "paying off the credit card balance" as an action item.
 - "Recurring Income" entries are inflows (salary, interest, etc.) — do not treat them as expenses or flag them as concerns.
 - "Recurring Expenses" entries are outgoing obligations.
 - Peer loans (PEER subtype) are informal loans at 0% interest. Always flag any outstanding peer loan balance — even without interest cost, carrying informal debt is a financial risk worth addressing.
