@@ -16,7 +16,8 @@ import {
   FaArrowsRotate,
   FaCreditCard,
   FaFileInvoiceDollar,
-  FaScaleBalanced
+  FaScaleBalanced,
+  FaRobot
 } from 'react-icons/fa6';
 
 import {
@@ -116,6 +117,11 @@ export function AppSidebar() {
       title: 'Financial Health',
       url: '/dashboard/health',
       icon: FaHeart
+    },
+    {
+      title: 'AI Advisor',
+      url: '/dashboard/ai-advisor',
+      icon: FaRobot
     }
   ];
 
