@@ -205,6 +205,7 @@ async function handleRequest() {
     db.select({
       name: recurringPayments.name,
       amount: recurringPayments.amount,
+      transferCharge: recurringPayments.transferCharge,
       cadence: recurringPayments.cadence,
       intervalMonths: recurringPayments.intervalMonths,
       dayOfMonth: recurringPayments.dayOfMonth,
@@ -455,8 +456,9 @@ async function handleRequest() {
         ? ` from "${fromAccName}" → "${toAccName}"`
         : fromAccName ? ` from "${fromAccName}"` : toAccName ? ` → "${toAccName}"` : '';
       const dueDayStr = r.dayOfMonth ? ` on day ${r.dayOfMonth}` : '';
+      const chargeStr = r.transferCharge && r.transferCharge > 0 ? ` + ${toNPR(r.transferCharge)} charges/interest` : '';
       const noteStr = r.notes ? ` — note: "${r.notes}"` : '';
-      lines.push(`- ${r.name}: ${toNPR(Math.abs(r.amount))} ${label}${dueDayStr}${accountStr} (last completed: ${lastDone})${noteStr}`);
+      lines.push(`- ${r.name}: ${toNPR(Math.abs(r.amount))}${chargeStr} ${label}${dueDayStr}${accountStr} (last completed: ${lastDone})${noteStr}`);
     }
   }
 
@@ -503,6 +505,10 @@ Important context for interpretation:
 - The user manually logs recurring payments — "last completed" being old does not mean they missed a payment.
 - Monthly breakdown shows income/spending trends — flag if expenses are increasing month over month or savings rate is declining.
 - Savings rate below 20% of income is a concern; below 10% is high priority.
+- Account interest rates and purpose: read account descriptions carefully — they reveal the account's purpose (e.g. "primary salary account", "emergency fund", "highest interest savings"). Use these to make better routing decisions. Do not suggest moving money from a high-interest savings account to a low-interest spending account unnecessarily.
+- Salary account detection: identify which account the user receives their salary into by looking at (1) recurring income entries that specify a destination account, and (2) account descriptions (e.g. "salary account", "income deposited here"). Use this as the starting point for the paycheck plan.
+- Emergency fund: if the user does not appear to have 3–6 months of expenses set aside in a dedicated liquid account, treat this as a high-priority concern.
+- Savings priority order in the paycheck plan: (1) emergency fund top-up if below target, (2) investments/SIPs, (3) high-interest savings, (4) fixed obligations, (5) spending.
 
 Return ONLY a valid JSON object (no markdown, no code blocks) with this exact structure:
 {
@@ -531,11 +537,13 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with this exact st
 Priority must be "high", "medium", or "low".
 Category must be one of: "spending", "debt", "savings", "investments", "cashflow", "general".
 Include 5-8 recommendations ordered from highest to lowest priority.
-The paycheckPlan is a full paycheck allocation guide. It should cover:
-1. Fixed obligations first (recurring transfers, EMIs, insurance premiums, SIPs) — ordered by due date, specifying source and destination accounts
-2. Savings step — how much to set aside this month and which account to save in, based on the user's savings rate and goals
-3. Spending guidance — which account to use for day-to-day expenses this month, and a suggested spending ceiling based on what's left
-If a recurring expense has no source account, note it can be paid from any available account. Use specific account names from the data. Do not invent amounts not present in the data.
+The paycheckPlan is a full paycheck allocation guide. Order steps as follows:
+1. Emergency fund top-up — if the emergency fund appears underfunded (under 3 months of expenses), this is step 1
+2. Savings and investments — SIPs, recurring savings transfers (with due dates and destination accounts)
+3. Fixed obligations — EMIs, insurance premiums, loan repayments (include transfer charges/interest where present), ordered by due date
+4. Spending account funding — transfer only what is needed for this month's expenses to the spending/current account; recommend keeping the rest in the highest-interest savings account
+5. Remaining balance guidance — suggest what to do with any leftover after all of the above
+If a recurring expense has no source account specified, note it can be paid from any available account. Use specific account names from the data. Do not invent amounts not present in the data.
 Do not invent concerns not supported by the data. Base every recommendation on specific numbers provided.`;
 
   const vertexApiKey = process.env.VERTEX_AI_API_KEY;
