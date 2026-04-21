@@ -87,8 +87,6 @@ async function handleRequest() {
   const { userId } = await auth();
   if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const apiKey = process.env.VERTEX_AI_API_KEY;
-
   // Rate limit check
   const latest = await db.select()
     .from(aiRecommendations)
@@ -508,16 +506,18 @@ Category must be one of: "spending", "debt", "savings", "investments", "cashflow
 Include 5-8 recommendations ordered from highest to lowest priority.
 Do not invent concerns not supported by the data. Base every recommendation on specific numbers provided.`;
 
-  const useVertexAI = tier === 'paid' && !!apiKey;
+  const vertexApiKey = process.env.VERTEX_AI_API_KEY;
   const geminiApiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 
-  const endpoint = useVertexAI
-    ? `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-2.0-flash:generateContent?key=${apiKey}`
-    : `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`;
+  const useVertexAI = tier === 'paid' && !!vertexApiKey;
 
   if (!useVertexAI && !geminiApiKey) {
     return Response.json({ error: 'AI service not configured' }, { status: 500 });
   }
+
+  const endpoint = useVertexAI
+    ? `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-3.1-flash-lite-preview:generateContent?key=${vertexApiKey}`
+    : `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`;
 
   const res = await fetch(endpoint, {
     method: 'POST',
@@ -548,7 +548,7 @@ Do not invent concerns not supported by the data. Base every recommendation on s
     return Response.json({ error: 'Failed to parse AI response', raw: text }, { status: 500 });
   }
 
-  const modelUsed = useVertexAI ? 'gemini-2.0-flash (vertex)' : 'gemini-2.5-flash';
+  const modelUsed = useVertexAI ? 'gemini-3.1-flash-lite-preview (vertex)' : 'gemini-2.5-flash';
   await db.insert(aiRecommendations).values({
     id: createId(),
     userId,
