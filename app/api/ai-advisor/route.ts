@@ -22,6 +22,19 @@ const pct = (value: number, total: number) =>
   total === 0 ? '0%' : `${Math.round((value / total) * 100)}%`;
 
 export async function POST() {
+  try {
+    return await handleRequest();
+  } catch (err) {
+    const raw = err instanceof Error ? err.message : String(err);
+    const message = raw.includes('503') ? 'Gemini is temporarily overloaded — please try again in a moment.'
+      : raw.includes('429') ? 'Gemini rate limit reached — please wait a moment and try again.'
+      : raw.includes('401') || raw.includes('403') ? 'AI service authentication failed — check the API key.'
+      : 'Something went wrong. Please try again.';
+    return Response.json({ error: message }, { status: 500 });
+  }
+}
+
+async function handleRequest() {
   const { userId } = await auth();
   if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
