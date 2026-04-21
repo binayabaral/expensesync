@@ -1,17 +1,17 @@
-import { Hono } from 'hono';
-import { getAuth } from '@hono/clerk-auth';
-import { and, desc, eq, gte, isNotNull, lte, ne, sql } from 'drizzle-orm';
+import { auth } from '@clerk/nextjs/server';
+import { and, desc, eq, gte, isNotNull, lte, ne, sql, sum } from 'drizzle-orm';
 import { subDays, endOfDay, startOfDay, format, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 import { db } from '@/db/drizzle';
 import { accounts, assets, assetPrices, categories, creditCardStatements, recurringPayments, transactions } from '@/db/schema';
 import {
-  fetchAccountBalance,
   fetchFinancialData,
   fetchTransactionsByCategory,
   fetchTransactionsByPayee
 } from '../utils/common';
+
+export const maxDuration = 60;
 
 const toNPR = (mili: number | null | undefined) => {
   const val = Math.round((mili ?? 0) / 1000);
@@ -21,12 +21,12 @@ const toNPR = (mili: number | null | undefined) => {
 const pct = (value: number, total: number) =>
   total === 0 ? '0%' : `${Math.round((value / total) * 100)}%`;
 
-const app = new Hono().post('/', async c => {
-  const auth = getAuth(c);
-  if (!auth?.userId) return c.json({ error: 'Unauthorized' }, 401);
+export async function POST() {
+  const { userId } = await auth();
+  if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
   const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-  if (!apiKey) return c.json({ error: 'AI service not configured' }, 500);
+  if (!apiKey) return Response.json({ error: 'AI service not configured' }, { status: 500 });
 
   const now = new Date();
   const today = endOfDay(now);
@@ -42,6 +42,7 @@ const app = new Hono().post('/', async c => {
 
   const [
     allAccounts,
+    allBalances,
     [current90],
     [prior90],
     [month0Data],
@@ -68,20 +69,33 @@ const app = new Hono().post('/', async c => {
     })
       .from(accounts)
       .where(and(
-        eq(accounts.userId, auth.userId),
+        eq(accounts.userId, userId),
         eq(accounts.isDeleted, false),
         ne(accounts.accountType, 'BILL_SPLIT')
       )),
 
-    fetchFinancialData(auth.userId, ninetyDaysAgo, today),
-    fetchFinancialData(auth.userId, oneEightyDaysAgo, ninetyDaysAgo),
+    // Single batched balance query replacing the per-account loop
+    db.select({
+      accountId: transactions.accountId,
+      balance: sum(transactions.amount).mapWith(Number)
+    })
+      .from(transactions)
+      .innerJoin(accounts, eq(transactions.accountId, accounts.id))
+      .where(and(
+        eq(accounts.userId, userId),
+        lte(transactions.date, today)
+      ))
+      .groupBy(transactions.accountId),
 
-    fetchFinancialData(auth.userId, month0Start, month0End),
-    fetchFinancialData(auth.userId, month1Start, month1End),
-    fetchFinancialData(auth.userId, month2Start, month2End),
+    fetchFinancialData(userId, ninetyDaysAgo, today),
+    fetchFinancialData(userId, oneEightyDaysAgo, ninetyDaysAgo),
 
-    fetchTransactionsByCategory(auth.userId, ninetyDaysAgo, today),
-    fetchTransactionsByPayee(auth.userId, ninetyDaysAgo, today),
+    fetchFinancialData(userId, month0Start, month0End),
+    fetchFinancialData(userId, month1Start, month1End),
+    fetchFinancialData(userId, month2Start, month2End),
+
+    fetchTransactionsByCategory(userId, ninetyDaysAgo, today),
+    fetchTransactionsByPayee(userId, ninetyDaysAgo, today),
 
     db.select({
       accountId: creditCardStatements.accountId,
@@ -92,7 +106,7 @@ const app = new Hono().post('/', async c => {
     })
       .from(creditCardStatements)
       .where(and(
-        eq(creditCardStatements.userId, auth.userId),
+        eq(creditCardStatements.userId, userId),
         eq(creditCardStatements.isPaid, false)
       ))
       .orderBy(desc(creditCardStatements.dueDate)),
@@ -105,7 +119,7 @@ const app = new Hono().post('/', async c => {
     })
       .from(creditCardStatements)
       .where(and(
-        eq(creditCardStatements.userId, auth.userId),
+        eq(creditCardStatements.userId, userId),
         eq(creditCardStatements.isPaid, true)
       ))
       .orderBy(desc(creditCardStatements.paidAt))
@@ -121,7 +135,7 @@ const app = new Hono().post('/', async c => {
     })
       .from(recurringPayments)
       .where(and(
-        eq(recurringPayments.userId, auth.userId),
+        eq(recurringPayments.userId, userId),
         eq(recurringPayments.isActive, true)
       )),
 
@@ -135,7 +149,7 @@ const app = new Hono().post('/', async c => {
     })
       .from(assets)
       .where(and(
-        eq(assets.userId, auth.userId),
+        eq(assets.userId, userId),
         eq(assets.isSold, false)
       )),
 
@@ -146,7 +160,6 @@ const app = new Hono().post('/', async c => {
       fetchedAt: assetPrices.fetchedAt
     }).from(assetPrices),
 
-    // Transactions with notes from last 90 days, largest first
     db.select({
       payee: transactions.payee,
       amount: transactions.amount,
@@ -158,7 +171,7 @@ const app = new Hono().post('/', async c => {
       .innerJoin(accounts, eq(transactions.accountId, accounts.id))
       .leftJoin(categories, eq(transactions.categoryId, categories.id))
       .where(and(
-        eq(accounts.userId, auth.userId),
+        eq(accounts.userId, userId),
         eq(accounts.currency, 'NPR'),
         isNotNull(transactions.notes),
         gte(transactions.date, ninetyDaysAgo),
@@ -175,17 +188,16 @@ const app = new Hono().post('/', async c => {
     if (!(key in latestPriceByKey)) latestPriceByKey[key] = p.price;
   }
 
-  // Account balances
-  const accountsWithBalance = await Promise.all(
-    allAccounts.map(async acc => {
-      const [{ balance }] = await fetchAccountBalance(auth.userId, today, acc.id, true);
-      return { ...acc, balance: balance ?? 0 };
-    })
-  );
+  // Merge accounts with their batched balances
+  const balanceByAccountId = new Map(allBalances.map(r => [r.accountId, r.balance ?? 0]));
+  const accountsWithBalance = allAccounts.map(acc => ({
+    ...acc,
+    balance: balanceByAccountId.get(acc.id) ?? 0
+  }));
 
   const accountNameMap = new Map(accountsWithBalance.map(a => [a.id, a.name]));
 
-  // CC payment behavior from history
+  // CC payment behavior
   const paidInFull = recentPaidStatements.filter(s => s.paidAmount >= s.statementBalance).length;
   const ccPaymentNote = recentPaidStatements.length > 0
     ? `User has paid ${paidInFull} of their last ${recentPaidStatements.length} credit card statements in full.`
@@ -229,7 +241,7 @@ const app = new Hono().post('/', async c => {
   const net90 = income90 - expenses90;
   const savingsRate = income90 > 0 ? Math.round((net90 / income90) * 100) : 0;
 
-  // Spending trend (current 90 vs prior 90)
+  // Spending trend
   const priorExpenses90 = Math.abs(prior90?.expenses ?? 0);
   const priorIncome90 = prior90?.income ?? 0;
   const spendingChange = priorExpenses90 > 0
@@ -242,14 +254,12 @@ const app = new Hono().post('/', async c => {
   // ── Build context ──────────────────────────────────────────────────────────
   const lines: string[] = [`Financial Snapshot — ${format(now, 'dd MMM yyyy')}`];
 
-  // Net worth summary
   lines.push('\n## Net Worth Summary');
   lines.push(`- Liquid Assets (cash/bank): ${toNPR(liquidBalance)}`);
   lines.push(`- Investment Assets (market value): ${toNPR(totalAssetMarket)}`);
   lines.push(`- Total Liabilities (loans + CC balance): ${toNPR(totalLoanBalance + totalCCBalance)}`);
-  lines.push(`- **Net Worth: ${toNPR(netWorth)}**`);
+  lines.push(`- Net Worth: ${toNPR(netWorth)}`);
 
-  // Cash & bank
   if (cashBankAccounts.length > 0) {
     lines.push('\n## Cash & Bank Accounts');
     for (const a of cashBankAccounts) {
@@ -257,7 +267,6 @@ const app = new Hono().post('/', async c => {
     }
   }
 
-  // Credit cards
   if (ccAccounts.length > 0) {
     lines.push('\n## Credit Cards');
     for (const a of ccAccounts) {
@@ -293,7 +302,6 @@ const app = new Hono().post('/', async c => {
     }
   }
 
-  // Loans
   if (loanAccounts.length > 0) {
     lines.push('\n## Loans');
     for (const a of loanAccounts) {
@@ -303,7 +311,6 @@ const app = new Hono().post('/', async c => {
     }
   }
 
-  // Cash flow
   lines.push('\n## Cash Flow — Last 90 Days');
   lines.push(`- Total Income: ${toNPR(income90)}`);
   lines.push(`- Total Expenses: ${toNPR(expenses90)}`);
@@ -311,7 +318,6 @@ const app = new Hono().post('/', async c => {
   lines.push(`- Savings Rate: ${savingsRate}%`);
   lines.push(`- vs Prior 90 Days: income ${incomeChange >= 0 ? '+' : ''}${incomeChange}%, spending ${spendingChange >= 0 ? '+' : ''}${spendingChange}%`);
 
-  // Monthly breakdown
   lines.push('\n## Monthly Breakdown');
   const months = [
     { label: format(month2Start, 'MMM yyyy'), data: month2Data },
@@ -325,7 +331,6 @@ const app = new Hono().post('/', async c => {
     lines.push(`- ${m.label}: Income ${toNPR(inc)}, Expenses ${toNPR(exp)}, Net ${toNPR(net)}`);
   }
 
-  // Categories
   if (categorySpending.length > 0) {
     lines.push('\n## Top Expense Categories (last 90 days)');
     for (const cat of categorySpending.slice(0, 10)) {
@@ -333,7 +338,6 @@ const app = new Hono().post('/', async c => {
     }
   }
 
-  // Payees
   if (topPayees.length > 0) {
     lines.push('\n## Top Payees (last 90 days)');
     for (const p of topPayees.slice(0, 8)) {
@@ -341,7 +345,6 @@ const app = new Hono().post('/', async c => {
     }
   }
 
-  // Recurring income
   if (recurringIncome.length > 0) {
     lines.push('\n## Recurring Income');
     for (const r of recurringIncome) {
@@ -353,7 +356,6 @@ const app = new Hono().post('/', async c => {
     }
   }
 
-  // Recurring expenses
   if (recurringExpenses.length > 0) {
     lines.push('\n## Recurring Expenses');
     for (const r of recurringExpenses) {
@@ -366,17 +368,14 @@ const app = new Hono().post('/', async c => {
     }
   }
 
-  // Assets
   if (assetsWithMarket.length > 0) {
     lines.push('\n## Investment Assets');
-
     if (Object.keys(allocationByType).length > 0) {
       lines.push('Asset allocation by type:');
       for (const [type, val] of Object.entries(allocationByType)) {
         lines.push(`  - ${type}: cost ${toNPR(val.cost)}, market ${toNPR(val.market)} (${pct(val.market, totalAssetMarket)} of portfolio)`);
       }
     }
-
     lines.push('Individual holdings:');
     for (const a of assetsWithMarket) {
       const pnlStr = a.pnl != null
@@ -386,7 +385,6 @@ const app = new Hono().post('/', async c => {
     }
   }
 
-  // Annotated transactions (user-written notes on individual transactions)
   if (notedTransactions.length > 0) {
     lines.push('\n## User Notes on Transactions (last 90 days)');
     lines.push('These are notes the user wrote on specific transactions — treat as first-hand context:');
@@ -442,10 +440,8 @@ Do not invent concerns not supported by the data. Base every recommendation on s
   try {
     data = JSON.parse(text);
   } catch {
-    return c.json({ error: 'Failed to parse AI response', raw: text }, 500);
+    return Response.json({ error: 'Failed to parse AI response', raw: text }, { status: 500 });
   }
 
-  return c.json({ data });
-});
-
-export default app;
+  return Response.json({ data });
+}

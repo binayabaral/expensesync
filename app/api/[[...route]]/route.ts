@@ -20,7 +20,6 @@ import splitGroupsRoute from './split-groups';
 import splitExpensesRoute from './split-expenses';
 import splitSettlementsRoute from './split-settlements';
 import splitBalancesRoute from './split-balances';
-import aiAdvisorRoute from './ai-advisor';
 
 export const runtime = 'edge';
 
@@ -46,8 +45,7 @@ const routes = app
   .route('/split-groups', splitGroupsRoute)
   .route('/split-expenses', splitExpensesRoute)
   .route('/split-settlements', splitSettlementsRoute)
-  .route('/split-balances', splitBalancesRoute)
-  .route('/ai-advisor', aiAdvisorRoute);
+  .route('/split-balances', splitBalancesRoute);
 
 export const GET = handle(app);
 export const POST = handle(app);
