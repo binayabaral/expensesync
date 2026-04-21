@@ -539,7 +539,7 @@ Do not invent concerns not supported by the data. Base every recommendation on s
   }
 
   const endpoint = useVertexAI
-    ? `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-3.1-flash-lite-preview:generateContent?key=${vertexApiKey}`
+    ? `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-2.5-flash:generateContent?key=${vertexApiKey}`
     : `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`;
 
   const res = await fetch(endpoint, {
@@ -571,7 +571,7 @@ Do not invent concerns not supported by the data. Base every recommendation on s
     return Response.json({ error: 'Failed to parse AI response', raw: text }, { status: 500 });
   }
 
-  const modelUsed = useVertexAI ? 'gemini-3.1-flash-lite-preview (vertex)' : 'gemini-2.5-flash';
+  const modelUsed = useVertexAI ? 'gemini-2.5-flash (vertex)' : 'gemini-2.5-flash';
   await db.insert(aiRecommendations).values({
     id: createId(),
     userId,
