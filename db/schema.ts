@@ -33,6 +33,7 @@ export const CurrencyEnum = pgEnum('currency', [...SUPPORTED_CURRENCIES]);
 export const accounts = pgTable('accounts', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
+  description: text('description'),
   userId: text('user_id').notNull(),
   accountType: AccountTypeEnum('account_type').notNull().default('CASH'),
   creditLimit: bigint('credit_limit', { mode: 'number' }),

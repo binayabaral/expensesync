@@ -15,6 +15,7 @@ import { closeAccountsAndDeactivateRecurring, fetchAccountBalance } from '../uti
 const ACCOUNT_SELECT_FIELDS = {
   id: accounts.id,
   name: accounts.name,
+  description: accounts.description,
   isHidden: accounts.isHidden,
   accountType: accounts.accountType,
   creditLimit: accounts.creditLimit,
@@ -115,6 +116,7 @@ const app = new Hono()
       z
         .object({
           name: z.string(),
+          description: z.string().nullable().optional(),
           isHidden: z.boolean(),
           startingBalance: z.number(),
           accountType: z.enum(['CASH', 'BANK', 'CREDIT_CARD', 'LOAN', 'OTHER']),
@@ -165,6 +167,7 @@ const app = new Hono()
           id: createId(),
           userId: auth.userId,
           name: values.name,
+          description: values.description ?? null,
           isHidden: values.isHidden,
           accountType: values.accountType,
           creditLimit: isCreditCard ? (values.creditLimit ?? null) : null,
@@ -227,6 +230,7 @@ const app = new Hono()
       insertAccountSchema
         .pick({
           name: true,
+          description: true,
           isHidden: true,
           accountType: true,
           creditLimit: true,

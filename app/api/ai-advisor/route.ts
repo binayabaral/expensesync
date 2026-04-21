@@ -135,6 +135,7 @@ async function handleRequest() {
     db.select({
       id: accounts.id,
       name: accounts.name,
+      description: accounts.description,
       accountType: accounts.accountType,
       creditLimit: accounts.creditLimit,
       apr: accounts.apr,
@@ -339,7 +340,8 @@ async function handleRequest() {
   if (cashBankAccounts.length > 0) {
     lines.push('\n## Cash & Bank Accounts');
     for (const a of cashBankAccounts) {
-      lines.push(`- ${a.name} (${a.accountType}): ${toNPR(a.balance)}${a.isClosed ? ' [CLOSED]' : ''}`);
+      const descStr = a.description ? ` — "${a.description}"` : '';
+      lines.push(`- ${a.name} (${a.accountType}): ${toNPR(a.balance)}${a.isClosed ? ' [CLOSED]' : ''}${descStr}`);
     }
   }
 
@@ -349,8 +351,9 @@ async function handleRequest() {
       const utilization = a.creditLimit && a.creditLimit > 0
         ? Math.round((Math.abs(a.balance) / a.creditLimit) * 100)
         : null;
+      const descStr = a.description ? ` — "${a.description}"` : '';
       lines.push(
-        `- ${a.name}${a.isClosed ? ' [CLOSED]' : ''}: Balance ${toNPR(Math.abs(a.balance))}, Limit ${toNPR(a.creditLimit)}, Utilization ${utilization ?? 'N/A'}%${a.apr ? `, APR ${a.apr}%` : ''}${a.paymentDueDay ? `, due day ${a.paymentDueDay}` : ''}`
+        `- ${a.name}${a.isClosed ? ' [CLOSED]' : ''}: Balance ${toNPR(Math.abs(a.balance))}, Limit ${toNPR(a.creditLimit)}, Utilization ${utilization ?? 'N/A'}%${a.apr ? `, APR ${a.apr}%` : ''}${a.paymentDueDay ? `, due day ${a.paymentDueDay}` : ''}${descStr}`
       );
     }
     if (ccPaymentNote) lines.push(`Payment history: ${ccPaymentNote}`);
@@ -381,8 +384,9 @@ async function handleRequest() {
   if (loanAccounts.length > 0) {
     lines.push('\n## Loans');
     for (const a of loanAccounts) {
+      const descStr = a.description ? ` — "${a.description}"` : '';
       lines.push(
-        `- ${a.name}${a.isClosed ? ' [CLOSED]' : ''} (${a.loanSubType ?? 'PEER'}): Remaining ${toNPR(Math.abs(a.balance))}${a.apr ? `, APR ${a.apr}%` : ', 0% interest'}`
+        `- ${a.name}${a.isClosed ? ' [CLOSED]' : ''} (${a.loanSubType ?? 'PEER'}): Remaining ${toNPR(Math.abs(a.balance))}${a.apr ? `, APR ${a.apr}%` : ', 0% interest'}${descStr}`
       );
     }
   }

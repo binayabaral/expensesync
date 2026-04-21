@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 
 import { Select } from '@/components/Select';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -17,6 +18,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/
 
 const formSchema = z.object({
   name: z.string(),
+  description: z.string().optional().nullable(),
   currency: z.enum([...SUPPORTED_CURRENCIES]),
   isHidden: z.boolean(),
   startingBalance: z.string(),
@@ -36,6 +38,7 @@ const formSchema = z.object({
 
 const apiSchema = z.object({
   name: z.string(),
+  description: z.string().nullable().optional(),
   currency: z.enum([...SUPPORTED_CURRENCIES]),
   isHidden: z.boolean(),
   startingBalance: z.number(),
@@ -103,6 +106,7 @@ export const AccountForm = ({ id, onSubmit, onDelete, disabled, defaultValues }:
 
     onSubmit({
       name: values.name,
+      description: values.description ?? null,
       currency: values.currency,
       isHidden: values.isHidden,
       startingBalance: amountInMiliUnits,
@@ -135,6 +139,25 @@ export const AccountForm = ({ id, onSubmit, onDelete, disabled, defaultValues }:
               <FormLabel>Name</FormLabel>
               <FormControl>
                 <Input disabled={disabled} placeholder='e.g. Cash, Bank, Credit Card' {...field} />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        <FormField
+          name='description'
+          control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Description <span className='text-muted-foreground font-normal'>(optional)</span></FormLabel>
+              <FormControl>
+                <Textarea
+                  {...field}
+                  value={field.value ?? ''}
+                  disabled={disabled}
+                  placeholder='e.g. Emergency fund, Monthly salary account, Joint household expenses'
+                  className='resize-none'
+                  rows={2}
+                />
               </FormControl>
             </FormItem>
           )}

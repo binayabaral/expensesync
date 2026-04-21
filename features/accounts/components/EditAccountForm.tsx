@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 
 import { Select } from '@/components/Select';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -16,6 +17,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/
 
 const editAccountSchema = z.object({
   name: z.string(),
+  description: z.string().optional().nullable(),
   currency: z.string().optional(),
   isHidden: z.boolean(),
   accountType: z.enum(['CASH', 'BANK', 'CREDIT_CARD', 'LOAN', 'OTHER']),
@@ -43,6 +45,7 @@ type Props = {
   defaultValues?: FormValues;
   onSubmit: (values: {
     name: string;
+    description?: string | null;
     isHidden: boolean;
     accountType: 'CASH' | 'BANK' | 'CREDIT_CARD' | 'LOAN' | 'OTHER';
     creditLimit?: number | null;
@@ -97,6 +100,7 @@ export const EditAccountForm = ({ id, isClosed, onSubmit, onDelete, onCloseLoan,
 
     onSubmit({
       name: values.name,
+      description: values.description ?? null,
       isHidden: values.isHidden,
       accountType: values.accountType,
       creditLimit,
@@ -127,6 +131,25 @@ export const EditAccountForm = ({ id, isClosed, onSubmit, onDelete, onCloseLoan,
               <FormLabel>Name</FormLabel>
               <FormControl>
                 <Input disabled={disabled} placeholder='e.g. Cash, Bank, Credit Card' {...field} />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        <FormField
+          name='description'
+          control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Description <span className='text-muted-foreground font-normal'>(optional)</span></FormLabel>
+              <FormControl>
+                <Textarea
+                  {...field}
+                  value={field.value ?? ''}
+                  disabled={disabled}
+                  placeholder='e.g. Emergency fund, Monthly salary account, Joint household expenses'
+                  className='resize-none'
+                  rows={2}
+                />
               </FormControl>
             </FormItem>
           )}

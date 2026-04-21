@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 
 type DefaultValues = {
   name: string;
+  description?: string | null;
   currency?: string;
   isHidden: boolean;
   accountType: 'CASH' | 'BANK' | 'CREDIT_CARD' | 'LOAN' | 'OTHER';
@@ -31,6 +32,7 @@ type DefaultValues = {
 
 type SubmitValues = {
   name: string;
+  description?: string | null;
   isHidden: boolean;
   accountType: 'CASH' | 'BANK' | 'CREDIT_CARD' | 'LOAN' | 'OTHER';
   creditLimit?: number | null;
@@ -88,6 +90,7 @@ export const EditAccountSheet = () => {
   const defaultValues: DefaultValues = accountQuery.data
     ? {
         name: accountQuery.data.name,
+        description: accountQuery.data.description ?? '',
         currency: accountQuery.data.currency ?? DEFAULT_CURRENCY,
         isHidden: accountQuery.data.isHidden,
         accountType: (accountQuery.data.accountType ?? 'CASH') as DefaultValues['accountType'],
@@ -109,6 +112,7 @@ export const EditAccountSheet = () => {
       }
     : {
         name: '',
+        description: '',
         currency: DEFAULT_CURRENCY,
         isHidden: false,
         accountType: 'CASH',
