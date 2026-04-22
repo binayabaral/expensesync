@@ -17,7 +17,11 @@ import {
   FaArrowTrendDown,
   FaLayerGroup,
   FaArrowRightArrowLeft,
-  FaPlus
+  FaPlus,
+  FaRobot,
+  FaPiggyBank,
+  FaArrowRight,
+  FaLock
 } from 'react-icons/fa6';
 
 type Page =
@@ -32,12 +36,14 @@ type Page =
   | 'assets'
   | 'categories'
   | 'payees'
-  | 'health';
+  | 'health'
+  | 'ai-advisor'
+  | 'ai-organizer';
 
 const sidebarSections = [
   {
     label: null,
-    items: [{ id: 'overview' as Page, icon: FaLayerGroup, label: 'Overview' }]
+    items: [{ id: 'overview' as Page, icon: FaLayerGroup, label: 'Overview', pro: false }]
   },
   {
     label: 'Transactions',
@@ -46,7 +52,7 @@ const sidebarSections = [
       { id: 'transactions' as Page, icon: FaReceipt, label: 'Transactions' },
       { id: 'transfers' as Page, icon: FaArrowRightArrowLeft, label: 'Transfers' },
       { id: 'recurring' as Page, icon: FaArrowsRotate, label: 'Recurring' },
-      { id: 'bill-split' as Page, icon: FaScaleBalanced, label: 'Bill Split' }
+      { id: 'bill-split' as Page, icon: FaScaleBalanced, label: 'Bill Split', pro: true }
     ]
   },
   {
@@ -66,6 +72,14 @@ const sidebarSections = [
       { id: 'categories' as Page, icon: FaTags, label: 'Categories' },
       { id: 'payees' as Page, icon: FaReceipt, label: 'Payees' },
       { id: 'health' as Page, icon: FaHeart, label: 'Financial Health' }
+    ]
+  },
+  {
+    label: 'AI',
+    icon: FaRobot,
+    items: [
+      { id: 'ai-advisor' as Page, icon: FaRobot, label: 'Advisor', pro: true },
+      { id: 'ai-organizer' as Page, icon: FaLayerGroup, label: 'Organizer', pro: true }
     ]
   }
 ];
@@ -655,6 +669,213 @@ function HealthContent() {
   );
 }
 
+function AiAdvisorContent() {
+  return (
+    <div className='space-y-2.5'>
+      <div className='flex items-center justify-between'>
+        <div>
+          <div className='text-xs font-semibold flex items-center gap-1.5'>
+            <FaRobot className='h-3 w-3 text-primary' />
+            AI Financial Advisor
+          </div>
+          <div className='text-[9px] text-muted-foreground mt-0.5'>Analyses all your financial data and surfaces what actually needs your attention.</div>
+        </div>
+        <div className='pointer-events-none border border-border/60 rounded-md px-2 py-1 text-[9px] flex items-center gap-1 bg-background'>
+          <FaArrowRight className='h-2 w-2' /> Refresh
+        </div>
+      </div>
+
+      <div className='text-[8px] text-muted-foreground'>Gemini · Vertex AI · Apr 22, 9:38 AM · AI-generated — verify before acting</div>
+
+      <div className='rounded-lg border border-primary/20 bg-primary/5 p-3'>
+        <div className='text-[10px] font-semibold mb-1'>Financial Health Summary</div>
+        <p className='text-[9px] text-muted-foreground leading-relaxed'>
+          Your net worth is currently negative, primarily driven by significant liabilities including a large car loan. While your overall savings rate over the last 90 days was healthy, your monthly net savings have declined sharply in April, indicating increasing expenses are eroding your financial progress.
+        </p>
+      </div>
+
+      <div className='text-[9px] font-semibold text-muted-foreground uppercase tracking-wide'>High Priority</div>
+      <div className='space-y-1.5'>
+        {[
+          { cat: 'debt', badge: 'bg-destructive/15 text-destructive', border: 'border-l-destructive', title: 'Address Negative Net Worth', desc: 'Your net worth is currently negative, driven by total liabilities of NPR 8,50,000. This indicates you owe more than you own.', action: 'Prioritise aggressive debt reduction, starting with high-interest loans while building an emergency buffer.' },
+          { cat: 'savings', badge: 'bg-destructive/15 text-destructive', border: 'border-l-destructive', title: 'Build a Robust Emergency Fund', desc: 'Your current liquid savings cover less than 3 months of average monthly expenses. A recommended emergency fund is 3–6 months.', action: 'Set a target of at least NPR 2,55,000. Prioritise topping this up before increasing other investments.' }
+        ].map(rec => (
+          <div key={rec.title} className={`border-l-4 ${rec.border} rounded-r-md bg-destructive/5 p-2.5`}>
+            <div className='flex items-center gap-1.5 mb-1 flex-wrap'>
+              <span className='text-[9px] font-semibold'>{rec.title}</span>
+              <span className={`text-[8px] px-1.5 py-0.5 rounded-full font-medium ${rec.badge}`}>{rec.cat}</span>
+            </div>
+            <p className='text-[8px] text-muted-foreground leading-relaxed mb-1'>{rec.desc}</p>
+            <p className='text-[8px] text-primary font-medium'>→ {rec.action}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className='text-[9px] font-semibold text-muted-foreground uppercase tracking-wide'>Medium Priority</div>
+      <div className='space-y-1.5'>
+        {[
+          { cat: 'debt', badge: 'bg-yellow-500/15 text-yellow-600', border: 'border-l-yellow-500', title: 'Evaluate High APR Home Loan', desc: 'Your Home Loan has an APR of 14%, significantly above the market average for home financing.', action: 'Research options to refinance with a lower interest rate from another financial institution.' },
+          { cat: 'spending', badge: 'bg-yellow-500/15 text-yellow-600', border: 'border-l-yellow-500', title: 'Review Credit Card Annual Fee', desc: 'One of your credit cards has an annual subscription charge of NPR 1,500 that may be waivable.', action: 'Contact your bank to inquire about waiving the annual fee based on your spending history.' }
+        ].map(rec => (
+          <div key={rec.title} className={`border-l-4 ${rec.border} rounded-r-md bg-yellow-500/5 p-2.5`}>
+            <div className='flex items-center gap-1.5 mb-1 flex-wrap'>
+              <span className='text-[9px] font-semibold'>{rec.title}</span>
+              <span className={`text-[8px] px-1.5 py-0.5 rounded-full font-medium ${rec.badge}`}>{rec.cat}</span>
+            </div>
+            <p className='text-[8px] text-muted-foreground leading-relaxed mb-1'>{rec.desc}</p>
+            <p className='text-[8px] text-primary font-medium'>→ {rec.action}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className='text-[9px] font-semibold text-muted-foreground uppercase tracking-wide'>Low Priority</div>
+      <div className={`border-l-4 border-l-green-500 rounded-r-md bg-green-500/5 p-2.5`}>
+        <div className='flex items-center gap-1.5 mb-1'>
+          <span className='text-[9px] font-semibold'>Improve Data Entry for Recurring Items</span>
+          <span className='text-[8px] px-1.5 py-0.5 rounded-full font-medium bg-green-500/15 text-green-600'>general</span>
+        </div>
+        <p className='text-[8px] text-muted-foreground leading-relaxed mb-1'>Several items listed under Recurring Income such as vehicle registration and insurance renewals are actually recurring expenses, not income.</p>
+        <p className='text-[8px] text-primary font-medium'>→ Recategorise these items under Recurring Expenses for more accurate reporting.</p>
+      </div>
+    </div>
+  );
+}
+
+function AiOrganizerContent() {
+  return (
+    <div className='space-y-2.5'>
+      <div className='flex items-center justify-between'>
+        <div>
+          <div className='text-xs font-semibold flex items-center gap-1.5'>
+            <FaLayerGroup className='h-3 w-3 text-primary' />
+            AI Financial Organizer
+          </div>
+          <div className='text-[9px] text-muted-foreground mt-0.5'>Account health check, payday routing plan, monthly calendar, and budget breakdown.</div>
+        </div>
+        <div className='pointer-events-none border border-border/60 rounded-md px-2 py-1 text-[9px] flex items-center gap-1 bg-background'>
+          <FaArrowRight className='h-2 w-2' /> Refresh
+        </div>
+      </div>
+
+      <div className='text-[8px] text-muted-foreground'>Gemini · Vertex AI · Apr 22, 12:10 PM · AI-generated — verify before acting</div>
+
+      {/* Payday Plan */}
+      <div className='rounded-lg border border-border/50 bg-background overflow-hidden'>
+        <div className='px-3 py-2 border-b border-border/40 text-[10px] font-semibold'>Payday Plan</div>
+        <div className='p-2.5 space-y-1.5'>
+          {[
+            { step: 1, action: 'Transfer to National Bank for Car EMI buffer', amount: 'NPR 10,000', to: 'National Bank', color: 'bg-orange-500/10 border-orange-500/30' },
+            { step: 2, action: 'Transfer to SSF — mandatory SSF contributions', amount: 'NPR 2,500', to: 'SSF', color: 'bg-blue-500/10 border-blue-500/30' },
+            { step: 3, action: 'Transfer to Sunrise Savings for savings and set-asides', amount: 'NPR 35,000', to: 'Sunrise Savings', color: 'bg-emerald-500/10 border-emerald-500/30' },
+            { step: 4, action: 'Transfer to Metro Bank for monthly spending', amount: 'NPR 37,500', to: 'Metro Bank', color: 'bg-primary/10 border-primary/30' }
+          ].map(s => (
+            <div key={s.step} className={`rounded border ${s.color} p-2`}>
+              <div className='flex items-center justify-between mb-0.5'>
+                <div className='flex items-center gap-1.5'>
+                  <span className='h-4 w-4 rounded-full bg-primary/15 text-primary text-[8px] font-bold flex items-center justify-center shrink-0'>{s.step}</span>
+                  <span className='text-[9px] font-medium'>{s.action}</span>
+                </div>
+                <span className='text-[9px] font-bold shrink-0 ml-2'>{s.amount}</span>
+              </div>
+              <div className='text-[8px] text-muted-foreground ml-5.5'>→ {s.to}</div>
+            </div>
+          ))}
+          <div className='text-[8px] text-muted-foreground text-right'>Total: NPR 85,000</div>
+        </div>
+      </div>
+
+      {/* Monthly Routine */}
+      <div className='rounded-lg border border-border/50 bg-background overflow-hidden'>
+        <div className='px-3 py-2 border-b border-border/40 text-[10px] font-semibold'>Monthly Routine</div>
+        <div className='p-2.5 space-y-1'>
+          {[
+            { day: 1, name: 'Car EMI auto-deducted', amount: 'NPR 10,000', badge: 'Auto', account: 'National Bank' },
+            { day: 15, name: 'Monthly salary deposit', amount: 'NPR 85,000', badge: 'Auto', account: 'Summit Bank' },
+            { day: 15, name: 'SSF contributions', amount: 'NPR 2,500', badge: 'Auto', account: 'SSF' },
+            { day: 15, name: 'SIP — mutual fund deducted', amount: 'NPR 3,000', badge: 'Auto', account: 'SIP Fund' },
+            { day: 25, name: 'Pay electricity bill', amount: '~NPR 1,800', badge: 'Variable', account: 'unknown', variable: true },
+            { day: 28, name: 'Pay streaming subscription', amount: 'NPR 649', badge: null, account: 'Metro Bank' }
+          ].map((item, i) => (
+            <div key={i} className='flex items-center gap-2'>
+              <span className='text-[8px] text-muted-foreground w-6 shrink-0 text-right'>Day {item.day}</span>
+              <span className='text-[9px] flex-1'>{item.name}</span>
+              <span className={`text-[8px] font-medium ${item.variable ? 'text-yellow-600' : ''}`}>{item.amount}</span>
+              {item.badge && (
+                <span className={`text-[7px] px-1 py-0.5 rounded border shrink-0 ${item.variable ? 'border-yellow-500/40 text-yellow-600 bg-yellow-500/10' : 'border-border/50 text-muted-foreground'}`}>
+                  {item.badge}
+                </span>
+              )}
+            </div>
+          ))}
+          <div className='mt-2 rounded bg-yellow-500/10 border border-yellow-500/20 p-2 text-[8px] text-yellow-700 dark:text-yellow-400'>
+            ⚠ Days 15–16 are busy: SIP auto-deduction, salary deposit, and SSF contributions all fall within 2 days. Aug 20 — Life Insurance Premium — NPR 18,500
+          </div>
+        </div>
+      </div>
+
+      {/* Budget Allocation */}
+      <div className='rounded-lg border border-border/50 bg-background overflow-hidden'>
+        <div className='px-3 py-2 border-b border-border/40 text-[10px] font-semibold'>Budget Allocation</div>
+        <div className='grid grid-cols-3 gap-px bg-border/30'>
+          {[
+            { label: 'Monthly Income', value: 'NPR 85,000', color: 'text-foreground' },
+            { label: 'Fixed Obligations', value: 'NPR 18,200', color: 'text-red-400' },
+            { label: 'Savings Target', value: 'NPR 25,500 (30%)', color: 'text-emerald-500' }
+          ].map(card => (
+            <div key={card.label} className='bg-background p-2.5 text-center'>
+              <div className='text-[8px] text-muted-foreground'>{card.label}</div>
+              <div className={`text-[9px] font-bold mt-0.5 ${card.color}`}>{card.value}</div>
+            </div>
+          ))}
+        </div>
+        <div className='p-2.5'>
+          <div className='text-[9px] font-medium mb-1.5'>Discretionary Budget <span className='text-muted-foreground font-normal'>NPR 41,300</span></div>
+          <div className='space-y-1'>
+            {[
+              { name: 'Food & Drinks', budget: 'NPR 18,000', actual: 'NPR 14,200', status: 'ok', statusColor: 'text-emerald-500' },
+              { name: 'Entertainment', budget: 'NPR 4,500', actual: 'NPR 6,100', status: 'over', statusColor: 'text-red-400' },
+              { name: 'Clothing', budget: 'NPR 3,200', actual: 'NPR 5,800', status: 'over', statusColor: 'text-red-400' },
+              { name: 'Others', budget: 'NPR 2,100', actual: 'NPR 1,900', status: 'ok', statusColor: 'text-emerald-500' }
+            ].map(cat => (
+              <div key={cat.name} className='flex items-center gap-2 text-[8px]'>
+                <span className='flex-1 text-muted-foreground truncate'>{cat.name}</span>
+                <span>actual {cat.actual}</span>
+                <span>budget {cat.budget}</span>
+                <span className={`font-medium w-6 text-right ${cat.statusColor}`}>{cat.status}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Account Health (compact) */}
+      <div className='rounded-lg border border-border/50 bg-background overflow-hidden'>
+        <div className='px-3 py-2 border-b border-border/40 text-[10px] font-semibold'>Account Health</div>
+        <div className='divide-y divide-border/30'>
+          {[
+            { name: 'Sunrise Savings', tags: ['Emergency Fund', 'Long-term Savings'], rec: 'KEEP', balance: 'NPR 1,42,500', desc: 'High-interest savings account. Primary savings vehicle.' },
+            { name: 'Metro Bank', tags: ['Primary Spending Account'], rec: 'KEEP', balance: 'NPR 48,200', desc: 'Main account for daily expenses and family transfers.' },
+            { name: 'SIP Fund', tags: ['Mutual Fund Investment'], rec: 'KEEP', balance: 'NPR 15,000', desc: 'Mutual fund SIP account for automated monthly investments.' },
+            { name: 'Summit Bank', tags: ['Salary Landing Account'], rec: 'KEEP', balance: 'NPR 2,100', desc: 'Primary salary account where income is deposited.' }
+          ].map(acc => (
+            <div key={acc.name} className='px-3 py-2'>
+              <div className='flex items-center gap-1.5 mb-0.5'>
+                <span className='text-[9px] font-medium'>{acc.name}</span>
+                {acc.tags.map(t => (
+                  <span key={t} className='text-[7px] border border-border/50 rounded px-1 text-muted-foreground'>{t}</span>
+                ))}
+                <span className='ml-auto text-[8px] font-semibold text-emerald-500'>{acc.rec}</span>
+                <span className='text-[8px] font-medium'>{acc.balance}</span>
+              </div>
+              <p className='text-[8px] text-muted-foreground'>{acc.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const pageContent: Record<Page, React.ReactNode> = {
   overview: <OverviewContent />,
   transactions: <TransactionsContent />,
@@ -667,7 +888,9 @@ const pageContent: Record<Page, React.ReactNode> = {
   assets: <AssetsContent />,
   categories: <CategoriesContent />,
   payees: <PayeesContent />,
-  health: <HealthContent />
+  health: <HealthContent />,
+  'ai-advisor': <AiAdvisorContent />,
+  'ai-organizer': <AiOrganizerContent />
 };
 
 /* ── Main export ─────────────────────────────────────────────────── */
@@ -692,9 +915,9 @@ export function DashboardPreview() {
       </div>
 
       {/* App layout */}
-      <div className='flex' style={{ minHeight: 520 }}>
+      <div className='flex' style={{ height: 660, overflow: 'hidden' }}>
         {/* Sidebar */}
-        <div className='hidden sm:flex flex-col w-48 border-r border-border/50 bg-muted/20 p-2.5 gap-0 shrink-0 overflow-y-auto'>
+        <div className='hidden sm:flex flex-col w-48 border-r border-border/50 bg-muted/20 p-2.5 gap-0 shrink-0 overflow-hidden'>
           {/* Logo */}
           <div className='flex items-center gap-2 px-2 py-2 mb-1'>
             <div className='h-6 w-6 rounded bg-primary flex items-center justify-center shrink-0'>
@@ -708,7 +931,7 @@ export function DashboardPreview() {
 
           {/* Nav sections */}
           {sidebarSections.map((section, si) => (
-            <div key={si} className='mb-1'>
+            <div key={si} className={si > 0 ? 'mt-2 mb-1' : 'mb-1'}>
               {section.label && (
                 <div className='flex items-center gap-1.5 px-2 py-1'>
                   {section.icon && <section.icon className='h-2.5 w-2.5 text-muted-foreground' />}
@@ -726,7 +949,13 @@ export function DashboardPreview() {
                   }`}
                 >
                   <item.icon className='h-3 w-3 shrink-0' />
-                  {item.label}
+                  <span className='flex-1 text-left'>{item.label}</span>
+                  {item.pro && (
+                    <span className='flex items-center gap-0.5 text-[8px] font-medium text-primary/70 bg-primary/10 rounded px-1 py-0.5 shrink-0'>
+                      <FaLock className='h-1.5 w-1.5' />
+                      Pro
+                    </span>
+                  )}
                 </button>
               ))}
             </div>

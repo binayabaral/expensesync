@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 export const metadata: Metadata = {
   title: 'ExpenseSync — Your finances, finally in control',
   description:
-    'Track expenses, split bills with friends, manage subscriptions, credit cards, loans, and assets. Free personal finance app built for real life.',
+    'Track expenses, split bills with friends, manage subscriptions, credit cards, loans, and assets — with AI-powered advice and organization. Free personal finance app built for real life.',
   keywords: [
     'expense tracker',
     'personal finance',
@@ -14,12 +14,14 @@ export const metadata: Metadata = {
     'net worth tracker',
     'recurring payments',
     'money management',
-    'financial health'
+    'financial health',
+    'AI financial advisor',
+    'AI budget organizer'
   ],
   openGraph: {
     title: 'ExpenseSync — Your finances, finally in control',
     description:
-      'Track expenses, split bills with friends, manage subscriptions, credit cards, loans, and assets. Free, always.',
+      'Track expenses, split bills with friends, manage subscriptions, credit cards, loans, and assets — with AI-powered advice and organization.',
     url: '/',
     siteName: 'ExpenseSync',
     type: 'website',
@@ -29,7 +31,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'ExpenseSync — Your finances, finally in control',
     description:
-      'Track expenses, split bills with friends, manage subscriptions, credit cards, loans, and assets. Free, always.'
+      'Track expenses, split bills with friends, manage subscriptions, credit cards, loans, and assets — with AI-powered advice and organization.'
   },
   robots: {
     index: true,
@@ -59,7 +61,10 @@ import {
   FaCoins,
   FaStar,
   FaPlus,
-  FaMinus
+  FaMinus,
+  FaRobot,
+  FaLayerGroup,
+  FaLock
 } from 'react-icons/fa6';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -127,7 +132,7 @@ export default async function LandingPage() {
         <div className='relative mx-auto max-w-6xl px-4 sm:px-6 py-24 sm:py-36 text-center'>
           <Badge variant='secondary' className='mb-6 gap-1.5 px-3 py-1 text-xs font-medium'>
             <span className='inline-block h-1.5 w-1.5 rounded-full bg-primary' />
-            Personal finance, reimagined
+            Now with AI-powered financial advice
           </Badge>
           <h1 className='mx-auto max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl'>
             Your finances,{' '}
@@ -136,8 +141,8 @@ export default async function LandingPage() {
             </span>
           </h1>
           <p className='mx-auto mt-6 max-w-2xl text-base sm:text-lg text-muted-foreground leading-relaxed'>
-            Track every expense, split bills with friends, manage recurring payments, and get a clear
-            picture of your financial health — all in one place.
+            Track every expense, split bills with friends, manage recurring payments, and let AI
+            surface what actually needs your attention — all in one place.
           </p>
           <div className='mt-10 flex flex-col sm:flex-row items-center justify-center gap-3'>
             <Button size='lg' className='w-full sm:w-auto gap-2 px-8' asChild>
@@ -158,9 +163,9 @@ export default async function LandingPage() {
         <div className='mx-auto max-w-6xl px-4 sm:px-6 py-10'>
           <div className='grid grid-cols-2 gap-6 sm:grid-cols-4'>
             {[
-              { value: '12+', label: 'Built-in features' },
+              { value: '14+', label: 'Built-in features' },
+              { value: 'AI-powered', label: 'Financial advice' },
               { value: 'Multi-account', label: 'Banks, cards & loans' },
-              { value: 'Real-time', label: 'Balance tracking' },
               { value: 'Multi-user', label: 'Bill splitting' }
             ].map(stat => (
               <div key={stat.label} className='text-center'>
@@ -209,12 +214,6 @@ export default async function LandingPage() {
                   'Log every transaction with categories, payees, and notes. Filter and search across your full history.'
               },
               {
-                icon: FaScaleBalanced,
-                title: 'Bill Splitting',
-                description:
-                  'Split expenses with friends and groups. Track who owes what and settle balances with ease.'
-              },
-              {
                 icon: FaArrowsRotate,
                 title: 'Recurring Payments',
                 description:
@@ -236,13 +235,15 @@ export default async function LandingPage() {
                 icon: FaHeart,
                 title: 'Financial Health',
                 description:
-                  'Get a snapshot of your net worth, savings rate, and overall financial wellbeing in one dashboard.'
+                  'Get a snapshot of your net worth, savings rate, and overall financial wellbeing in one dashboard.',
+                pro: true
               },
               {
                 icon: FaCoins,
                 title: 'Asset Tracking',
                 description:
-                  'Track physical and financial assets — property, investments, savings — to monitor your net worth over time.'
+                  'Live pricing of stocks, gold and silver. Track physical and financial assets to monitor your net worth.',
+                pro: true
               },
               {
                 icon: FaChartLine,
@@ -255,14 +256,43 @@ export default async function LandingPage() {
                 title: 'Transfers',
                 description:
                   'Record money moved between your own accounts without double-counting it as income or expense.'
+              },
+              {
+                icon: FaScaleBalanced,
+                title: 'Bill Splitting',
+                description:
+                  'Split expenses with friends and groups. Track who owes what and settle balances with ease.',
+                pro: true
+              },
+              {
+                icon: FaRobot,
+                title: 'AI Advisor',
+                description:
+                  'Get personalised financial recommendations powered by AI — surfacing what actually needs your attention based on your real data.',
+                pro: true
+              },
+              {
+                icon: FaLayerGroup,
+                title: 'AI Financial Organizer',
+                description:
+                  'AI-generated payday plan, monthly calendar, and budget breakdown tailored to your accounts, income, and recurring obligations.',
+                pro: true
               }
             ].map(feature => (
               <Card
                 key={feature.title}
-                className='group border-border/60 bg-card/50 hover:bg-card hover:border-primary/30 transition-all duration-200'
+                className={`group border-border/60 bg-card/50 hover:bg-card transition-all duration-200 ${feature.pro ? 'hover:border-primary/40' : 'hover:border-primary/30'} relative overflow-hidden`}
               >
+                {feature.pro && (
+                  <div className='absolute top-3 right-3'>
+                    <Badge className='text-[10px] px-1.5 py-0.5 gap-1 bg-primary/10 text-primary border-primary/20 hover:bg-primary/10'>
+                      <FaLock className='h-2 w-2' />
+                      Pro
+                    </Badge>
+                  </div>
+                )}
                 <CardContent className='p-6'>
-                  <div className='mb-4 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary/15 transition-colors'>
+                  <div className={`mb-4 inline-flex h-10 w-10 items-center justify-center rounded-lg ${feature.pro ? 'bg-primary/10 text-primary' : 'bg-primary/10 text-primary'} group-hover:bg-primary/15 transition-colors`}>
                     <feature.icon className='h-5 w-5' />
                   </div>
                   <h3 className='font-semibold text-base mb-2'>{feature.title}</h3>
@@ -398,6 +428,91 @@ export default async function LandingPage() {
         </div>
       </section>
 
+      {/* ── AI Spotlight ─────────────────────────────────────────────────── */}
+      <section className='border-t border-border/50 bg-muted/10'>
+        <div className='mx-auto max-w-6xl px-4 sm:px-6 py-24'>
+          <div className='grid gap-12 lg:grid-cols-2 items-center'>
+            {/* Visual side */}
+            <div className='relative order-2 lg:order-1'>
+              <div className='pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_60%_at_50%_50%,hsl(var(--primary)/0.08),transparent)]' />
+              <Card className='border-border/60 shadow-xl relative'>
+                <CardContent className='p-6'>
+                  <div className='flex items-center gap-2 mb-4'>
+                    <div className='flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary'>
+                      <FaRobot className='h-3.5 w-3.5' />
+                    </div>
+                    <span className='text-sm font-semibold'>AI Advisor · Gemini</span>
+                    <Badge variant='secondary' className='ml-auto text-xs'>Personalised</Badge>
+                  </div>
+
+                  <div className='rounded-lg bg-primary/5 border border-primary/15 p-3 mb-4'>
+                    <div className='text-xs font-medium mb-1 text-primary'>Financial Health Summary</div>
+                    <p className='text-xs text-muted-foreground leading-relaxed'>
+                      Your savings rate of 32% is strong. Fixed obligations are well-managed. Focus this month on building your emergency fund to 3 months of expenses.
+                    </p>
+                  </div>
+
+                  <div className='space-y-2.5'>
+                    {[
+                      { priority: 'High', color: 'border-l-destructive bg-destructive/5', badge: 'bg-destructive/15 text-destructive', cat: 'savings', title: 'Emergency fund below target', desc: 'Current liquid reserves cover ~6 weeks. Aim for 3 months.' },
+                      { priority: 'Medium', color: 'border-l-yellow-500 bg-yellow-500/5', badge: 'bg-yellow-500/15 text-yellow-600', cat: 'spending', title: 'Dining spend up 28% this month', desc: 'NPR 12,400 vs your NPR 9,700 average. Review recent restaurant transactions.' },
+                      { priority: 'Low', color: 'border-l-green-500 bg-green-500/5', badge: 'bg-green-500/15 text-green-600', cat: 'investments', title: 'SIP on track', desc: 'Monthly SIP deductions running consistently. No action needed.' }
+                    ].map(rec => (
+                      <div key={rec.title} className={`border-l-4 rounded-r-md p-3 ${rec.color}`}>
+                        <div className='flex items-center gap-2 mb-1 flex-wrap'>
+                          <span className='text-xs font-semibold'>{rec.title}</span>
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${rec.badge}`}>{rec.cat}</span>
+                        </div>
+                        <p className='text-[11px] text-muted-foreground leading-relaxed'>{rec.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Text side */}
+            <div className='order-1 lg:order-2'>
+              <Badge variant='secondary' className='mb-4'>
+                AI features
+              </Badge>
+              <h2 className='text-3xl font-bold tracking-tight sm:text-4xl mb-5'>
+                Your finances,{' '}
+                <span className='bg-linear-to-r from-primary to-primary/60 bg-clip-text text-transparent'>
+                  explained by AI.
+                </span>
+              </h2>
+              <p className='text-muted-foreground leading-relaxed mb-6'>
+                Two built-in AI tools analyse your actual data — accounts, transactions, recurring
+                payments, and investments — and tell you what to do next.
+              </p>
+              <ul className='space-y-3 mb-8'>
+                {[
+                  'AI Advisor surfaces high-priority actions based on your real spending patterns',
+                  'AI Financial Organizer builds your payday plan — exactly where each rupee should go',
+                  'Monthly calendar pre-built from your recurring obligations, no guesswork',
+                  'Budget breakdown with category-level spend trends and targets',
+                  'Powered by Gemini — results cached so you stay within rate limits'
+                ].map(point => (
+                  <li key={point} className='flex items-start gap-3 text-sm'>
+                    <span className='mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary'>
+                      <FaCheck className='h-2.5 w-2.5' />
+                    </span>
+                    {point}
+                  </li>
+                ))}
+              </ul>
+              <Button asChild className='gap-2'>
+                <Link href='/sign-up'>
+                  Try the AI features
+                  <FaArrowRight className='h-3.5 w-3.5' />
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── How it works ─────────────────────────────────────────────────── */}
       <section id='how-it-works' className='border-y border-border/50 bg-muted/20'>
         <div className='mx-auto max-w-6xl px-4 sm:px-6 py-24'>
@@ -479,26 +594,22 @@ export default async function LandingPage() {
           <div className='text-center mb-14'>
             <h2 className='text-3xl font-bold tracking-tight sm:text-4xl'>Pricing</h2>
             <p className='mt-4 text-muted-foreground max-w-xl mx-auto'>
-              Sign up now and get full access while we&apos;re in early access.
+              Start free. Upgrade when you need bill splitting and AI features.
             </p>
           </div>
 
-          <div className='mx-auto max-w-sm'>
-            <Card className='border-primary/40 shadow-lg relative overflow-hidden'>
-              <div className='absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-primary to-transparent' />
+          <div className='mx-auto max-w-3xl grid gap-6 sm:grid-cols-2'>
+            {/* Free tier */}
+            <Card className='border-border/60 relative overflow-hidden'>
               <CardContent className='p-8'>
-                <div className='text-center mb-8'>
-                  <Badge variant='secondary' className='mb-3'>
-                    Early Access
-                  </Badge>
-                  <div className='text-5xl font-bold tracking-tight'>
-                    Free
-                    <span className='text-lg font-normal text-muted-foreground ml-1'>
-                      for now
-                    </span>
+                <div className='mb-8'>
+                  <Badge variant='secondary' className='mb-3'>Free</Badge>
+                  <div className='text-4xl font-bold tracking-tight'>
+                    NPR 0
+                    <span className='text-base font-normal text-muted-foreground ml-1'>/month</span>
                   </div>
                   <div className='text-sm text-muted-foreground mt-2'>
-                    Paid plans will be introduced in the future
+                    Core features, forever free
                   </div>
                 </div>
 
@@ -507,10 +618,8 @@ export default async function LandingPage() {
                     'Unlimited transactions',
                     'Multiple accounts & cards',
                     'Recurring payment tracking',
-                    'Bill splitting & groups',
                     'Categories & payees',
-                    'Financial health dashboard',
-                    'Asset & net worth tracking',
+                    'Spending trends & charts',
                     'Dark & light mode'
                   ].map(feature => (
                     <li key={feature} className='flex items-center gap-3 text-sm'>
@@ -522,9 +631,62 @@ export default async function LandingPage() {
                   ))}
                 </ul>
 
+                <Button className='w-full gap-2' variant='outline' size='lg' asChild>
+                  <Link href='/sign-up'>
+                    Get Started Free
+                    <FaArrowRight className='h-3.5 w-3.5' />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Pro tier */}
+            <Card className='border-primary/40 shadow-lg relative overflow-hidden'>
+              <div className='absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-primary to-transparent' />
+              <CardContent className='p-8'>
+                <div className='mb-8'>
+                  <Badge className='mb-3 gap-1 bg-primary/10 text-primary border-primary/20 hover:bg-primary/10'>
+                    <FaStar className='h-2.5 w-2.5' />
+                    Pro
+                  </Badge>
+                  <div className='text-4xl font-bold tracking-tight'>
+                    NPR 199
+                    <span className='text-base font-normal text-muted-foreground ml-1'>/year</span>
+                  </div>
+                  <div className='text-sm text-muted-foreground mt-2'>
+                    Less than NPR 17/month — early access pricing
+                  </div>
+                </div>
+
+                <ul className='space-y-3 mb-6'>
+                  {[
+                    { text: 'Everything in Free', free: true },
+                    { text: 'Financial health dashboard', free: false },
+                    { text: 'Asset tracking with live pricing', free: false },
+                    { text: 'Bill splitting & groups', free: false },
+                    { text: 'AI Financial Advisor', free: false },
+                    { text: 'AI Financial Organizer', free: false },
+                    { text: 'Priority support', free: false }
+                  ].map(item => (
+                    <li key={item.text} className='flex items-center gap-3 text-sm'>
+                      <span className='flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary'>
+                        <FaCheck className='h-2.5 w-2.5' />
+                      </span>
+                      {item.text}
+                    </li>
+                  ))}
+                </ul>
+
+                <div className='flex items-center gap-2 mb-8 rounded-md bg-muted/50 border border-border/50 px-3 py-2'>
+                  <FaStar className='h-3 w-3 text-primary shrink-0' />
+                  <p className='text-xs text-muted-foreground'>
+                    More Pro features coming — bulk import, export & more.
+                  </p>
+                </div>
+
                 <Button className='w-full gap-2' size='lg' asChild>
                   <Link href='/sign-up'>
-                    Get Started
+                    Get Early Access
                     <FaArrowRight className='h-3.5 w-3.5' />
                   </Link>
                 </Button>
@@ -570,6 +732,10 @@ export default async function LandingPage() {
             {
               q: 'Does ExpenseSync support currencies other than USD?',
               a: 'Yes. You can enter amounts in any currency. The app is built to be currency-agnostic, making it suitable for users worldwide including Nepal, India, and beyond.'
+            },
+            {
+              q: 'How do the AI features work?',
+              a: 'The AI Advisor analyses your accounts, transactions, and recurring payments and surfaces prioritised recommendations. The AI Financial Organizer builds a personalised payday plan, monthly calendar, and budget breakdown. Both are powered by Google Gemini and analyse only your own data — nothing is shared externally.'
             }
           ].map((item, i) => (
             <details
