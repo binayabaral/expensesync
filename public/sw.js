@@ -16,7 +16,13 @@ self.addEventListener('push', function (event) {
     ]
   };
 
-  event.waitUntil(self.registration.showNotification(data.title, options));
+  const tasks = [self.registration.showNotification(data.title, options)];
+
+  if (typeof navigator.setAppBadge === 'function' && data.badgeCount != null) {
+    tasks.push(navigator.setAppBadge(data.badgeCount));
+  }
+
+  event.waitUntil(Promise.all(tasks));
 });
 
 self.addEventListener('notificationclick', function (event) {
@@ -29,14 +35,17 @@ self.addEventListener('notificationclick', function (event) {
     : '/dashboard';
 
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (clientList) {
-      for (const client of clientList) {
-        if (client.url.includes(self.location.origin) && 'focus' in client) {
-          client.navigate(targetUrl);
-          return client.focus();
+    Promise.all([
+      clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (clientList) {
+        for (const client of clientList) {
+          if (client.url.includes(self.location.origin) && 'focus' in client) {
+            client.navigate(targetUrl);
+            return client.focus();
+          }
         }
-      }
-      return clients.openWindow(targetUrl);
-    })
+        return clients.openWindow(targetUrl);
+      }),
+      typeof navigator.clearAppBadge === 'function' ? navigator.clearAppBadge() : Promise.resolve()
+    ])
   );
 });
