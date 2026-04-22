@@ -487,6 +487,18 @@ export const insertAssetPriceSchema = createInsertSchema(assetPrices).extend({
   fetchedAt: z.coerce.date().optional()
 });
 
+export const aiOrganizationReports = pgTable('ai_organization_reports', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull(),
+  data: jsonb('data').notNull(),
+  model: text('model').notNull(),
+  tier: text('tier').notNull(),
+  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull()
+}, (t) => [
+  index('idx_aorgr_user_id').on(t.userId),
+  index('idx_aorgr_user_created').on(t.userId, t.createdAt)
+]);
+
 export const aiRecommendations = pgTable('ai_recommendations', {
   id: text('id').primaryKey(),
   userId: text('user_id').notNull(),

@@ -122,6 +122,11 @@ export function AppSidebar() {
       title: 'AI Advisor',
       url: '/dashboard/ai-advisor',
       icon: FaRobot
+    },
+    {
+      title: 'AI Organization',
+      url: '/dashboard/ai-organization',
+      icon: FaLayerGroup
     }
   ];
 

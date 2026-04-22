@@ -209,6 +209,8 @@ async function handleRequest() {
       cadence: recurringPayments.cadence,
       intervalMonths: recurringPayments.intervalMonths,
       dayOfMonth: recurringPayments.dayOfMonth,
+      month: recurringPayments.month,
+      startDate: recurringPayments.startDate,
       lastCompletedAt: recurringPayments.lastCompletedAt,
       notes: recurringPayments.notes,
       accountId: recurringPayments.accountId,
@@ -473,24 +475,77 @@ async function handleRequest() {
       const chargeStr = r.transferCharge && r.transferCharge > 0 ? ` + ${toNPR(r.transferCharge)} charges/interest` : '';
       const noteStr = r.notes ? ` — note: "${r.notes}"` : '';
       lines.push(`- ${r.name}: ${toNPR(Math.abs(r.amount))}${chargeStr} ${label}${dueDayStr}${accountStr} (last completed: ${lastDone})${noteStr}`);
+      if (r.transferCharge && r.transferCharge > 0) {
+        const total = Math.abs(r.amount) + r.transferCharge;
+        lines.push(`  → Total monthly deduction: ${toNPR(total)} (principal ${toNPR(Math.abs(r.amount))} + charges/interest ${toNPR(r.transferCharge)})`);
+      }
     }
   }
 
+  const getNextAnnualDue = (r: {
+    lastCompletedAt: Date | null;
+    startDate: Date | null;
+    dayOfMonth: number | null;
+    month: number | null;
+  }): Date | null => {
+    if (r.month && r.dayOfMonth) {
+      const monthIndex = r.month - 1;
+      const currentYear = now.getFullYear();
+      const thisYear = new Date(currentYear, monthIndex, r.dayOfMonth);
+      if (thisYear > now) return thisYear;
+      return new Date(currentYear + 1, monthIndex, r.dayOfMonth);
+    }
+    if (r.lastCompletedAt) {
+      const next = new Date(r.lastCompletedAt);
+      next.setFullYear(next.getFullYear() + 1);
+      while (next <= now) next.setFullYear(next.getFullYear() + 1);
+      return next;
+    }
+    if (r.startDate) {
+      const next = new Date(r.startDate);
+      while (next <= now) next.setFullYear(next.getFullYear() + 1);
+      return next;
+    }
+    return null;
+  };
+
   const upcomingAnnual = activeRecurring.filter(r => {
-    if (r.cadence !== 'YEARLY' || r.amount >= 0) return false;
-    if (!r.lastCompletedAt) return true;
-    const last = new Date(r.lastCompletedAt);
-    const nextDue = new Date(last);
-    nextDue.setFullYear(nextDue.getFullYear() + 1);
+    if (r.cadence !== 'YEARLY') return false;
+    const nextDue = getNextAnnualDue(r);
+    if (!nextDue) return false;
     const daysUntilDue = Math.floor((nextDue.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     return daysUntilDue >= 0 && daysUntilDue <= 90;
   });
 
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[annual debug] all yearly recurring:', activeRecurring
+      .filter(r => r.cadence === 'YEARLY')
+      .map(r => ({
+        name: r.name,
+        amount: r.amount,
+        inRecurringExpenses: recurringExpenses.some(e => e.name === r.name),
+        lastCompletedAt: r.lastCompletedAt,
+        startDate: r.startDate,
+        nextDue: getNextAnnualDue(r)?.toISOString()
+      }))
+    );
+    console.log('[upcoming annual] filtered list:', upcomingAnnual.map(r => ({
+      name: r.name,
+      nextDue: getNextAnnualDue(r)?.toISOString()
+    })));
+  }
+
   if (upcomingAnnual.length > 0) {
-    lines.push('\n## Upcoming Annual Expenses (due within 90 days)');
+    lines.push('\n## Upcoming Annual Expenses (due within 90 days — dates pre-calculated from schedule)');
+    lines.push('IMPORTANT: Use ONLY these exact dates. Do not calculate or invent due dates from other data.');
     for (const r of upcomingAnnual) {
-      lines.push(`- ${r.name}: ${toNPR(Math.abs(r.amount))}`);
+      const nextDue = getNextAnnualDue(r);
+      const totalAmount = Math.abs(r.amount) + (r.transferCharge ?? 0);
+      lines.push(`- ${r.name}: ${toNPR(totalAmount)} due ${nextDue ? format(nextDue, 'dd MMM yyyy') : 'soon'}`);
     }
+  } else {
+    lines.push('\n## Upcoming Annual Expenses (due within 90 days)');
+    lines.push('No annual expenses due within the next 90 days.');
   }
 
   if (assetsWithMarket.length > 0) {
@@ -545,6 +600,10 @@ async function handleRequest() {
 - Insurance premium payments (life, car) and vehicle registration fees are planned obligations — do not flag as concerning expenses. Only flag if total fixed obligations exceed 40% of monthly income.
 - Car EMI shown may be principal only — do not make precise EMI calculations unless total is explicitly stated.
 - The user manually logs recurring payments — "last completed" being old does not mean a missed payment.
+- CASH type accounts and digital wallets (eSewa, Khalti, and similar mobile wallets) should never be flagged for closure or review based on low balance alone — low balances are normal and intentional for wallets.
+- Dedicated-purpose accounts (EV charging wallet, travel card, broker/TMS account) must never be flagged if their description states a specific use case, regardless of current balance.
+- A stock trading or broker account (e.g. NAASA TMS) must never be flagged for closure if the user holds any active stock positions.
+- If a bank account belongs to the same institution as an active credit card (e.g. HBL bank account + HBL credit card), do not recommend closing the bank account — it is almost certainly used for credit card payments.
 
 ## Loan Rules
 - Peer loans (PEER, 0% interest): flag for awareness but do not treat as more urgent than interest-bearing EMI debt. Note the 0% nature explicitly.
@@ -555,6 +614,7 @@ async function handleRequest() {
 
 ## Savings & Emergency Fund
 - Savings rate below 20% is a concern; below 10% is high priority.
+- When referencing a savings target percentage in recommendations, derive it from the actual savings rate in the data: round the actual rate to the nearest 5% (e.g. 27% → 25%, 28% → 30%) and use that figure consistently. Never assume 25% if the actual rate differs.
 - If the user does not appear to have 3–6 months of expenses in a dedicated liquid account, flag this as a high-priority concern.
 - Prefer keeping idle money in the highest-interest account. Do not suggest moving from a high-interest savings account to a low-interest spending account unnecessarily.
 

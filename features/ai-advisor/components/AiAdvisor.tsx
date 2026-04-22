@@ -156,6 +156,7 @@ export default function AiAdvisor() {
         {meta && !isLoading && (
           <p className='text-xs text-muted-foreground'>
             {modelLabel(meta.model)} · {format(new Date(meta.createdAt), 'MMM d, h:mm a')}
+            <span className='ml-2'>· AI-generated — verify before acting</span>
           </p>
         )}
 
