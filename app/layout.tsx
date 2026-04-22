@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { ClerkProvider } from '@clerk/nextjs';
 import { Geist, Geist_Mono } from 'next/font/google';
 
@@ -19,6 +19,16 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
   display: 'swap'
 });
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#16a34a' },
+    { media: '(prefers-color-scheme: dark)', color: '#15803d' }
+  ]
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://expensesync.vercel.app'),
