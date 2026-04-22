@@ -238,14 +238,20 @@ export default function AiOrganizer() {
                 <h2 className='text-sm font-semibold text-muted-foreground uppercase tracking-wide'>Payday Plan</h2>
                 <Card>
                   <CardHeader className='pb-2'>
-                    <CardTitle className='text-sm flex items-center gap-2'>
-                      <Wallet className='h-4 w-4 text-primary' />
-                      {data.paydayPlan.salaryAccount}
-                      {data.paydayPlan.salaryDay && <span className='text-muted-foreground font-normal'>· day {data.paydayPlan.salaryDay}</span>}
-                      <span className='ml-auto font-semibold text-primary'>{fmt(data.paydayPlan.salaryAmount)}</span>
+                    <CardTitle className='text-sm flex items-start justify-between gap-2'>
+                      <span className='flex items-center gap-2'>
+                        <Wallet className='h-4 w-4 text-primary shrink-0' />
+                        <span>
+                          {data.paydayPlan.salaryAccount}
+                          {data.paydayPlan.salaryDay && (
+                            <span className='text-muted-foreground font-normal'> · day {data.paydayPlan.salaryDay}</span>
+                          )}
+                        </span>
+                      </span>
+                      <span className='font-semibold text-primary shrink-0'>{fmt(data.paydayPlan.salaryAmount)}</span>
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className='pt-0 pb-4 space-y-2'>
+                  <CardContent className='pt-0 pb-4 space-y-3'>
                     {data.paydayPlan.steps.map((step) => (
                       <div key={step.step} className='flex gap-3 text-sm'>
                         <span className='shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-semibold flex items-center justify-center mt-0.5'>
@@ -259,14 +265,16 @@ export default function AiOrganizer() {
                             </span>
                             {step.isEstimated && <span className='text-xs text-muted-foreground'>(est.)</span>}
                           </div>
-                          <div className='flex items-center gap-1 text-xs text-muted-foreground mt-0.5'>
-                            <span>{step.from}</span>
-                            <ArrowRight className='h-3 w-3' />
-                            <span>{step.to}</span>
-                            <span className='ml-1'>— {step.reason}</span>
+                          <div className='flex items-start gap-1 text-xs text-muted-foreground mt-0.5 flex-wrap'>
+                            <span className='flex items-center gap-1 shrink-0'>
+                              <span>{step.from}</span>
+                              <ArrowRight className='h-3 w-3' />
+                              <span>{step.to}</span>
+                            </span>
+                            <span>— {step.reason}</span>
                           </div>
                           {step.covers && step.covers.length > 0 && (
-                            <div className='mt-1 flex flex-wrap gap-1'>
+                            <div className='mt-1.5 flex flex-wrap gap-1'>
                               {step.covers.map((c, ci) => (
                                 <span key={ci} className='text-xs bg-muted text-muted-foreground rounded px-1.5 py-0.5'>{c}</span>
                               ))}
@@ -294,25 +302,27 @@ export default function AiOrganizer() {
                       Calendar
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className='pt-0 pb-4 space-y-1.5'>
+                  <CardContent className='pt-0 pb-4 space-y-2.5'>
                     {data.monthlyRoutine.calendar
                       .slice()
                       .sort((a, b) => a.day - b.day)
                       .map((entry, i) => (
                         <div key={i} className='flex items-start gap-3 text-sm'>
-                          <span className='shrink-0 w-8 text-right text-xs font-mono text-muted-foreground pt-0.5'>
+                          <span className='shrink-0 w-9 text-right text-xs font-mono text-muted-foreground pt-0.5'>
                             Day {entry.day}
                           </span>
                           <div className='flex-1 min-w-0'>
-                            <span className='font-medium'>{entry.action}</span>
-                            {entry.amount != null && (
-                              <span className='text-primary ml-1.5 font-medium'>
-                                {entry.isVariable ? '~' : ''}{fmt(entry.amount)}
-                              </span>
-                            )}
-                            <span className='text-muted-foreground ml-1.5'>· {entry.account}</span>
-                            {entry.isAutomatic && <Badge variant='outline' className='ml-1.5 text-xs px-1 py-0'>Auto</Badge>}
-                            {entry.isVariable && <Badge variant='outline' className='ml-1 text-xs px-1 py-0 border-yellow-400 text-yellow-600'>Variable</Badge>}
+                            <div className='flex flex-wrap items-center gap-x-1.5 gap-y-1'>
+                              <span className='font-medium'>{entry.action}</span>
+                              {entry.amount != null && (
+                                <span className='text-primary font-medium'>
+                                  {entry.isVariable ? '~' : ''}{fmt(entry.amount)}
+                                </span>
+                              )}
+                              {entry.isAutomatic && <Badge variant='outline' className='text-xs px-1 py-0'>Auto</Badge>}
+                              {entry.isVariable && <Badge variant='outline' className='text-xs px-1 py-0 border-yellow-400 text-yellow-600'>Variable</Badge>}
+                            </div>
+                            <span className='text-xs text-muted-foreground'>{entry.account}</span>
                           </div>
                         </div>
                       ))}
@@ -344,22 +354,22 @@ export default function AiOrganizer() {
             {data.budgetAllocation && (
               <div className='space-y-3'>
                 <h2 className='text-sm font-semibold text-muted-foreground uppercase tracking-wide'>Budget Allocation</h2>
-                <div className='grid grid-cols-3 gap-3'>
+                <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
                   <Card>
-                    <CardContent className='pt-4 pb-4 text-center'>
-                      <p className='text-xs text-muted-foreground mb-1'>Monthly Income</p>
+                    <CardContent className='pt-4 pb-4 flex sm:flex-col items-center sm:items-center justify-between sm:justify-center gap-2'>
+                      <p className='text-xs text-muted-foreground'>Monthly Income</p>
                       <p className='font-semibold text-sm'>{fmt(data.budgetAllocation.monthlyIncome)}</p>
                     </CardContent>
                   </Card>
                   <Card>
-                    <CardContent className='pt-4 pb-4 text-center'>
-                      <p className='text-xs text-muted-foreground mb-1'>Fixed Obligations</p>
+                    <CardContent className='pt-4 pb-4 flex sm:flex-col items-center sm:items-center justify-between sm:justify-center gap-2'>
+                      <p className='text-xs text-muted-foreground'>Fixed Obligations</p>
                       <p className='font-semibold text-sm text-destructive'>{fmt(data.budgetAllocation.fixedObligations.total)}</p>
                     </CardContent>
                   </Card>
                   <Card>
-                    <CardContent className='pt-4 pb-4 text-center'>
-                      <p className='text-xs text-muted-foreground mb-1'>Savings Target</p>
+                    <CardContent className='pt-4 pb-4 flex sm:flex-col items-center sm:items-center justify-between sm:justify-center gap-2'>
+                      <p className='text-xs text-muted-foreground'>Savings Target</p>
                       <p className='font-semibold text-sm text-green-600'>
                         {fmt(data.budgetAllocation.savingsTarget.amount)}
                         <span className='font-normal text-muted-foreground'> ({data.budgetAllocation.savingsTarget.percentage}%)</span>
@@ -374,9 +384,9 @@ export default function AiOrganizer() {
                   </CardHeader>
                   <CardContent className='pt-0 pb-4 space-y-1.5'>
                     {data.budgetAllocation.fixedObligations.breakdown.map((item) => (
-                      <div key={item.name} className='flex justify-between text-sm'>
+                      <div key={item.name} className='flex justify-between text-sm gap-2'>
                         <span className='text-muted-foreground'>{item.name}</span>
-                        <span className='font-medium'>
+                        <span className='font-medium shrink-0'>
                           {item.isEstimated ? '~' : ''}{fmt(item.amount)}
                           {item.isEstimated && <span className='text-xs text-muted-foreground ml-1'>(est.)</span>}
                         </span>
@@ -393,15 +403,19 @@ export default function AiOrganizer() {
                         <span className='font-semibold text-primary'>{fmt(data.budgetAllocation.discretionaryBudget.total)}</span>
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className='pt-0 pb-4 space-y-2'>
+                    <CardContent className='pt-0 pb-4 space-y-2.5'>
                       {data.budgetAllocation.discretionaryBudget.categories.map((cat) => {
                         const scfg = statusConfig[cat.status] ?? statusConfig.ok;
                         return (
-                          <div key={cat.name} className='flex items-center gap-3 text-sm'>
-                            <span className='flex-1 text-muted-foreground'>{cat.name}</span>
-                            <span className='text-xs text-muted-foreground'>actual {fmt(cat.actual)}</span>
-                            <span className='w-20 text-right font-medium'>{fmt(cat.recommended)}</span>
-                            <span className={cn('text-xs w-20 text-right', scfg.class)}>{scfg.label}</span>
+                          <div key={cat.name} className='text-sm'>
+                            <div className='flex items-center justify-between gap-2 mb-0.5'>
+                              <span className='font-medium truncate'>{cat.name}</span>
+                              <span className={cn('text-xs shrink-0', scfg.class)}>{scfg.label}</span>
+                            </div>
+                            <div className='flex items-center justify-between gap-2 text-xs text-muted-foreground'>
+                              <span>Actual: {fmt(cat.actual)}</span>
+                              <span>Budget: {fmt(cat.recommended)}</span>
+                            </div>
                           </div>
                         );
                       })}
@@ -427,7 +441,7 @@ export default function AiOrganizer() {
                 return (
                   <Card key={a.name} className={cn('border-l-4', cfg.borderClass)}>
                     <CardContent className='pt-4 pb-4'>
-                      <div className='flex items-start justify-between gap-3 flex-wrap'>
+                      <div className='flex items-start justify-between gap-3'>
                         <div className='flex-1 min-w-0'>
                           <div className='flex items-center gap-2 flex-wrap mb-1'>
                             <span className='font-semibold text-sm'>{a.name}</span>
@@ -435,8 +449,8 @@ export default function AiOrganizer() {
                             {a.role && <span className='text-xs text-muted-foreground'>· {a.role}</span>}
                           </div>
                           <p className='text-sm text-muted-foreground'>{a.reason}</p>
+                          <p className='text-xs font-medium mt-1'>{fmt(a.balance)}</p>
                         </div>
-                        <span className='text-sm font-medium shrink-0'>{fmt(a.balance)}</span>
                       </div>
                     </CardContent>
                   </Card>
@@ -451,12 +465,12 @@ export default function AiOrganizer() {
                 <Card>
                   <CardContent className='pt-4 pb-4 divide-y divide-border'>
                     {data.accountRoles.map((r) => (
-                      <div key={r.name} className='py-2 first:pt-0 last:pb-0 flex items-start gap-3'>
-                        <div className='flex-1 min-w-0'>
+                      <div key={r.name} className='py-2.5 first:pt-0 last:pb-0'>
+                        <div className='flex items-center justify-between gap-2 mb-0.5'>
                           <span className='text-sm font-medium'>{r.name}</span>
-                          <span className='text-muted-foreground text-sm'> — {r.purpose}</span>
+                          <Badge variant='secondary' className='shrink-0 text-xs'>{r.role}</Badge>
                         </div>
-                        <Badge variant='secondary' className='shrink-0 text-xs'>{r.role}</Badge>
+                        <p className='text-xs text-muted-foreground'>{r.purpose}</p>
                       </div>
                     ))}
                   </CardContent>
