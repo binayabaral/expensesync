@@ -19,7 +19,6 @@ import {
   FaArrowRightArrowLeft,
   FaPlus,
   FaRobot,
-  FaPiggyBank,
   FaArrowRight,
   FaLock
 } from 'react-icons/fa6';
