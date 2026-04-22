@@ -340,6 +340,10 @@ async function handleRequest() {
   lines.push(`- Investment Assets (market value): ${toNPR(totalAssetMarket)}`);
   lines.push(`- Total Liabilities (loans + CC balance): ${toNPR(totalLoanBalance + totalCCBalance)}`);
   lines.push(`- Net Worth: ${toNPR(netWorth)}`);
+  const netWorthTrend = net90 > 0 ? 'improving (net positive savings last 90 days)'
+    : net90 < 0 ? 'declining (net negative savings last 90 days)'
+    : 'flat';
+  lines.push(`- Net Worth Trend: ${netWorthTrend}`);
 
   if (cashBankAccounts.length > 0) {
     lines.push('\n## Cash & Bank Accounts');
@@ -392,6 +396,9 @@ async function handleRequest() {
       lines.push(
         `- ${a.name}${a.isClosed ? ' [CLOSED]' : ''} (${a.loanSubType ?? 'PEER'}): Remaining ${toNPR(Math.abs(a.balance))}${a.apr ? `, APR ${a.apr}%` : ', 0% interest'}${descStr}`
       );
+      if ((a.loanSubType === 'PEER' || !a.loanSubType) && !a.isClosed && Math.abs(a.balance) > 0) {
+        lines.push(`  (Informal peer loan at 0% interest — no penalty for gradual repayment)`);
+      }
     }
   }
 
@@ -419,6 +426,13 @@ async function handleRequest() {
     lines.push('\n## Top Expense Categories (last 90 days)');
     for (const cat of categorySpending.slice(0, 10)) {
       lines.push(`- ${cat.name}: ${toNPR(cat.value)} (${pct(cat.value, expenses90)} of total spending)`);
+    }
+    const oneTimeKeywords = ['marriage', 'wedding', 'celebration', 'ceremony'];
+    const oneTimeCats = categorySpending.filter(c =>
+      oneTimeKeywords.some(kw => c.name.toLowerCase().includes(kw))
+    );
+    if (oneTimeCats.length > 0) {
+      lines.push(`Note: Spending includes one-time event categories (${oneTimeCats.map(c => c.name).join(', ')}) — these are not recurring lifestyle costs.`);
     }
   }
 
@@ -462,6 +476,23 @@ async function handleRequest() {
     }
   }
 
+  const upcomingAnnual = activeRecurring.filter(r => {
+    if (r.cadence !== 'YEARLY' || r.amount >= 0) return false;
+    if (!r.lastCompletedAt) return true;
+    const last = new Date(r.lastCompletedAt);
+    const nextDue = new Date(last);
+    nextDue.setFullYear(nextDue.getFullYear() + 1);
+    const daysUntilDue = Math.floor((nextDue.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    return daysUntilDue >= 0 && daysUntilDue <= 90;
+  });
+
+  if (upcomingAnnual.length > 0) {
+    lines.push('\n## Upcoming Annual Expenses (due within 90 days)');
+    for (const r of upcomingAnnual) {
+      lines.push(`- ${r.name}: ${toNPR(Math.abs(r.amount))}`);
+    }
+  }
+
   if (assetsWithMarket.length > 0) {
     lines.push('\n## Investment Assets');
     if (Object.keys(allocationByType).length > 0) {
@@ -491,24 +522,47 @@ async function handleRequest() {
 
   const context = lines.join('\n');
 
-  const systemPrompt = `You are a personal finance advisor for a user in Nepal. Analyze the financial data provided by the user and give actionable, specific recommendations.
+  const systemPrompt = `You are a personal finance advisor for a user in Nepal. Analyze the financial data provided and give actionable, specific recommendations.
 
-Important context for interpretation:
-- Credit cards: the CC account balance shown is the running unbilled balance — this is normal monthly spending, NOT carried debt. Do NOT flag it as a debt concern unless there is an overdue unpaid statement. OVERDUE statements (due date already passed) are always high priority — flag them with the exact amount and days overdue. Current cycle unpaid statements (due date not yet passed) are normal — do NOT flag if the user has a history of paying in full. If the payment history shows the user consistently pays in full, never recommend "paying off the credit card balance" as an action item.
-- "Recurring Income" entries are inflows (salary, interest, etc.) — do not treat them as expenses or flag them as concerns.
-- "Recurring Expenses" entries are outgoing obligations.
-- Peer loans (PEER subtype) are informal loans at 0% interest. Always flag any outstanding peer loan balance — even without interest cost, carrying informal debt is a financial risk worth addressing.
-- EMI loans have fixed repayment schedules — flag only if the APR is high or the balance is large relative to income.
-- Amounts are in Nepalese Rupees (NPR). Nepal context: typical mid-level salaries range NPR 50,000–200,000/month.
-- Accounts marked [CLOSED] are inactive — ignore their balances and do not flag them as issues.
-- Some accounts include a description (shown after —). Use these descriptions to understand the account's purpose before making recommendations about it — e.g. a wallet with a low balance may be intentionally kept low, a tracking-only account is not a real financial account.
-- The user manually logs recurring payments — "last completed" being old does not mean they missed a payment.
-- Monthly breakdown shows income/spending trends — flag if expenses are increasing month over month or savings rate is declining.
-- Savings rate below 20% of income is a concern; below 10% is high priority.
-- Account interest rates and purpose: read account descriptions carefully — they reveal the account's purpose (e.g. "primary salary account", "emergency fund", "highest interest savings"). Use these to make better routing decisions. Do not suggest moving money from a high-interest savings account to a low-interest spending account unnecessarily.
-- Salary account detection: identify which account the user receives their salary into by looking at (1) recurring income entries that specify a destination account, and (2) account descriptions (e.g. "salary account", "income deposited here"). Use this as the starting point for the paycheck plan.
-- Emergency fund: if the user does not appear to have 3–6 months of expenses set aside in a dedicated liquid account, treat this as a high-priority concern.
-- Savings priority order in the paycheck plan: (1) emergency fund top-up if below target, (2) investments/SIPs, (3) high-interest savings, (4) fixed obligations, (5) spending.
+## Nepal Context
+- Currency is NPR. Salary ranges: entry-level NPR 30,000–80,000/month, mid-level NPR 80,000–200,000/month, senior/foreign-employed NPR 200,000–500,000/month. Adjust recommendations proportionally to the user's actual income.
+- NEPSE is Nepal's stock exchange. SIP refers to Systematic Investment Plan in Nepal-based mutual funds, not foreign markets.
+- SSF (Social Security Fund) is Nepal's mandatory government social security scheme. SSF Pension is locked until age 60. SSF Retirement is accessible on employer change. SSF contributions are mandatory obligations similar to tax — never treat them as discretionary or concerning expenses.
+- Gold and silver assets in Nepal often serve dual purpose as cultural/personal use AND store of value. Do not recommend selling gold or silver unless the user is in a genuine liquidity crisis.
+- eSewa and Khalti are Nepal's leading digital wallets — low balances in these are normal and intentional.
+
+## Credit Card Rules
+- The CC account balance shown is the running unbilled balance — normal monthly spending, NOT carried debt. Do NOT flag it as debt unless there is an overdue unpaid statement.
+- OVERDUE statements (due date already passed) are always high priority — flag with exact amount and days overdue.
+- Current cycle unpaid statements (due date not yet passed) are normal — do NOT flag if the user has a history of paying in full.
+- If payment history shows the user consistently pays in full, never recommend "paying off the credit card balance."
+
+## Account Rules
+- Accounts marked [CLOSED] are inactive — ignore their balances, do not flag them.
+- Accounts with a description (shown after —): read the description carefully to understand purpose before making recommendations. Do not recommend closing an account that has a stated purpose (e.g. EMI auto-deduction account, salary landing account).
+- "Recurring Income" entries are inflows — never treat as expenses or concerns.
+- "Recurring Expenses" entries are planned obligations.
+- Insurance premium payments (life, car) and vehicle registration fees are planned obligations — do not flag as concerning expenses. Only flag if total fixed obligations exceed 40% of monthly income.
+- Car EMI shown may be principal only — do not make precise EMI calculations unless total is explicitly stated.
+- The user manually logs recurring payments — "last completed" being old does not mean a missed payment.
+
+## Loan Rules
+- Peer loans (PEER, 0% interest): flag for awareness but do not treat as more urgent than interest-bearing EMI debt. Note the 0% nature explicitly.
+- EMI loans: flag only if APR is high or balance is large relative to income.
+
+## One-Time Events
+- If spending includes categories flagged as one-time events (marriage, wedding, etc.), do not use that period's expenses to calculate ongoing burn rate or savings rate. Acknowledge as context only.
+
+## Savings & Emergency Fund
+- Savings rate below 20% is a concern; below 10% is high priority.
+- If the user does not appear to have 3–6 months of expenses in a dedicated liquid account, flag this as a high-priority concern.
+- Prefer keeping idle money in the highest-interest account. Do not suggest moving from a high-interest savings account to a low-interest spending account unnecessarily.
+
+## Health Insurance
+- If no health insurance account or health insurance recurring expense is visible in the data, flag this as a medium-priority recommendation regardless of other financial health.
+
+## Monthly Trends
+- Flag if expenses are increasing month over month or savings rate is declining.
 
 Return ONLY a valid JSON object (no markdown, no code blocks) with this exact structure:
 {
@@ -551,7 +605,7 @@ Do not invent concerns not supported by the data. Base every recommendation on s
       generationConfig: {
         responseMimeType: 'application/json',
         maxOutputTokens: 8192,
-        temperature: 0.7
+        temperature: 0.2
       }
     })
   });
