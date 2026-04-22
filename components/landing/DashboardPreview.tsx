@@ -61,7 +61,7 @@ const sidebarSections = [
       { id: 'accounts' as Page, icon: FaWallet, label: 'Accounts' },
       { id: 'credit-cards' as Page, icon: FaCreditCard, label: 'Credit Cards' },
       { id: 'loans' as Page, icon: FaFileInvoiceDollar, label: 'Loans' },
-      { id: 'assets' as Page, icon: FaCoins, label: 'Assets' }
+      { id: 'assets' as Page, icon: FaCoins, label: 'Assets', pro: true }
     ]
   },
   {
@@ -70,7 +70,7 @@ const sidebarSections = [
     items: [
       { id: 'categories' as Page, icon: FaTags, label: 'Categories' },
       { id: 'payees' as Page, icon: FaReceipt, label: 'Payees' },
-      { id: 'health' as Page, icon: FaHeart, label: 'Financial Health' }
+      { id: 'health' as Page, icon: FaHeart, label: 'Financial Health', pro: true }
     ]
   },
   {
