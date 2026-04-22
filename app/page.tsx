@@ -232,6 +232,18 @@ export default async function LandingPage() {
                   'Organise spending with custom categories and payees. Understand where your money actually goes.'
               },
               {
+                icon: FaChartLine,
+                title: 'Spending Trends',
+                description:
+                  'Visual charts break down your spending by category and period so you can spot patterns instantly.'
+              },
+              {
+                icon: FaMoneyBillTransfer,
+                title: 'Transfers',
+                description:
+                  'Record money moved between your own accounts without double-counting it as income or expense.'
+              },
+              {
                 icon: FaHeart,
                 title: 'Financial Health',
                 description:
@@ -244,18 +256,6 @@ export default async function LandingPage() {
                 description:
                   'Live pricing of stocks, gold and silver. Track physical and financial assets to monitor your net worth.',
                 pro: true
-              },
-              {
-                icon: FaChartLine,
-                title: 'Spending Trends',
-                description:
-                  'Visual charts break down your spending by category and period so you can spot patterns instantly.'
-              },
-              {
-                icon: FaMoneyBillTransfer,
-                title: 'Transfers',
-                description:
-                  'Record money moved between your own accounts without double-counting it as income or expense.'
               },
               {
                 icon: FaScaleBalanced,
