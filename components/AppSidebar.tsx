@@ -117,15 +117,18 @@ export function AppSidebar() {
       title: 'Financial Health',
       url: '/dashboard/health',
       icon: FaHeart
-    },
+    }
+  ];
+
+  const aiItems = [
     {
-      title: 'AI Advisor',
+      title: 'Advisor',
       url: '/dashboard/ai-advisor',
       icon: FaRobot
     },
     {
-      title: 'AI Organization',
-      url: '/dashboard/ai-organization',
+      title: 'Organizer',
+      url: '/dashboard/ai-organizer',
       icon: FaLayerGroup
     }
   ];
@@ -224,6 +227,30 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {analyticsItems.map(item => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    onClick={() => navigate(item.url)}
+                    isActive={pathname === item.url}
+                    tooltip={item.title}
+                  >
+                    <item.icon className='h-4 w-4' />
+                    <span>{item.title}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* AI */}
+        <SidebarGroup>
+          <SidebarGroupLabel>
+            <FaRobot className='h-4 w-4 mr-2' />
+            AI
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {aiItems.map(item => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     onClick={() => navigate(item.url)}

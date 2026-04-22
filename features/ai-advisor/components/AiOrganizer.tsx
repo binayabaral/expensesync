@@ -122,7 +122,7 @@ function modelLabel(model: string): string {
   return 'Gemini';
 }
 
-export default function AiOrganization() {
+export default function AiOrganizer() {
   const [isLoading, setIsLoading] = useState(false);
   const [isFetchingCached, setIsFetchingCached] = useState(true);
   const [data, setData] = useState<OrgData | null>(null);
@@ -130,7 +130,7 @@ export default function AiOrganization() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('/api/ai-organization')
+    fetch('/api/ai-organizer')
       .then(r => r.json())
       .then(({ data: d, meta: m }) => {
         if (d) { setData(d); setMeta(m); }
@@ -143,10 +143,10 @@ export default function AiOrganization() {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/ai-organization', { method: 'POST' });
+      const res = await fetch('/api/ai-organizer', { method: 'POST' });
       const json = await res.json();
       if (!res.ok) {
-        if (json.raw) console.error('[AI Organization] raw error:', json.raw);
+        if (json.raw) console.error('[AI Organizer] raw error:', json.raw);
         throw new Error(json.error ?? 'Request failed');
       }
       setData(json.data);
@@ -169,7 +169,7 @@ export default function AiOrganization() {
           <div className='flex items-center justify-between gap-3'>
             <h1 className='text-xl font-bold flex items-center gap-2'>
               <Building2 className='h-5 w-5 text-primary shrink-0' />
-              Financial Organization
+              AI Financial Organizer
             </h1>
             <TooltipProvider>
               <Tooltip>
