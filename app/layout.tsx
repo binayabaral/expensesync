@@ -5,6 +5,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import { Toaster } from '@/components/ui/sonner';
 import QueryProvider from '@/providers/QueryProvider';
 import { ThemeProvider } from '@/components/ThemeProvider';
+import { PwaInstallPrompt } from '@/components/PwaInstallPrompt';
 
 import './globals.css';
 
@@ -61,6 +62,7 @@ export default function RootLayout({
           <ThemeProvider>
             <QueryProvider>
               <Toaster position='top-right' />
+              <PwaInstallPrompt />
               {children}
             </QueryProvider>
           </ThemeProvider>
