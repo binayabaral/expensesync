@@ -510,3 +510,15 @@ export const aiRecommendations = pgTable('ai_recommendations', {
   index('idx_air_user_id').on(t.userId),
   index('idx_air_user_created').on(t.userId, t.createdAt)
 ]);
+
+export const pushSubscriptions = pgTable('push_subscriptions', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull(),
+  endpoint: text('endpoint').notNull(),
+  p256dh: text('p256dh').notNull(),
+  auth: text('auth').notNull(),
+  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull()
+}, (t) => [
+  uniqueIndex('idx_push_endpoint').on(t.endpoint),
+  index('idx_push_user_id').on(t.userId)
+]);

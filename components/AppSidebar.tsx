@@ -35,13 +35,17 @@ import {
 } from '@/components/ui/sidebar';
 import { ClerkLoaded, ClerkLoading, UserButton, useUser } from '@clerk/nextjs';
 import { shadcn } from '@clerk/themes';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Bell, BellOff } from 'lucide-react';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 export function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { user } = useUser();
   const { setOpenMobile } = useSidebar();
+  const { permission, isSubscribed, isLoading, subscribe, unsubscribe } = usePushNotifications();
 
   const navigate = (url: string) => {
     setOpenMobile(false);
@@ -269,6 +273,43 @@ export function AppSidebar() {
 
       <SidebarFooter className='border-t border-sidebar-border'>
         <SidebarMenu>
+          {permission !== 'unsupported' && (
+            <SidebarMenuItem>
+              <div className='flex items-center gap-3 py-1 w-full group-data-[collapsible=icon]:justify-center'>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      onClick={isSubscribed ? unsubscribe : subscribe}
+                      disabled={isLoading || permission === 'denied'}
+                      className='w-full justify-start gap-2 group-data-[collapsible=icon]:w-9 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0'
+                    >
+                      {isSubscribed ? (
+                        <Bell className='h-4 w-4 text-primary shrink-0' />
+                      ) : (
+                        <BellOff className='h-4 w-4 text-muted-foreground shrink-0' />
+                      )}
+                      <span className='group-data-[collapsible=icon]:hidden text-xs'>
+                        {permission === 'denied'
+                          ? 'Notifications blocked'
+                          : isSubscribed
+                            ? 'Reminders on'
+                            : 'Enable reminders'}
+                      </span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side='right'>
+                    {permission === 'denied'
+                      ? 'Notifications are blocked in browser settings'
+                      : isSubscribed
+                        ? 'Turn off recurring payment reminders'
+                        : 'Get notified about upcoming recurring payments'}
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </SidebarMenuItem>
+          )}
           <SidebarMenuItem>
             <div className='flex items-center gap-3 py-3 w-full'>
               <ClerkLoaded>

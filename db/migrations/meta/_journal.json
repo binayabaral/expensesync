@@ -260,6 +260,13 @@
       "when": 1776830625387,
       "tag": "0036_steady_warbound",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1776884783076,
+      "tag": "0037_confused_magneto",
+      "breakpoints": true
     }
   ]
 }

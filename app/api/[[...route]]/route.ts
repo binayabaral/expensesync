@@ -20,6 +20,7 @@ import splitGroupsRoute from './split-groups';
 import splitExpensesRoute from './split-expenses';
 import splitSettlementsRoute from './split-settlements';
 import splitBalancesRoute from './split-balances';
+import pushSubscriptionsRoute from './push-subscriptions';
 
 export const runtime = 'edge';
 
@@ -45,7 +46,8 @@ const routes = app
   .route('/split-groups', splitGroupsRoute)
   .route('/split-expenses', splitExpensesRoute)
   .route('/split-settlements', splitSettlementsRoute)
-  .route('/split-balances', splitBalancesRoute);
+  .route('/split-balances', splitBalancesRoute)
+  .route('/push-subscriptions', pushSubscriptionsRoute);
 
 export const GET = handle(app);
 export const POST = handle(app);

@@ -3,18 +3,12 @@ import { Hono } from 'hono';
 import { getAuth } from '@hono/clerk-auth';
 import { createId } from '@paralleldrive/cuid2';
 import { zValidator } from '@hono/zod-validator';
-import {
-  addDays,
-  addMonths,
-  addYears,
-  differenceInCalendarDays,
-  getDaysInMonth,
-  startOfDay
-} from 'date-fns';
+import { differenceInCalendarDays, startOfDay } from 'date-fns';
 import { aliasedTable, and, eq, sql } from 'drizzle-orm';
 
 import { db } from '@/db/drizzle';
 import { accounts, categories, recurringPayments } from '@/db/schema';
+import { getNextDueDate } from '@/lib/recurring-utils';
 
 const cadenceSchema = z.enum(['DAILY', 'MONTHLY', 'YEARLY']);
 const typeSchema = z.enum(['TRANSACTION', 'TRANSFER']);
@@ -50,61 +44,6 @@ const recurringPaymentSchema = baseRecurringPaymentSchema
     path: ['month']
   });
 
-const clampDayOfMonth = (date: Date, dayOfMonth: number) => {
-  const maxDay = getDaysInMonth(date);
-  return Math.min(dayOfMonth, maxDay);
-};
-
-const getNextDueDate = (item: {
-  cadence: 'DAILY' | 'MONTHLY' | 'YEARLY';
-  startDate: Date;
-  lastCompletedAt: Date | null;
-  dayOfMonth: number | null;
-  month: number | null;
-  intervalMonths: number;
-}) => {
-  const baseDate = startOfDay(item.lastCompletedAt ? new Date(item.lastCompletedAt) : new Date(item.startDate));
-
-  if (item.cadence === 'DAILY') {
-    if (item.lastCompletedAt) {
-      return addDays(baseDate, 1);
-    }
-    return baseDate;
-  }
-
-  if (item.cadence === 'MONTHLY') {
-    const day = item.dayOfMonth ?? baseDate.getDate();
-    const interval = item.intervalMonths ?? 1;
-    let next: Date;
-
-    if (item.lastCompletedAt) {
-      next = addMonths(baseDate, interval);
-    } else {
-      next = new Date(baseDate);
-    }
-    next.setDate(clampDayOfMonth(next, day));
-
-    return next;
-  }
-
-  if (item.cadence === 'YEARLY') {
-    const day = item.dayOfMonth ?? baseDate.getDate();
-    const targetMonth = item.month ? item.month - 1 : baseDate.getMonth();
-    let next: Date;
-    
-    if (item.lastCompletedAt) {
-      next = addYears(baseDate, 1);
-    } else {
-      next = new Date(baseDate);
-    }
-    next.setMonth(targetMonth);
-    next.setDate(clampDayOfMonth(next, day));
-    
-    return next;
-  }
-
-  return baseDate;
-};
 
 const app = new Hono()
   .get('/', async c => {
