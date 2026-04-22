@@ -601,37 +601,38 @@ export default async function LandingPage() {
           <div className='mx-auto max-w-3xl grid gap-6 sm:grid-cols-2'>
             {/* Free tier */}
             <Card className='border-border/60 relative overflow-hidden'>
-              <CardContent className='p-8'>
-                <div className='mb-8'>
-                  <Badge variant='secondary' className='mb-3'>Free</Badge>
-                  <div className='text-4xl font-bold tracking-tight'>
-                    NPR 0
-                    <span className='text-base font-normal text-muted-foreground ml-1'>/month</span>
+              <CardContent className='p-8 flex flex-col h-full'>
+                <div className="flex-col justify-between">
+                  <div className='mb-8'>
+                    <Badge variant='secondary' className='mb-3'>Free</Badge>
+                    <div className='text-4xl font-bold tracking-tight'>
+                      NPR 0
+                      <span className='text-base font-normal text-muted-foreground ml-1'>/month</span>
+                    </div>
+                    <div className='text-sm text-muted-foreground mt-2'>
+                      Core features, forever free
+                    </div>
                   </div>
-                  <div className='text-sm text-muted-foreground mt-2'>
-                    Core features, forever free
-                  </div>
+                  <ul className='space-y-3 mb-8'>
+                    {[
+                      'Unlimited transactions',
+                      'Multiple accounts & cards',
+                      'Recurring payment tracking',
+                      'Categories & payees',
+                      'Spending trends & charts',
+                      'Dark & light mode'
+                    ].map(feature => (
+                      <li key={feature} className='flex items-center gap-3 text-sm'>
+                        <span className='flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary'>
+                          <FaCheck className='h-2.5 w-2.5' />
+                        </span>
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
 
-                <ul className='space-y-3 mb-8'>
-                  {[
-                    'Unlimited transactions',
-                    'Multiple accounts & cards',
-                    'Recurring payment tracking',
-                    'Categories & payees',
-                    'Spending trends & charts',
-                    'Dark & light mode'
-                  ].map(feature => (
-                    <li key={feature} className='flex items-center gap-3 text-sm'>
-                      <span className='flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary'>
-                        <FaCheck className='h-2.5 w-2.5' />
-                      </span>
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-
-                <Button className='w-full gap-2' variant='outline' size='lg' asChild>
+                <Button className='w-full gap-2 mt-auto' variant='outline' size='lg' asChild>
                   <Link href='/sign-up'>
                     Get Started Free
                     <FaArrowRight className='h-3.5 w-3.5' />
