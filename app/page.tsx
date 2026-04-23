@@ -3,7 +3,7 @@ import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 
 export const metadata: Metadata = {
-  title: 'ExpenseSync — Your finances, finally in control',
+  title: 'XpenseSync — Your finances, finally in control',
   description:
     'Track expenses, split bills with friends, manage subscriptions, credit cards, loans, and assets — with AI-powered advice and organization. Free personal finance app built for real life.',
   keywords: [
@@ -19,17 +19,17 @@ export const metadata: Metadata = {
     'AI budget organizer'
   ],
   openGraph: {
-    title: 'ExpenseSync — Your finances, finally in control',
+    title: 'XpenseSync — Your finances, finally in control',
     description:
       'Track expenses, split bills with friends, manage subscriptions, credit cards, loans, and assets — with AI-powered advice and organization.',
     url: '/',
-    siteName: 'ExpenseSync',
+    siteName: 'XpenseSync',
     type: 'website',
     locale: 'en_US'
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'ExpenseSync — Your finances, finally in control',
+    title: 'XpenseSync — Your finances, finally in control',
     description:
       'Track expenses, split bills with friends, manage subscriptions, credit cards, loans, and assets — with AI-powered advice and organization.'
   },
@@ -88,7 +88,7 @@ export default async function LandingPage() {
               <div className='flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground'>
                 <FaMoneyBillTransfer className='h-5 w-5' />
               </div>
-              <span className='text-base font-bold'>ExpenseSync</span>
+              <span className='text-base font-bold'>XpenseSync</span>
             </div>
             <nav className='hidden sm:flex items-center gap-6 text-sm text-muted-foreground'>
               <a href='#features' className='hover:text-foreground transition-colors'>
@@ -322,7 +322,7 @@ export default async function LandingPage() {
             </h2>
             <p className='text-muted-foreground leading-relaxed mb-6'>
               Going on a trip, sharing a flat, or just grabbing dinner with friends? Create a group,
-              log shared expenses, and ExpenseSync figures out exactly who owes what — and by how
+              log shared expenses, and XpenseSync figures out exactly who owes what — and by how
               much.
             </p>
             <ul className='space-y-3 mb-8'>
@@ -570,7 +570,7 @@ export default async function LandingPage() {
               ))}
             </div>
             <blockquote className='mx-auto max-w-2xl text-xl sm:text-2xl font-medium leading-snug tracking-tight mb-8'>
-              &ldquo;I built ExpenseSync because I couldn&apos;t find a finance app that fit how I
+              &ldquo;I built XpenseSync because I couldn&apos;t find a finance app that fit how I
               actually manage money — multiple accounts, shared expenses with friends, and recurring
               bills all in one place. Using it every day has genuinely changed how I think about my
               finances.&rdquo;
@@ -581,7 +581,7 @@ export default async function LandingPage() {
               </div>
               <div>
                 <div className='font-semibold text-sm'>Binaya Baral</div>
-                <div className='text-xs text-muted-foreground'>Creator of ExpenseSync</div>
+                <div className='text-xs text-muted-foreground'>Creator of XpenseSync</div>
               </div>
             </div>
           </div>
@@ -711,8 +711,8 @@ export default async function LandingPage() {
         <div className='mx-auto max-w-2xl space-y-3'>
           {[
             {
-              q: 'How much does ExpenseSync cost?',
-              a: 'ExpenseSync is currently free to use during our early access period. We plan to introduce paid plans in the future with additional features — early users will be notified well in advance.'
+              q: 'How much does XpenseSync cost?',
+              a: 'XpenseSync is currently free to use during our early access period. We plan to introduce paid plans in the future with additional features — early users will be notified well in advance.'
             },
             {
               q: 'Can I manage multiple bank accounts and credit cards?',
@@ -720,18 +720,18 @@ export default async function LandingPage() {
             },
             {
               q: 'How does bill splitting work?',
-              a: 'Create a group for any occasion (a trip, shared flat, dinner, etc.), add members, and log shared expenses. ExpenseSync automatically calculates the optimal settlement so the minimum number of transactions are needed to settle all balances.'
+              a: 'Create a group for any occasion (a trip, shared flat, dinner, etc.), add members, and log shared expenses. XpenseSync automatically calculates the optimal settlement so the minimum number of transactions are needed to settle all balances.'
             },
             {
               q: 'Is my financial data secure?',
               a: 'Your data is stored securely in the cloud with industry-standard encryption. Authentication is handled by Clerk, a trusted identity platform. We never share or sell your data.'
             },
             {
-              q: 'Can I use ExpenseSync on mobile?',
-              a: 'ExpenseSync is a responsive web app that works great on any device — desktop, tablet, or mobile browser. A dedicated mobile app may come in the future.'
+              q: 'Can I use XpenseSync on mobile?',
+              a: 'XpenseSync is a responsive web app that works great on any device — desktop, tablet, or mobile browser. A dedicated mobile app may come in the future.'
             },
             {
-              q: 'Does ExpenseSync support currencies other than USD?',
+              q: 'Does XpenseSync support currencies other than USD?',
               a: 'Yes. You can enter amounts in any currency. The app is built to be currency-agnostic, making it suitable for users worldwide including Nepal, India, and beyond.'
             },
             {
@@ -767,7 +767,7 @@ export default async function LandingPage() {
             Ready to take control?
           </h2>
           <p className='text-muted-foreground max-w-md mx-auto mb-8'>
-            Join ExpenseSync today and start tracking your finances with clarity.
+            Join XpenseSync today and start tracking your finances with clarity.
           </p>
           <div className='flex flex-col sm:flex-row items-center justify-center gap-3'>
             <Button size='lg' className='w-full sm:w-auto gap-2 px-8' asChild>
@@ -791,7 +791,7 @@ export default async function LandingPage() {
               <div className='flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground'>
                 <FaMoneyBillTransfer className='h-3.5 w-3.5' />
               </div>
-              <span className='font-semibold text-sm'>ExpenseSync</span>
+              <span className='font-semibold text-sm'>XpenseSync</span>
               <span className='text-xs text-muted-foreground'>· Personal Finance Tracker</span>
             </div>
             <div className='flex items-center gap-4 text-sm text-muted-foreground'>
@@ -813,7 +813,7 @@ export default async function LandingPage() {
             </div>
           </div>
           <div className='mt-6 text-center text-xs text-muted-foreground'>
-            © {new Date().getFullYear()} ExpenseSync. Built with care for personal finance.
+            © {new Date().getFullYear()} XpenseSync. Built with care for personal finance.
           </div>
         </div>
       </footer>

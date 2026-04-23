@@ -908,7 +908,7 @@ export function DashboardPreview() {
         </div>
         <div className='flex-1 mx-3'>
           <div className='mx-auto max-w-xs h-6 rounded-md bg-background/60 border border-border/40 flex items-center justify-center'>
-            <span className='text-xs text-muted-foreground'>expensesync.app/dashboard</span>
+            <span className='text-xs text-muted-foreground'>xpensesync.com/dashboard</span>
           </div>
         </div>
       </div>
@@ -923,7 +923,7 @@ export function DashboardPreview() {
               <FaMoneyBillTransfer className='h-3 w-3 text-primary-foreground' />
             </div>
             <div>
-              <div className='text-[10px] font-bold leading-none'>ExpenseSync</div>
+              <div className='text-[10px] font-bold leading-none'>XpenseSync</div>
               <div className='text-[9px] text-muted-foreground'>Finance Tracker</div>
             </div>
           </div>

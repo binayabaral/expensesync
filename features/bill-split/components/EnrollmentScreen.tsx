@@ -53,7 +53,7 @@ export function EnrollmentScreen() {
         <div className='flex items-start gap-2 text-left bg-muted/50 rounded-lg p-3 text-xs text-muted-foreground'>
           <FaExclamationTriangle className='h-3.5 w-3.5 mt-0.5 shrink-0 text-amber-500' />
           <p>
-            Once enrolled, other ExpenseSync users can find you by your email address and add you to splits.
+            Once enrolled, other XpenseSync users can find you by your email address and add you to splits.
           </p>
         </div>
 

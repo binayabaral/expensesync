@@ -52,7 +52,7 @@ export function AddContactSheet() {
         <SheetHeader>
           <SheetTitle>Add contact</SheetTitle>
           <SheetDescription>
-            Add someone to split expenses with. If they join ExpenseSync with the same email, they&apos;ll see the splits too.
+            Add someone to split expenses with. If they join XpenseSync with the same email, they&apos;ll see the splits too.
           </SheetDescription>
         </SheetHeader>
         <Form {...form}>

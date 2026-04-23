@@ -32,10 +32,10 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://expensesync.vercel.app'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://xpensesync.com'),
   title: {
-    default: 'ExpenseSync',
-    template: '%s | ExpenseSync'
+    default: 'XpenseSync',
+    template: '%s | XpenseSync'
   },
   description: 'Personal finance tracker — track expenses, split bills, manage subscriptions, and grow your net worth.',
   icons: {

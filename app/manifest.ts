@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'ExpenseSync',
-    short_name: 'ExpenseSync',
+    name: 'XpenseSync',
+    short_name: 'XpenseSync',
     description: 'Personal finance tracker — track expenses, split bills, manage subscriptions, and grow your net worth.',
     start_url: '/dashboard',
     display: 'standalone',

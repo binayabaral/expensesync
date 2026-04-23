@@ -205,7 +205,7 @@ export default function GroupDetailPage({ params }: Props) {
       <div className='hidden print:block mb-6 pb-4 border-b-2 border-gray-200'>
         <div className='flex items-start justify-between'>
           <div>
-            <p className='text-xs text-gray-400 uppercase tracking-widest mb-1'>ExpenseSync · Bill Split</p>
+            <p className='text-xs text-gray-400 uppercase tracking-widest mb-1'>XpenseSync · Bill Split</p>
             <div className='flex items-center gap-2'>
               <h1 className='text-2xl font-bold text-gray-900'>{group.name}</h1>
               <span className='text-xs font-medium bg-gray-100 text-gray-600 rounded px-2 py-0.5'>{group.currency}</span>

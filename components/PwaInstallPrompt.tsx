@@ -62,7 +62,7 @@ export function PwaInstallPrompt() {
   return (
     <div className='fixed bottom-4 left-4 right-4 z-50 flex items-center gap-3 rounded-xl border bg-card px-4 py-3 shadow-lg sm:left-auto sm:right-4 sm:w-80'>
       <div className='flex flex-1 flex-col gap-0.5'>
-        <p className='text-sm font-semibold'>Install ExpenseSync</p>
+        <p className='text-sm font-semibold'>Install XpenseSync</p>
         <p className='text-muted-foreground text-xs'>Add to home screen for quick access</p>
       </div>
       <Button size='sm' onClick={handleInstall} className='shrink-0 gap-1.5'>

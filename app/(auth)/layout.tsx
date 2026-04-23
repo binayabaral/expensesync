@@ -92,7 +92,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               <p className='text-xs text-muted-foreground italic leading-relaxed'>
                 &ldquo;Using it every day has genuinely changed how I think about my finances.&rdquo;
               </p>
-              <p className='text-[11px] text-muted-foreground/60 mt-1.5'>— Binaya Baral, Creator of ExpenseSync</p>
+              <p className='text-[11px] text-muted-foreground/60 mt-1.5'>— Binaya Baral, Creator of XpenseSync</p>
             </div>
           </div>
 
@@ -161,7 +161,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <div className='flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground'>
             <FaMoneyBillTransfer className='h-3.5 w-3.5' />
           </div>
-          <span className='font-bold'>ExpenseSync</span>
+          <span className='font-bold'>XpenseSync</span>
         </Link>
         <ThemeToggle />
       </header>

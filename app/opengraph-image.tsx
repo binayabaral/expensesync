@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
-export const alt = 'ExpenseSync — Your finances, finally in control';
+export const alt = 'XpenseSync — Your finances, finally in control';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -63,7 +63,7 @@ export default function Image() {
             </svg>
           </div>
           <span style={{ color: 'white', fontSize: 34, fontWeight: 700, letterSpacing: '-0.5px' }}>
-            ExpenseSync
+            XpenseSync
           </span>
         </div>
 

@@ -147,7 +147,7 @@ export function AppSidebar() {
             <FaMoneyBillTransfer className='h-6 w-6' />
           </div>
           <div className='flex flex-col overflow-hidden group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:w-0 transition-all duration-200'>
-            <span className='text-base font-bold whitespace-nowrap'>ExpenseSync</span>
+            <span className='text-base font-bold whitespace-nowrap'>XpenseSync</span>
             <span className='text-xs text-muted-foreground whitespace-nowrap'>Finance Tracker</span>
           </div>
         </div>
