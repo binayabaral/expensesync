@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 export const metadata: Metadata = {
   title: 'XpenseSync — Your finances, finally in control',
   description:
-    'Track expenses, split bills with friends, manage subscriptions, credit cards, loans, and assets — with AI-powered advice and organization. Free personal finance app built for real life.',
+    'Track your expenses, split bills with friends, manage credit cards, loans and assets, and get AI-powered financial advice. Built for real life, not for spreadsheet nerds.',
   keywords: [
     'expense tracker',
     'personal finance',
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'XpenseSync — Your finances, finally in control',
     description:
-      'Track expenses, split bills with friends, manage subscriptions, credit cards, loans, and assets — with AI-powered advice and organization.',
+      'Track your expenses, split bills with friends, manage credit cards, loans and assets, and get AI-powered financial advice.',
     url: '/',
     siteName: 'XpenseSync',
     type: 'website',
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'XpenseSync — Your finances, finally in control',
     description:
-      'Track expenses, split bills with friends, manage subscriptions, credit cards, loans, and assets — with AI-powered advice and organization.'
+      'Track your expenses, split bills with friends, manage credit cards, loans and assets, and get AI-powered financial advice.'
   },
   robots: {
     index: true,
@@ -64,7 +64,10 @@ import {
   FaMinus,
   FaRobot,
   FaLayerGroup,
-  FaLock
+  FaLock,
+  FaShieldHalved,
+  FaEyeSlash,
+  FaPencil
 } from 'react-icons/fa6';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -141,8 +144,8 @@ export default async function LandingPage() {
             </span>
           </h1>
           <p className='mx-auto mt-6 max-w-2xl text-base sm:text-lg text-muted-foreground leading-relaxed'>
-            Track every expense, split bills with friends, manage recurring payments, and let AI
-            surface what actually needs your attention — all in one place.
+            Track every expense, split bills with friends, manage recurring payments and let AI
+            tell you what actually needs your attention. Everything in one place.
           </p>
           <div className='mt-10 flex flex-col sm:flex-row items-center justify-center gap-3'>
             <Button size='lg' className='w-full sm:w-auto gap-2 px-8' asChild>
@@ -181,11 +184,11 @@ export default async function LandingPage() {
       <section className='mx-auto max-w-6xl px-4 sm:px-6 py-24'>
         <div className='text-center mb-12'>
           <h2 className='text-3xl font-bold tracking-tight sm:text-4xl'>
-            A dashboard built for clarity
+            See everything at a glance
           </h2>
           <p className='mt-4 text-muted-foreground max-w-xl mx-auto'>
-            Click any page in the sidebar to explore. Everything at a glance — balances, spending
-            trends, categories, credit cards, and more.
+            Click through the sidebar to explore. Balances, spending trends, credit cards and more,
+            right where you need them.
           </p>
         </div>
 
@@ -197,11 +200,11 @@ export default async function LandingPage() {
         <div className='mx-auto max-w-6xl px-4 sm:px-6 py-24'>
           <div className='text-center mb-14'>
             <h2 className='text-3xl font-bold tracking-tight sm:text-4xl'>
-              Everything you need to manage money
+              Built around how you actually spend money
             </h2>
             <p className='mt-4 text-muted-foreground max-w-xl mx-auto'>
-              A complete personal finance toolkit — from daily transactions to long-term asset
-              tracking.
+              From logging your morning coffee to tracking gold and stocks, XpenseSync covers
+              the full picture.
             </p>
           </div>
 
@@ -247,7 +250,7 @@ export default async function LandingPage() {
                 icon: FaHeart,
                 title: 'Financial Health',
                 description:
-                  'Get a snapshot of your net worth, savings rate, and overall financial wellbeing in one dashboard.',
+                  'Know where you stand. Net worth, savings rate and financial health in one view.',
                 pro: true
               },
               {
@@ -268,14 +271,14 @@ export default async function LandingPage() {
                 icon: FaRobot,
                 title: 'AI Advisor',
                 description:
-                  'Get personalised financial recommendations powered by AI — surfacing what actually needs your attention based on your real data.',
+                  'AI looks at your real spending data and tells you exactly what to fix. Not generic advice, your actual numbers.',
                 pro: true
               },
               {
                 icon: FaLayerGroup,
                 title: 'AI Financial Organizer',
                 description:
-                  'AI-generated payday plan, monthly calendar, and budget breakdown tailored to your accounts, income, and recurring obligations.',
+                  'Get a payday plan, monthly calendar and budget breakdown built around your actual income and bills.',
                 pro: true
               }
             ].map(feature => (
@@ -322,12 +325,11 @@ export default async function LandingPage() {
             </h2>
             <p className='text-muted-foreground leading-relaxed mb-6'>
               Going on a trip, sharing a flat, or just grabbing dinner with friends? Create a group,
-              log shared expenses, and XpenseSync figures out exactly who owes what — and by how
-              much.
+              log the expenses, and XpenseSync figures out exactly who owes what and how much.
             </p>
             <ul className='space-y-3 mb-8'>
               {[
-                'Create groups for any occasion — trips, flatmates, events',
+                'Create groups for any occasion: trips, flatmates, events',
                 'Log expenses and assign them to one or multiple people',
                 'See real-time balance: who owes you, who you owe',
                 'Settle up with a single tap',
@@ -483,16 +485,16 @@ export default async function LandingPage() {
                 </span>
               </h2>
               <p className='text-muted-foreground leading-relaxed mb-6'>
-                Two built-in AI tools analyse your actual data — accounts, transactions, recurring
-                payments, and investments — and tell you what to do next.
+                Two built-in AI tools look at your real data and tell you what actually needs your
+                attention this month.
               </p>
               <ul className='space-y-3 mb-8'>
                 {[
-                  'AI Advisor surfaces high-priority actions based on your real spending patterns',
-                  'AI Financial Organizer builds your payday plan — exactly where each rupee should go',
-                  'Monthly calendar pre-built from your recurring obligations, no guesswork',
-                  'Budget breakdown with category-level spend trends and targets',
-                  'Powered by Gemini — results cached so you stay within rate limits'
+                  'The AI Advisor tells you what to fix first, based on your own numbers',
+                  'The AI Organizer builds a payday plan so you know exactly where each rupee goes',
+                  'Get a monthly calendar built around your recurring bills and income',
+                  'See your spending broken down by category with targets you can actually stick to',
+                  'Powered by Google Gemini, built right into XpenseSync so you never need a separate tool'
                 ].map(point => (
                   <li key={point} className='flex items-start gap-3 text-sm'>
                     <span className='mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary'>
@@ -513,13 +515,60 @@ export default async function LandingPage() {
         </div>
       </section>
 
+      {/* ── Built for Nepal ──────────────────────────────────────────────── */}
+      <section className='border-t border-border/50 bg-muted/10'>
+        <div className='mx-auto max-w-6xl px-4 sm:px-6 py-24'>
+          <div className='text-center mb-12'>
+            <Badge variant='secondary' className='mb-4'>Built for Nepal</Badge>
+            <h2 className='text-3xl font-bold tracking-tight sm:text-4xl'>
+              Designed around how money works here
+            </h2>
+            <p className='mt-4 text-muted-foreground max-w-xl mx-auto'>
+              Most finance apps are built for the US or UK market. XpenseSync is built around the realities of managing money in Nepal.
+            </p>
+          </div>
+          <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
+            {[
+              {
+                icon: FaWallet,
+                title: 'NPR Native',
+                desc: 'Built around Nepali Rupees. No awkward conversion just to log a daily expense.'
+              },
+              {
+                icon: FaChartLine,
+                title: 'NEPSE Stocks',
+                desc: 'Track your stock portfolio with live NEPSE prices updated twice daily on trading days.'
+              },
+              {
+                icon: FaCoins,
+                title: 'Gold in Tola',
+                desc: 'Buy and sell gold by the tola in 22K and 24K, tracked with live rates from local sources.'
+              },
+              {
+                icon: FaReceipt,
+                title: 'Nepali Bank Quirks',
+                desc: 'Credit card statements that do not close neatly at month end? Handled exactly as Nepali banks work.'
+              }
+            ].map(item => (
+              <div key={item.title} className='rounded-xl border border-border/60 bg-card/50 p-6 hover:bg-card transition-colors'>
+                <div className='mb-4 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary'>
+                  <item.icon className='h-5 w-5' />
+                </div>
+                <h3 className='font-semibold mb-2'>{item.title}</h3>
+                <p className='text-sm text-muted-foreground leading-relaxed'>{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── How it works ─────────────────────────────────────────────────── */}
       <section id='how-it-works' className='border-y border-border/50 bg-muted/20'>
         <div className='mx-auto max-w-6xl px-4 sm:px-6 py-24'>
           <div className='text-center mb-14'>
             <h2 className='text-3xl font-bold tracking-tight sm:text-4xl'>How it works</h2>
             <p className='mt-4 text-muted-foreground max-w-xl mx-auto'>
-              Set up in minutes, gain insights in seconds.
+              Takes less than 5 minutes to get started.
             </p>
           </div>
 
@@ -536,13 +585,13 @@ export default async function LandingPage() {
                 step: '02',
                 title: 'Track transactions',
                 description:
-                  'Log income and expenses with categories and notes. Import or enter them as they happen.'
+                  'Log income and expenses with categories and notes. Enter them as they happen.'
               },
               {
                 step: '03',
                 title: 'Split & settle',
                 description:
-                  'Create bill-split groups for trips, shared housing, or any shared expense. Track and settle balances effortlessly.'
+                  "Create bill-split groups for trips, shared housing, or any shared expense. Track who owes what and settle up when you're ready."
               }
             ].map(step => (
               <div key={step.step} className='flex flex-col items-center text-center relative'>
@@ -559,30 +608,28 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* ── Testimonial ──────────────────────────────────────────────────── */}
+      {/* ── Why this exists ──────────────────────────────────────────────── */}
       <section className='mx-auto max-w-6xl px-4 sm:px-6 py-24'>
-        <div className='relative rounded-2xl border border-border/60 bg-card/50 px-8 py-12 sm:px-16 sm:py-14 text-center overflow-hidden'>
+        <div className='relative rounded-2xl border border-border/60 bg-card/50 px-8 py-10 sm:px-12 sm:py-12 overflow-hidden'>
           <div className='pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_50%_50%,hsl(var(--primary)/0.06),transparent)]' />
-          <div className='relative'>
-            <div className='flex justify-center gap-1 mb-6'>
-              {[...Array(5)].map((_, i) => (
-                <FaStar key={i} className='h-4 w-4 text-yellow-400' />
-              ))}
-            </div>
-            <blockquote className='mx-auto max-w-2xl text-xl sm:text-2xl font-medium leading-snug tracking-tight mb-8'>
-              &ldquo;I built XpenseSync because I couldn&apos;t find a finance app that fit how I
-              actually manage money — multiple accounts, shared expenses with friends, and recurring
-              bills all in one place. Using it every day has genuinely changed how I think about my
-              finances.&rdquo;
-            </blockquote>
-            <div className='flex flex-col items-center gap-2.5'>
-              <div className='h-11 w-11 rounded-full bg-primary/20 text-primary flex items-center justify-center text-sm font-bold'>
+          <div className='relative grid gap-10 lg:grid-cols-[180px_1fr] items-start'>
+            <div className='flex flex-col items-center lg:items-start gap-3'>
+              <div className='h-14 w-14 rounded-full bg-primary/20 text-primary flex items-center justify-center text-base font-bold'>
                 BB
               </div>
-              <div>
+              <div className='text-center lg:text-left'>
                 <div className='font-semibold text-sm'>Binaya Baral</div>
                 <div className='text-xs text-muted-foreground'>Creator of XpenseSync</div>
               </div>
+              <Badge variant='secondary' className='text-xs'>Why this exists</Badge>
+            </div>
+            <div>
+              <p className='text-xl sm:text-2xl font-medium leading-snug tracking-tight mb-5'>
+                &ldquo;I built XpenseSync because I couldn&apos;t find a finance app that fit how I actually manage money.&rdquo;
+              </p>
+              <p className='text-muted-foreground leading-relaxed'>
+                Most apps either want to connect to your bank (which I didn&apos;t want), don&apos;t support NPR, or are so complex you stop using them after a week. I wanted something I would open every day. Simple enough to log a quick expense, powerful enough to track loans, gold, credit card statements and bills with friends. This is that app.
+              </p>
             </div>
           </div>
         </div>
@@ -655,7 +702,7 @@ export default async function LandingPage() {
                     <span className='text-base font-normal text-muted-foreground ml-1'>/year</span>
                   </div>
                   <div className='text-sm text-muted-foreground mt-2'>
-                    Less than NPR 17/month — early access pricing
+                    Less than NPR 17 per month. Early access pricing.
                   </div>
                 </div>
 
@@ -681,7 +728,7 @@ export default async function LandingPage() {
                 <div className='flex items-center gap-2 mb-8 rounded-md bg-muted/50 border border-border/50 px-3 py-2'>
                   <FaStar className='h-3 w-3 text-primary shrink-0' />
                   <p className='text-xs text-muted-foreground'>
-                    More Pro features coming — bulk import, export & more.
+                    More Pro features coming: bulk import, export and more.
                   </p>
                 </div>
 
@@ -712,11 +759,11 @@ export default async function LandingPage() {
           {[
             {
               q: 'How much does XpenseSync cost?',
-              a: 'XpenseSync is currently free to use during our early access period. We plan to introduce paid plans in the future with additional features — early users will be notified well in advance.'
+              a: 'XpenseSync is free right now. When paid plans launch, early users will get plenty of notice and will likely get a discount for joining early.'
             },
             {
               q: 'Can I manage multiple bank accounts and credit cards?',
-              a: 'Absolutely. You can add as many accounts as you need — savings accounts, current accounts, credit cards, loans, and even physical assets. Everything is tracked in one place.'
+              a: 'Absolutely. You can add as many accounts as you need. Savings accounts, current accounts, credit cards, loans, physical assets. Everything in one place.'
             },
             {
               q: 'How does bill splitting work?',
@@ -728,7 +775,7 @@ export default async function LandingPage() {
             },
             {
               q: 'Can I use XpenseSync on mobile?',
-              a: 'XpenseSync is a responsive web app that works great on any device — desktop, tablet, or mobile browser. A dedicated mobile app may come in the future.'
+              a: 'XpenseSync works great on any device. You can also install it as a PWA from your browser for a near-native experience on iOS and Android.'
             },
             {
               q: 'Does XpenseSync support currencies other than USD?',
@@ -736,7 +783,7 @@ export default async function LandingPage() {
             },
             {
               q: 'How do the AI features work?',
-              a: 'The AI Advisor analyses your accounts, transactions, and recurring payments and surfaces prioritised recommendations. The AI Financial Organizer builds a personalised payday plan, monthly calendar, and budget breakdown. Both are powered by Google Gemini and analyse only your own data — nothing is shared externally.'
+              a: 'The AI Advisor looks at your accounts, transactions and recurring payments and tells you what to prioritise. The AI Organizer builds a payday plan, monthly calendar and budget breakdown. Both run on Google Gemini and only ever look at your own data.'
             }
           ].map((item, i) => (
             <details
@@ -760,14 +807,54 @@ export default async function LandingPage() {
         </div>
       </section>
 
+      {/* ── Philosophy / Privacy ─────────────────────────────────────────── */}
+      <section className='border-y border-border/50'>
+        <div className='mx-auto max-w-6xl px-4 sm:px-6 py-14'>
+          <div className='grid gap-8 sm:grid-cols-2 lg:grid-cols-4'>
+            {[
+              {
+                icon: FaShieldHalved,
+                title: 'No bank sync',
+                desc: 'Your banking credentials never touch our servers. Nothing is connected automatically.'
+              },
+              {
+                icon: FaEyeSlash,
+                title: 'No ads, ever',
+                desc: 'XpenseSync does not run ads or sell your financial data to anyone, period.'
+              },
+              {
+                icon: FaPencil,
+                title: 'Manual by design',
+                desc: 'Entering transactions yourself keeps you aware of every rupee. That awareness is the point.'
+              },
+              {
+                icon: FaLock,
+                title: 'Your data, yours',
+                desc: 'Stored securely in the cloud. You can export or delete everything at any time.'
+              }
+            ].map(item => (
+              <div key={item.title} className='flex gap-4'>
+                <div className='mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary'>
+                  <item.icon className='h-4 w-4' />
+                </div>
+                <div>
+                  <h3 className='font-semibold text-sm mb-1'>{item.title}</h3>
+                  <p className='text-sm text-muted-foreground leading-relaxed'>{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── CTA Banner ───────────────────────────────────────────────────── */}
       <section className='border-t border-border/50 bg-muted/20'>
         <div className='mx-auto max-w-6xl px-4 sm:px-6 py-20 text-center'>
           <h2 className='text-3xl font-bold tracking-tight sm:text-4xl mb-4'>
-            Ready to take control?
+            Your finances, sorted.
           </h2>
           <p className='text-muted-foreground max-w-md mx-auto mb-8'>
-            Join XpenseSync today and start tracking your finances with clarity.
+            Create your free account and see how different it feels to actually know where your money is going.
           </p>
           <div className='flex flex-col sm:flex-row items-center justify-center gap-3'>
             <Button size='lg' className='w-full sm:w-auto gap-2 px-8' asChild>
@@ -813,7 +900,7 @@ export default async function LandingPage() {
             </div>
           </div>
           <div className='mt-6 text-center text-xs text-muted-foreground'>
-            © {new Date().getFullYear()} XpenseSync. Built with care for personal finance.
+            © {new Date().getFullYear()} XpenseSync. Made for people who take their money seriously.
           </div>
         </div>
       </footer>
