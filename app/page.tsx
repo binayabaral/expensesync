@@ -220,7 +220,7 @@ export default async function LandingPage() {
                 icon: FaArrowsRotate,
                 title: 'Recurring Payments',
                 description:
-                  'Never lose track of subscriptions and bills. Log recurring payments and monitor their impact on your budget.'
+                  'Log recurring bills and subscriptions and get push notifications the day before and the day they are due. Never miss a payment.'
               },
               {
                 icon: FaWallet,
