@@ -10,104 +10,221 @@ export default function Image() {
     (
       <div
         style={{
-          background: '#0c0a09',
+          background: '#0a0a0a',
           width: '100%',
           height: '100%',
           display: 'flex',
-          flexDirection: 'column',
-          padding: '80px',
           position: 'relative',
           overflow: 'hidden',
+          fontFamily: 'sans-serif',
         }}
       >
-        {/* Top-left green glow */}
+        {/* Background gradient blobs */}
         <div
           style={{
             position: 'absolute',
-            top: -150,
-            left: -150,
-            width: 600,
-            height: 600,
+            top: -200,
+            left: -100,
+            width: 700,
+            height: 700,
             borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(34,197,94,0.22) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(34,197,94,0.18) 0%, transparent 65%)',
           }}
         />
-        {/* Bottom-right glow */}
         <div
           style={{
             position: 'absolute',
-            bottom: -120,
-            right: -120,
-            width: 480,
-            height: 480,
+            bottom: -200,
+            right: 300,
+            width: 500,
+            height: 500,
             borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(34,197,94,0.1) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(34,197,94,0.08) 0%, transparent 65%)',
           }}
         />
 
-        {/* Logo row */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '52px' }}>
-          <div
-            style={{
-              width: 54,
-              height: 54,
-              borderRadius: 14,
-              background: '#22c55e',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <svg width='26' height='26' viewBox='0 0 24 24' fill='white'>
-              <path d='M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z' />
-            </svg>
-          </div>
-          <span style={{ color: 'white', fontSize: 34, fontWeight: 700, letterSpacing: '-0.5px' }}>
-            XpenseSync
-          </span>
-        </div>
-
-        {/* Headline */}
-        <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '28px' }}>
-          <span style={{ color: 'white', fontSize: 74, fontWeight: 800, lineHeight: 1.1, letterSpacing: '-1px' }}>
-            Your finances,
-          </span>
-          <span style={{ color: '#22c55e', fontSize: 74, fontWeight: 800, lineHeight: 1.1, letterSpacing: '-1px' }}>
-            finally in control
-          </span>
-        </div>
-
-        {/* Description */}
+        {/* Left content area */}
         <div
           style={{
-            color: 'rgba(255,255,255,0.55)',
-            fontSize: 22,
-            marginBottom: '52px',
-            maxWidth: 720,
-            lineHeight: 1.6,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            padding: '64px 72px',
+            flex: 1,
+            zIndex: 1,
           }}
         >
-          Track expenses, split bills, manage subscriptions, and watch your net worth grow. Free, always.
-        </div>
-
-        {/* Feature badges */}
-        <div style={{ display: 'flex', gap: '12px' }}>
-          {['Expense Tracking', 'Bill Splitting', 'Recurring Payments', 'Net Worth'].map(f => (
+          {/* Logo */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
             <div
-              key={f}
               style={{
-                background: 'rgba(34,197,94,0.12)',
-                border: '1px solid rgba(34,197,94,0.3)',
-                borderRadius: 100,
-                padding: '9px 22px',
-                color: '#22c55e',
-                fontSize: 17,
-                fontWeight: 500,
+                width: 50,
+                height: 50,
+                borderRadius: 13,
+                background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 0 20px rgba(34,197,94,0.4)',
               }}
             >
-              {f}
+              <svg width='26' height='26' viewBox='0 0 24 24' fill='none'>
+                <path d='M3 3v18h18' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' />
+                <path d='M7 16l4-4 4 4 4-6' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' />
+              </svg>
             </div>
-          ))}
+            <span
+              style={{
+                color: 'white',
+                fontSize: 30,
+                fontWeight: 700,
+                letterSpacing: '-0.3px',
+              }}
+            >
+              XpenseSync
+            </span>
+          </div>
+
+          {/* Headline */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <span
+              style={{
+                color: 'rgba(255,255,255,0.9)',
+                fontSize: 68,
+                fontWeight: 800,
+                lineHeight: 1.05,
+                letterSpacing: '-2px',
+              }}
+            >
+              Your finances,
+            </span>
+            <span
+              style={{
+                fontSize: 68,
+                fontWeight: 800,
+                lineHeight: 1.05,
+                letterSpacing: '-2px',
+                background: 'linear-gradient(90deg, #22c55e, #4ade80)',
+                backgroundClip: 'text',
+                color: 'transparent',
+              }}
+            >
+              finally in sync.
+            </span>
+            <div
+              style={{
+                color: 'rgba(255,255,255,0.45)',
+                fontSize: 21,
+                marginTop: '20px',
+                lineHeight: 1.55,
+                maxWidth: 560,
+              }}
+            >
+              Track expenses · Split bills · Manage subscriptions · Grow net worth
+            </div>
+          </div>
+
+          {/* Bottom row: badges + URL */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              {['Free', 'PWA', 'Privacy-first'].map(tag => (
+                <div
+                  key={tag}
+                  style={{
+                    background: 'rgba(34,197,94,0.1)',
+                    border: '1px solid rgba(34,197,94,0.25)',
+                    borderRadius: 100,
+                    padding: '7px 18px',
+                    color: '#4ade80',
+                    fontSize: 15,
+                    fontWeight: 500,
+                  }}
+                >
+                  {tag}
+                </div>
+              ))}
+            </div>
+            <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 17 }}>
+              xpensesync.com
+            </span>
+          </div>
+        </div>
+
+        {/* Right panel — mock dashboard card */}
+        <div
+          style={{
+            width: 340,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: '16px',
+            padding: '48px 40px 48px 0',
+            zIndex: 1,
+          }}
+        >
+          {/* Net worth card */}
+          <div
+            style={{
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 20,
+              padding: '28px 32px',
+              width: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+            }}
+          >
+            <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14, fontWeight: 500, letterSpacing: '0.5px' }}>
+              NET WORTH
+            </span>
+            <span style={{ color: 'white', fontSize: 34, fontWeight: 700, letterSpacing: '-1px' }}>
+              NPR 4,82,500
+            </span>
+            <span style={{ color: '#22c55e', fontSize: 14, fontWeight: 500 }}>
+              ↑ 12.4% this month
+            </span>
+            {/* Mini bar chart */}
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px', marginTop: '12px', height: '44px' }}>
+              {[28, 38, 32, 50, 42, 60, 55, 70].map((h, i) => (
+                <div
+                  key={i}
+                  style={{
+                    flex: 1,
+                    height: `${h}%`,
+                    borderRadius: 4,
+                    background: i === 7 ? '#22c55e' : 'rgba(34,197,94,0.25)',
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Recent expense rows */}
+          <div
+            style={{
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 20,
+              padding: '20px 24px',
+              width: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '14px',
+            }}
+          >
+            {[
+              { label: 'Groceries', amt: '−2,400', color: '#f87171' },
+              { label: 'Salary', amt: '+85,000', color: '#4ade80' },
+              { label: 'Rent', amt: '−18,000', color: '#f87171' },
+            ].map(row => (
+              <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: 'rgba(255,255,255,0.55)', fontSize: 15 }}>{row.label}</span>
+                <span style={{ color: row.color, fontSize: 15, fontWeight: 600 }}>{row.amt}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     ),

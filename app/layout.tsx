@@ -38,6 +38,20 @@ export const metadata: Metadata = {
     template: '%s | XpenseSync'
   },
   description: 'Personal finance tracker — track expenses, split bills, manage subscriptions, and grow your net worth.',
+  openGraph: {
+    title: 'XpenseSync',
+    description: 'Personal finance tracker — track expenses, split bills, manage subscriptions, and grow your net worth.',
+    url: 'https://xpensesync.com',
+    siteName: 'XpenseSync',
+    images: [{ url: '/opengraph-image', width: 1200, height: 630 }],
+    type: 'website'
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'XpenseSync',
+    description: 'Personal finance tracker — track expenses, split bills, manage subscriptions, and grow your net worth.',
+    images: ['/opengraph-image']
+  },
   icons: {
     icon: [
       { url: '/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
