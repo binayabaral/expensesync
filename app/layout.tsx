@@ -59,9 +59,6 @@ export const metadata: Metadata = {
     ],
     apple: [{ url: '/apple-touch-icon.png', sizes: '180x180' }]
   },
-  other: {
-    'fb:app_id': process.env.NEXT_PUBLIC_FB_APP_ID ?? ''
-  }
 };
 
 export default function RootLayout({
