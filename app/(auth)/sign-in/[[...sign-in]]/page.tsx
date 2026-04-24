@@ -1,6 +1,13 @@
+import type { Metadata } from 'next';
 import { Loader2 } from 'lucide-react';
 import { SignIn, ClerkLoaded, ClerkLoading } from '@clerk/nextjs';
 import { shadcn } from '@clerk/themes';
+
+export const metadata: Metadata = {
+  title: 'Sign In',
+  description: 'Sign in to your XpenseSync account to track expenses, split bills, and manage your finances.',
+  robots: { index: false, follow: false }
+};
 
 export default function Page() {
   return (

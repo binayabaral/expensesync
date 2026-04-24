@@ -106,7 +106,7 @@ export function LandingPageContent() {
           >
             <Badge variant='secondary' className='mb-6 gap-1.5 px-3 py-1 text-xs font-medium'>
               <span className='inline-block h-1.5 w-1.5 rounded-full bg-primary' />
-              Now with AI-powered financial advice
+              Expense tracker · Bill splitter · AI advisor
             </Badge>
           </motion.div>
           <motion.h1
@@ -126,8 +126,8 @@ export function LandingPageContent() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            Track every expense, split bills with friends, manage recurring payments and let AI
-            tell you what actually needs your attention. Everything in one place.
+            The personal finance app built for Nepal. Track every expense in NPR, split bills
+            with friends, manage recurring payments, and let AI tell you what actually needs your attention.
           </motion.p>
           <motion.div
             className='mt-10 flex flex-col sm:flex-row items-center justify-center gap-3'

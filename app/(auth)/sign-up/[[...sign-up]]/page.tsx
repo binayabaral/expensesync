@@ -1,6 +1,13 @@
+import type { Metadata } from 'next';
 import { Loader2 } from 'lucide-react';
 import { SignUp, ClerkLoaded, ClerkLoading } from '@clerk/nextjs';
 import { shadcn } from '@clerk/themes';
+
+export const metadata: Metadata = {
+  title: 'Create Account',
+  description: 'Create your free XpenseSync account and start tracking expenses, splitting bills, and managing your finances.',
+  robots: { index: false, follow: false }
+};
 
 export default function Page() {
   return (
