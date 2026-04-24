@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/DataTable';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { useGetAccounts } from '@/features/accounts/api/useGetAccounts';
 import { useGetCategories } from '@/features/categories/api/useGetCategories';
 import { useCreateCategory } from '@/features/categories/api/useCreateCategory';
@@ -28,7 +27,6 @@ const NEW_ROW_ID = '__new__';
 
 function Transactions() {
   const params = useSearchParams();
-  const isMobile = useIsMobile();
 
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
   const [editingValues, setEditingValues] = useState<EditingValues | null>(null);
@@ -114,11 +112,7 @@ function Transactions() {
   };
 
   const handleAddNew = () => {
-    if (isMobile) {
-      newTransaction.onOpen();
-    } else {
-      startAddingNew();
-    }
+    newTransaction.onOpen();
   };
 
   const onRowClick = (row: Row<ResponseType>) => {

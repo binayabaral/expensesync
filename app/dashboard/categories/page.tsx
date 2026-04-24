@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DataTable } from '@/components/DataTable';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { useAddCategory } from '@/features/categories/hooks/useAddCategory';
 import { useEditCategory } from '@/features/categories/api/useEditCategory';
 import { useCreateCategory } from '@/features/categories/api/useCreateCategory';
@@ -26,7 +25,6 @@ function Categories() {
   const [editingValues, setEditingValues] = useState<EditingValues | null>(null);
 
   const newCategory = useAddCategory();
-  const isMobile = useIsMobile();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -86,11 +84,7 @@ function Categories() {
   };
 
   const handleAddNew = () => {
-    if (isMobile) {
-      newCategory.onOpen();
-    } else {
-      startAddingNew();
-    }
+    newCategory.onOpen();
   };
 
   const onRowClick = (row: Row<ResponseType>) => {

@@ -9,7 +9,6 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/DataTable';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { useGetAccounts } from '@/features/accounts/api/useGetAccounts';
 import { useGetTransfers } from '@/features/transfers/api/useGetTransfers';
 import { useEditTransfer } from '@/features/transfers/api/useEditTransfer';
@@ -26,7 +25,6 @@ function TransferPage() {
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
   const [editingValues, setEditingValues] = useState<EditingValues | null>(null);
 
-  const isMobile = useIsMobile();
   const openAddTransferSheet = useOpenAddTransferSheet();
   const transfersQuery = useGetTransfers();
   const transfers = transfersQuery.data || [];
@@ -104,11 +102,7 @@ function TransferPage() {
   };
 
   const handleAddNew = () => {
-    if (isMobile) {
-      openAddTransferSheet.onOpen();
-    } else {
-      startAddingNew();
-    }
+    openAddTransferSheet.onOpen();
   };
 
   const onRowClick = (row: Row<ResponseType>) => {
