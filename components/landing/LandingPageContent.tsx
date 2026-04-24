@@ -88,7 +88,7 @@ export function LandingPageContent() {
       </header>
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <section className='relative overflow-hidden'>
+      <section aria-label='Hero' className='relative overflow-hidden'>
         <div
           className='pointer-events-none absolute inset-0 opacity-[0.03]'
           style={{
@@ -149,7 +149,7 @@ export function LandingPageContent() {
       </section>
 
       {/* ── Stats bar ────────────────────────────────────────────────────── */}
-      <section className='border-y border-border/50 bg-muted/30'>
+      <section aria-label='Key stats' className='border-y border-border/50 bg-muted/30'>
         <div className='mx-auto max-w-6xl px-4 sm:px-6 py-10'>
           <div className='grid grid-cols-2 gap-6 sm:grid-cols-4'>
             {[
@@ -168,7 +168,7 @@ export function LandingPageContent() {
       </section>
 
       {/* ── Dashboard Preview ────────────────────────────────────────────── */}
-      <section className='mx-auto max-w-6xl px-4 sm:px-6 py-24'>
+      <section aria-label='Dashboard preview' className='mx-auto max-w-6xl px-4 sm:px-6 py-24'>
         <FadeUp className='text-center mb-12'>
           <h2 className='text-3xl font-bold tracking-tight sm:text-4xl'>
             See everything at a glance
@@ -184,7 +184,7 @@ export function LandingPageContent() {
       </section>
 
       {/* ── Features ─────────────────────────────────────────────────────── */}
-      <section id='features' className='border-t border-border/50 bg-muted/10'>
+      <section id='features' aria-label='Features' className='border-t border-border/50 bg-muted/10'>
         <div className='mx-auto max-w-6xl px-4 sm:px-6 py-24'>
           <FadeUp className='text-center mb-14'>
             <h2 className='text-3xl font-bold tracking-tight sm:text-4xl'>
@@ -242,7 +242,7 @@ export function LandingPageContent() {
       </section>
 
       {/* ── Bill Split Spotlight ─────────────────────────────────────────── */}
-      <section className='mx-auto max-w-6xl px-4 sm:px-6 py-24'>
+      <section aria-label='Bill splitting' className='mx-auto max-w-6xl px-4 sm:px-6 py-24'>
         <div className='grid gap-12 lg:grid-cols-2 items-center'>
           <FadeUp>
             <Badge variant='secondary' className='mb-4'>Standout feature</Badge>
@@ -353,7 +353,7 @@ export function LandingPageContent() {
       </section>
 
       {/* ── AI Spotlight ─────────────────────────────────────────────────── */}
-      <section className='border-t border-border/50 bg-muted/10'>
+      <section aria-label='AI Advisor' className='border-t border-border/50 bg-muted/10'>
         <div className='mx-auto max-w-6xl px-4 sm:px-6 py-24'>
           <div className='grid gap-12 lg:grid-cols-2 items-center'>
             <FadeUp className='relative order-2 lg:order-1'>
@@ -438,7 +438,7 @@ export function LandingPageContent() {
       </section>
 
       {/* ── Built for Nepal ──────────────────────────────────────────────── */}
-      <section className='border-t border-border/50 bg-muted/10'>
+      <section aria-label='Built for Nepal' className='border-t border-border/50 bg-muted/10'>
         <div className='mx-auto max-w-6xl px-4 sm:px-6 py-24'>
           <FadeUp className='text-center mb-12'>
             <Badge variant='secondary' className='mb-4'>Built for Nepal</Badge>
@@ -477,7 +477,7 @@ export function LandingPageContent() {
       </section>
 
       {/* ── How it works ─────────────────────────────────────────────────── */}
-      <section id='how-it-works' className='border-y border-border/50 bg-muted/20'>
+      <section id='how-it-works' aria-label='How it works' className='border-y border-border/50 bg-muted/20'>
         <div className='mx-auto max-w-6xl px-4 sm:px-6 py-24'>
           <FadeUp className='text-center mb-14'>
             <h2 className='text-3xl font-bold tracking-tight sm:text-4xl'>How it works</h2>
@@ -512,7 +512,7 @@ export function LandingPageContent() {
       </section>
 
       {/* ── Why this exists ──────────────────────────────────────────────── */}
-      <section className='mx-auto max-w-6xl px-4 sm:px-6 py-24'>
+      <section aria-label='About XpenseSync' className='mx-auto max-w-6xl px-4 sm:px-6 py-24'>
         <FadeUp>
           <div className='relative rounded-2xl border border-border/60 bg-card/50 px-8 py-10 sm:px-12 sm:py-12 overflow-hidden'>
             <div className='pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_50%_50%,hsl(var(--primary)/0.06),transparent)]' />
@@ -541,7 +541,7 @@ export function LandingPageContent() {
       </section>
 
       {/* ── Pricing ──────────────────────────────────────────────────────── */}
-      <section id='pricing' className='border-t border-border/50 bg-muted/10'>
+      <section id='pricing' aria-label='Pricing' className='border-t border-border/50 bg-muted/10'>
         <div className='mx-auto max-w-6xl px-4 sm:px-6 py-24'>
           <FadeUp className='text-center mb-14'>
             <h2 className='text-3xl font-bold tracking-tight sm:text-4xl'>Pricing</h2>
@@ -633,7 +633,7 @@ export function LandingPageContent() {
       </section>
 
       {/* ── FAQ ──────────────────────────────────────────────────────────── */}
-      <section id='faq' className='mx-auto max-w-6xl px-4 sm:px-6 py-24'>
+      <section id='faq' aria-label='Frequently asked questions' className='mx-auto max-w-6xl px-4 sm:px-6 py-24'>
         <FadeUp className='text-center mb-14'>
           <h2 className='text-3xl font-bold tracking-tight sm:text-4xl'>Frequently asked questions</h2>
           <p className='mt-4 text-muted-foreground max-w-xl mx-auto'>Got questions? We&apos;ve got answers.</p>
@@ -669,7 +669,7 @@ export function LandingPageContent() {
       </section>
 
       {/* ── Philosophy / Privacy ─────────────────────────────────────────── */}
-      <section className='border-y border-border/50'>
+      <section aria-label='Privacy and values' className='border-y border-border/50'>
         <div className='mx-auto max-w-6xl px-4 sm:px-6 py-14'>
           <div className='grid gap-8 sm:grid-cols-2 lg:grid-cols-4'>
             {[
@@ -700,7 +700,7 @@ export function LandingPageContent() {
       </section>
 
       {/* ── CTA Banner ───────────────────────────────────────────────────── */}
-      <section className='border-t border-border/50 bg-muted/20'>
+      <section aria-label='Get started' className='border-t border-border/50 bg-muted/20'>
         <div className='mx-auto max-w-6xl px-4 sm:px-6 py-20 text-center'>
           <FadeUp>
             <h2 className='text-3xl font-bold tracking-tight sm:text-4xl mb-4'>
