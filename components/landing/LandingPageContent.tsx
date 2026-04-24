@@ -645,7 +645,7 @@ export function LandingPageContent() {
             { q: 'How does bill splitting work?', a: 'Create a group for any occasion (a trip, shared flat, dinner, etc.), add members, and log shared expenses. XpenseSync automatically calculates the optimal settlement so the minimum number of transactions are needed to settle all balances.' },
             { q: 'Is my financial data secure?', a: 'Your data is stored securely in the cloud with industry-standard encryption. Authentication is handled by Clerk, a trusted identity platform. We never share or sell your data.' },
             { q: 'Can I use XpenseSync on mobile?', a: 'XpenseSync works great on any device. You can also install it as a PWA from your browser for a near-native experience on iOS and Android.' },
-            { q: 'Does XpenseSync support currencies other than USD?', a: 'Yes. You can enter amounts in any currency. The app is built to be currency-agnostic, making it suitable for users worldwide including Nepal, India, and beyond.' },
+            { q: 'Does XpenseSync support NPR and other currencies?', a: 'Yes. XpenseSync is built with NPR (Nepali Rupee) as the primary currency and supports any currency. It includes Nepal-specific features like NEPSE stock tracking, gold in tola, and Nepali bank formats.' },
             { q: 'How do the AI features work?', a: 'The AI Advisor looks at your accounts, transactions and recurring payments and tells you what to prioritise. The AI Organizer builds a payday plan, monthly calendar and budget breakdown. Both run on Google Gemini and only ever look at your own data.' }
           ].map((item, i) => (
             <motion.div
