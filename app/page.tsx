@@ -3,7 +3,7 @@ import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 
 export const metadata: Metadata = {
-  title: 'XpenseSync — Your finances, finally in control',
+  title: 'XpenseSync — Track expenses, split bills & grow wealth',
   description:
     'Track your expenses, split bills with friends, manage credit cards, loans and assets, and get AI-powered financial advice. Built for real life, not for spreadsheet nerds.',
   keywords: [
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     'AI budget organizer'
   ],
   openGraph: {
-    title: 'XpenseSync — Your finances, finally in control',
+    title: 'XpenseSync — Track expenses, split bills & grow wealth',
     description:
       'Track your expenses, split bills with friends, manage credit cards, loans and assets, and get AI-powered financial advice.',
     url: '/',
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'XpenseSync — Your finances, finally in control',
+    title: 'XpenseSync — Track expenses, split bills & grow wealth',
     description:
       'Track your expenses, split bills with friends, manage credit cards, loans and assets, and get AI-powered financial advice.'
   },
